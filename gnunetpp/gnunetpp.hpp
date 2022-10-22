@@ -1,5 +1,8 @@
 #pragma once
 
+#include "gnunetpp-scheduler.hpp"
+#include "gnunetpp-crypto.hpp"
+
 #include "gnunet/platform.h"
 #include <gnunet/gnunet_core_service.h>
 #include "gnunet/gnunet_dht_service.h"
@@ -54,17 +57,6 @@ inline void removeAllServices()
     g_services.clear();
 }
 
-inline GNUNET_SCHEDULER_Task* runLater(std::chrono::duration<double> delay, std::function<void()> fn)
-{
-    using namespace std::chrono;
-    const uint64_t usec = duration_cast<microseconds>(delay).count();
-    GNUNET_TIME_Relative time{usec};
-    return GNUNET_SCHEDULER_add_delayed(time, [] (void *cls) {
-        auto ptr = std::unique_ptr<std::function<void()>>(static_cast<std::function<void()>*>(cls));
-        (*ptr)();
-    }, new std::function<void()>(fn));
-}
-
 struct DHT : public Service
 {
     using PutCallbackFunctor = std::function<void()>;
@@ -74,7 +66,7 @@ struct DHT : public Service
     {
         DHT* self;
         GNUNET_DHT_GetHandle* handle;
-        GNUNET_SCHEDULER_Task* timer_task;
+        scheduler::TaskID timer_task;
         GetCallbackFunctor callback;
     };
 
@@ -96,8 +88,11 @@ struct DHT : public Service
     {
         if(dht_handle != NULL)
         {
-            for(auto pack : get_handles)
+            for(auto pack : get_handles) {
                 GNUNET_DHT_get_stop(pack->handle);
+                scheduler::cancel(pack->timer_task);
+                delete pack;
+            }
             get_handles.clear();
 
             GNUNET_DHT_disconnect(dht_handle);
@@ -114,8 +109,7 @@ struct DHT : public Service
     {
         if(dht_handle == NULL)
             throw std::runtime_error("DHT not connected");
-        GNUNET_HashCode key_hash;
-        GNUNET_CRYPTO_hash(key.data(), key.size(), &key_hash);
+        GNUNET_HashCode key_hash = crypto::hash(key);
 
         // XXX: This only works because internally GNUNet uses msec. If they ever change this, this will break.
         const size_t num_usecs = std::chrono::duration_cast<std::chrono::microseconds>(expiration).count();
@@ -139,8 +133,7 @@ struct DHT : public Service
     {
         if(dht_handle == NULL)
             throw std::runtime_error("DHT not connected");
-        GNUNET_HashCode key_hash;
-        GNUNET_CRYPTO_hash(key.data(), key.size(), &key_hash);
+        GNUNET_HashCode key_hash = crypto::hash(key);
         auto data = new GetCallbackPack;
         data->callback = std::move(completedCallback);
         data->self = this;
@@ -151,12 +144,13 @@ struct DHT : public Service
         if(handle == NULL)
             throw std::runtime_error("Failed to get data from GNUNet DHT");
         get_handles.insert(data);
-        data->timer_task = runLater(search_timeout, [data, this] () {
-            if(get_handles.find(data) != get_handles.end())
+        data->timer_task = scheduler::runLater(search_timeout, [data] () {
+            auto self = data->self;
+            if(self->get_handles.find(data) != self->get_handles.end())
             {
                 GNUNET_DHT_get_stop(data->handle);
                 delete data;
-                get_handles.erase(data);
+                self->get_handles.erase(data);
             }
         });
         return handle;
@@ -170,6 +164,15 @@ struct DHT : public Service
     void cancle(GNUNET_DHT_GetHandle* handle)
     {
         GNUNET_DHT_get_stop(handle);
+        // HACK: 
+        for(auto pack : get_handles) {
+            if(pack->handle == handle) {
+                scheduler::cancel(pack->timer_task);
+                delete pack;
+                get_handles.erase(pack);
+                break;
+            }
+        }
     }
 
 protected:
@@ -197,11 +200,10 @@ protected:
         assert(pack != nullptr);
         std::string_view data_view{reinterpret_cast<const char*>(data), size};
         bool keep_running = pack->callback(data_view);
-        if(keep_running == false)
-        {
+        if(keep_running == false) {
             pack->self->get_handles.erase(pack);
             GNUNET_DHT_get_stop(pack->handle);
-            GNUNET_SCHEDULER_cancel(pack->timer_task);
+            scheduler::cancel(pack->timer_task);
             delete pack;
         }
     }
@@ -235,6 +237,7 @@ void shutdown()
 {
     GNUNET_SCHEDULER_add_now([] (void* d) {
         removeAllServices();
+        scheduler::shutdown();
     }, NULL);
 }
 

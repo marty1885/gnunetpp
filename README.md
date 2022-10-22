@@ -21,7 +21,42 @@ dht->get("some_super_secret", [](const std::string_view data) {
    return true; // keep on searching after the current one.
    // return false to cancel futher lookups.
 }, std::chrono::seconds(30)); // Max searching for 30 seconds
+```
 
+The cryptographic library is also easily accessable
+
+```cpp
+auto hash = crypto::hash("foobar");
+auto hmac = crypto::hmac("hmac_key", "zap");
+std::cout << crypto::to_string(hmac) << "\n";
 ```
 
 [opendht]: https://github.com/savoirfairelinux/opendht
+
+## Requirments
+
+First you need the dependencies
+
+* C++17 capable compiler
+* A installation on GNUNet
+
+## Roadmap
+
+This project aims to create a easy to use wapper for the commonly used part of GNUNet.
+
+- DHT
+  - [x] Basic operations (put/get)
+  - [ ] Monitor
+- File Sharing
+  - [ ] Download
+  - [ ] Publish
+  - [ ] Search
+- Crypto
+  - [x] Hash
+  - [x] HMAC
+  - [ ] ECDSA/EDDSA/ECDHE
+  - [ ] to_string
+- Scheduler
+  - [x] Delayed run
+  - [x] Run on exit
+  - [ ] Run immidately
