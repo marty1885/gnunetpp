@@ -4,6 +4,8 @@
 
 IMO GNUNet is a cool project which shows what decentralized systems could look like. However the [time to first hello world][ttfhw] is way too long, API is not well documented and everything is written GNU style C. Which are all factors against it's adoption. GNUNet++ wraps all the C-ness into a (more or less) modern C++ style API. Provides proper lifetime management and an easier learning path. Hopefully leading to a better development experience.
 
+**IMPORTAN**: This is not a part of the GNUNet project. The [author](https://github.com/marty1885) created it because he wants to use GNUNet in C++.
+
 [ttfhw]: https://www.moesif.com/blog/technical/api-product-management/What-is-TTFHW/ 
 
 ## Show me some code!
@@ -56,7 +58,14 @@ This project aims to create a easy to use wapper for the commonly used part of G
   - [x] HMAC
   - [ ] ECDSA/EDDSA/ECDHE
   - [ ] to_string
+- CADET
+  - [ ] Server
+  - [ ] Client
+- GNS
+  - [ ] Resolve
+  - [ ] Register/modify record
+  - [ ] Ego
 - Scheduler
   - [x] Delayed run
   - [x] Run on exit
-  - [ ] Run immidately
+  - [x] Run immidately

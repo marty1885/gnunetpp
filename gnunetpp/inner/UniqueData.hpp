@@ -9,7 +9,7 @@
 
 namespace gnunetpp::detail
 {
-thread_local std::mt19937_64 g_rng(std::random_device{}());
+extern thread_local std::mt19937_64 g_rng;
 
 template <typename Data>
 struct UniqueData

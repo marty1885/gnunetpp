@@ -3,6 +3,7 @@
 #include "gnunetpp-scheduler.hpp"
 #include "gnunetpp-crypto.hpp"
 #include "gnunetpp-dht.hpp"
+#include "gnunetpp-fs.hpp"
 #include "inner/Infra.hpp"
 
 #include <gnunet/platform.h>

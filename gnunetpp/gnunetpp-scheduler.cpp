@@ -61,9 +61,12 @@ void cancel(TaskID id)
     g_tasks.remove(id);
 }
 
+static bool running = true;
 void shutdown()
 {
-    GNUNET_SCHEDULER_shutdown();
+    if(running)
+        GNUNET_SCHEDULER_shutdown();
+    running = false;
 }
 
 }

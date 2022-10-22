@@ -80,7 +80,7 @@ void DHT::cancle(GNUNET_DHT_PutHandle* handle)
 void DHT::cancle(GNUNET_DHT_GetHandle* handle)
 {
     GNUNET_DHT_get_stop(handle);
-    // HACK: 
+    // HACK: Need a faster way to find the GetCallbackPack
     for(auto pack : get_handles) {
         if(pack->handle == handle) {
             scheduler::cancel(pack->timer_task);
