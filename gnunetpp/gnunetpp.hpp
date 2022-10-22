@@ -175,6 +175,11 @@ struct DHT : public Service
         }
     }
 
+    GNUNET_DHT_Handle* native_handle() const
+    {
+        return dht_handle;
+    }
+
 protected:
     static void putCallback(void* cls)
     {

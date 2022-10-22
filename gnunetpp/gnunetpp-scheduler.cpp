@@ -2,6 +2,8 @@
 #include "gnunet/platform.h"
 #include <gnunet/gnunet_core_service.h>
 
+#include "inner/UniqueData.hpp"
+
 #include <map>
 #include <cassert>
 #include <mutex>
@@ -12,41 +14,25 @@ namespace gnunetpp::scheduler
 
 struct TaskData
 {
-    TaskID id;
     GNUNET_SCHEDULER_Task* handle;
     std::function<void()> fn;
 };
 
-static std::map<TaskID, TaskData> g_tasks;
-static std::mutex g_mtx_tasks;
+static detail::UniqueData<TaskData> g_tasks;
 TaskID runLater(std::chrono::duration<double> delay, std::function<void()> fn)
 {
     using namespace std::chrono;
     const uint64_t usec = duration_cast<microseconds>(delay).count();
     GNUNET_TIME_Relative time{usec};
 
-    std::lock_guard lock(g_mtx_tasks);
-    size_t id = 0;
-    thread_local std::mt19937_64 gen{std::random_device{}()};
-    do {
-        id = gen();
-    } while (g_tasks.find(id) != g_tasks.end());
-
+    auto [id, data] = g_tasks.add({nullptr, std::move(fn)});
+    static_assert(sizeof(TaskID) == sizeof(void*));
     auto handle = GNUNET_SCHEDULER_add_delayed(time, [] (void *cls) {
-        auto it = [cls]() {
-            std::lock_guard lock(g_mtx_tasks);
-            return g_tasks.find(reinterpret_cast<TaskID>(cls));
-        }();
-        assert(it != g_tasks.end());
-        auto& task = it->second;
-        task.fn();
-        {
-            std::lock_guard lock(g_mtx_tasks);
-            g_tasks.erase(it);
-        }
+        size_t id = reinterpret_cast<size_t>(cls);
+        g_tasks[id].fn();
+        g_tasks.remove(id);
     }, reinterpret_cast<void*>(id));
-
-    g_tasks[id] = {id, handle, fn};
+    data.handle = handle;
     return id;
 }
 
@@ -70,16 +56,9 @@ void run(std::function<void()> fn)
 
 void cancel(TaskID id)
 {
-    std::lock_guard lock(g_mtx_tasks);
-    auto it = g_tasks.find(id);
-#ifndef NDEBUG
-    if(it == g_tasks.end())
-        return;
-#endif
-    assert(it != g_tasks.end());
-    auto& task = it->second;
-    GNUNET_SCHEDULER_cancel(task.handle);
-    g_tasks.erase(it);
+    auto& data = g_tasks[id];
+    GNUNET_SCHEDULER_cancel(data.handle);
+    g_tasks.remove(id);
 }
 
 void shutdown()
