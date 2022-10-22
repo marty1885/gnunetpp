@@ -14,14 +14,6 @@ thread_local std::mt19937_64 g_rng(std::random_device{}());
 template <typename Data>
 struct UniqueData
 {
-    std::mutex mtx;
-    std::map<size_t, Data> data;
-
-    UniqueData()
-    {
-
-    }
-
     std::pair<size_t, Data&> add(Data&& d)
     {
         std::lock_guard l(mtx);
@@ -49,6 +41,15 @@ struct UniqueData
         assert(it != data.end());
         data.erase(it);
     }
+
+    bool contains(size_t id)
+    {
+	std::lock_guard l(mtx);
+	return data.find(id) != data.end();
+    }
+protected:
+    std::mutex mtx;
+    std::map<size_t, Data> data;
 };
 
 }

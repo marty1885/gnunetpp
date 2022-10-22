@@ -66,7 +66,7 @@ struct DHT : public Service
     {
         DHT* self;
         GNUNET_DHT_GetHandle* handle;
-        scheduler::TaskID timer_task;
+        TaskID timer_task;
         GetCallbackFunctor callback;
     };
 
@@ -144,14 +144,10 @@ struct DHT : public Service
         if(handle == NULL)
             throw std::runtime_error("Failed to get data from GNUNet DHT");
         get_handles.insert(data);
-        data->timer_task = scheduler::runLater(search_timeout, [data] () {
-            auto self = data->self;
-            if(self->get_handles.find(data) != self->get_handles.end())
-            {
-                GNUNET_DHT_get_stop(data->handle);
-                delete data;
-                self->get_handles.erase(data);
-            }
+        data->timer_task = scheduler::runLater(search_timeout, [data, this] () {
+            GNUNET_DHT_get_stop(data->handle);
+            delete data;
+            get_handles.erase(data);
         });
         return handle;
     }
@@ -213,7 +209,7 @@ protected:
         }
     }
 
-    struct GNUNET_DHT_Handle *dht_handle = nullptr;
+    GNUNET_DHT_Handle *dht_handle = nullptr;
     std::set<GetCallbackPack*> get_handles;
 };
 
