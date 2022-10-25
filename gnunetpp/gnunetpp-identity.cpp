@@ -47,10 +47,11 @@ void IdentityService::shutdown()
 }
 
 GNUNET_IDENTITY_Operation* IdentityService::create_identity(const std::string& name
-        , std::function<void(const GNUNET_IDENTITY_PrivateKey&, const std::string&)> fn)
+        , std::function<void(const GNUNET_IDENTITY_PrivateKey&, const std::string&)> fn
+        , GNUNET_IDENTITY_KeyType type)
 {
     auto cb = new std::function<void(const GNUNET_IDENTITY_PrivateKey&, const std::string&)>(fn);
-    return GNUNET_IDENTITY_create(handle, name.c_str(), nullptr, GNUNET_IDENTITY_TYPE_ECDSA
+    return GNUNET_IDENTITY_create(handle, name.c_str(), nullptr, type
         , &detail::identity_create_trampline, cb);
 }
 

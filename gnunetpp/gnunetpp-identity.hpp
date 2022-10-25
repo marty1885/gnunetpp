@@ -20,7 +20,8 @@ struct IdentityService : public Service
     void shutdown() override;
 
     GNUNET_IDENTITY_Operation* create_identity(const std::string& name
-        , std::function<void(const GNUNET_IDENTITY_PrivateKey&, const std::string&)> fn);
+        , std::function<void(const GNUNET_IDENTITY_PrivateKey&, const std::string&)> fn
+        , GNUNET_IDENTITY_KeyType type = GNUNET_IDENTITY_TYPE_ECDSA);
     GNUNET_IDENTITY_Operation* delete_identity(const std::string& name
         , std::function<void(const std::string&)> fn);
 
