@@ -72,7 +72,7 @@ This project aims to create a easy to use wapper for the commonly used part of G
   - [x] Basic operations (put/get)
   - [ ] Monitor
 - File Sharing
-  - [ ] Download
+  - [x] Download
   - [ ] Publish
   - [x] Search
 - Crypto

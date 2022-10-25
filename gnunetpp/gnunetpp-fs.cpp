@@ -30,6 +30,22 @@ GNUNET_FS_Handle* makeHandle(const GNUNET_CONFIGURATION_Handle* cfg, FSCallbackF
         throw std::runtime_error("GNUNET_FS_start failed");
     return fs_handle;
 }
+
+GNUNET_FS_Handle* makeHandle(const GNUNET_CONFIGURATION_Handle* cfg, FSCallbackFunctor callback, unsigned download_parallelism, unsigned request_parallelism)
+{
+    FSCallbackData* data = new FSCallbackData;
+    data->fn = callback;
+    GNUNET_FS_Handle* fs_handle = GNUNET_FS_start(cfg, "gnunetpp-fs", &fs_callback_trampoline
+        , data, GNUNET_FS_FLAGS_NONE, GNUNET_FS_OPTIONS_DOWNLOAD_PARALLELISM, download_parallelism
+        , GNUNET_FS_OPTIONS_REQUEST_PARALLELISM, request_parallelism
+        , GNUNET_FS_OPTIONS_END);
+    data->fs = fs_handle;
+    g_fs_handlers[fs_handle] = data;
+    if (!fs_handle)
+        throw std::runtime_error("GNUNET_FS_start failed");
+    return fs_handle;
+}
+
 }
 
 GNUNET_FS_SearchContext* search(
@@ -122,15 +138,17 @@ GNUNET_FS_DownloadContext* download(
     const std::string& uri,
     const std::string& filename,
     std::function<void(DownloadStatus)> fn,
-    unsigned anonymity_level)
+    unsigned anonymity_level,
+    unsigned download_parallelism,
+    unsigned request_parallelism)
 {
     char** error_msg = NULL;
     auto gnet_uri = GNUNET_FS_uri_parse(uri.c_str(), error_msg);
     if(gnet_uri == NULL)
         throw std::runtime_error("Failed to parse URI");
-    if(GNUNET_FS_uri_test_chk(gnet_uri) != GNUNET_OK && GNUNET_FS_uri_test_ksk(gnet_uri) != GNUNET_OK) {
+    if(GNUNET_FS_uri_test_chk(gnet_uri) != GNUNET_OK && GNUNET_FS_uri_test_loc(gnet_uri) != GNUNET_OK) {
         GNUNET_FS_uri_destroy(gnet_uri);
-        throw std::runtime_error("URI must be CHK or KSK");
+        throw std::runtime_error("URI must be CHK (shared files) or LOC (file on specific node)");
     }
 
     auto fs_handle = detail::makeHandle(cfg, [fn=std::move(fn)](const GNUNET_FS_ProgressInfo * info){
@@ -165,7 +183,7 @@ GNUNET_FS_DownloadContext* download(
         else if(info->status == GNUNET_FS_STATUS_DOWNLOAD_START) {
             fn(DownloadStatus::Started);
         }
-    });
+    }, download_parallelism, request_parallelism);
 
     // TODO: allow changing options
     GNUNET_FS_DownloadOptions options = GNUNET_FS_DOWNLOAD_OPTION_RECURSIVE;

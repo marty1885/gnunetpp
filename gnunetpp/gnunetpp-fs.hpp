@@ -29,6 +29,7 @@ struct FSCallbackData
 };
 extern std::map<GNUNET_FS_Handle*, detail::FSCallbackData*> g_fs_handlers;
 GNUNET_FS_Handle* makeHandle(const GNUNET_CONFIGURATION_Handle* cfg, FSCallbackFunctor callback);
+GNUNET_FS_Handle* makeHandle(const GNUNET_CONFIGURATION_Handle* cfg, FSCallbackFunctor callback, unsigned download_parallelism, unsigned request_parallelism);
 void* fs_callback_trampoline(void *cls, const struct GNUNET_FS_ProgressInfo *info);
 
 }
@@ -55,7 +56,9 @@ GNUNET_FS_DownloadContext* download(
     const std::string& uri,
     const std::string& filename,
     std::function<void(DownloadStatus)> fn,
-    unsigned anonymity_level = 1);
+    unsigned anonymity_level = 1,
+    unsigned download_parallelism = 16,
+    unsigned request_parallelism = 4092);
 
 void cancel(GNUNET_FS_SearchContext* sc);
 }
