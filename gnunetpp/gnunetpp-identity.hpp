@@ -21,6 +21,8 @@ struct IdentityService : public Service
 
     GNUNET_IDENTITY_Operation* create_identity(const std::string& name
         , std::function<void(const GNUNET_IDENTITY_PrivateKey&, const std::string&)> fn);
+    GNUNET_IDENTITY_Operation* delete_identity(const std::string& name
+        , std::function<void(const std::string&)> fn);
 
     GNUNET_IDENTITY_Handle* native_handle() const { return handle; }
     GNUNET_IDENTITY_Handle* handle;

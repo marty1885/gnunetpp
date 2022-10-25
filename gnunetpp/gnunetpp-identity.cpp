@@ -13,6 +13,14 @@ void identity_create_trampline(void* cls, const struct GNUNET_IDENTITY_PrivateKe
     (*cb)(*id, err_msg);
     delete cb;
 }
+
+void identity_delete_trampline(void* cls, const char* emsg)
+{
+    auto cb = reinterpret_cast<std::function<void(const std::string& err)>*>(cls);
+    std::string err_msg = emsg ? emsg : "";
+    (*cb)(err_msg);
+    delete cb;
+}
 }
 
 
@@ -44,6 +52,13 @@ GNUNET_IDENTITY_Operation* IdentityService::create_identity(const std::string& n
     auto cb = new std::function<void(const GNUNET_IDENTITY_PrivateKey&, const std::string&)>(fn);
     return GNUNET_IDENTITY_create(handle, name.c_str(), nullptr, GNUNET_IDENTITY_TYPE_ECDSA
         , &detail::identity_create_trampline, cb);
+}
+
+GNUNET_IDENTITY_Operation* IdentityService::delete_identity(const std::string& name
+        , std::function<void(const std::string&)> fn)
+{
+    auto cb = new std::function<void(const std::string&)>(fn);
+    return GNUNET_IDENTITY_delete(handle, name.c_str(), &detail::identity_delete_trampline, cb);
 }
 
 std::string to_string(const GNUNET_IDENTITY_PrivateKey& key)
