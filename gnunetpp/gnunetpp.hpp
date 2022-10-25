@@ -4,6 +4,7 @@
 #include "gnunetpp-crypto.hpp"
 #include "gnunetpp-dht.hpp"
 #include "gnunetpp-fs.hpp"
+#include "gnunetpp-identity.hpp"
 #include "inner/Infra.hpp"
 
 #include <gnunet/platform.h>

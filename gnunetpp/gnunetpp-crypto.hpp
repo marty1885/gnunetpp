@@ -32,4 +32,8 @@ uint64_t random_u64(GNUNET_CRYPTO_Quality quality = GNUNET_CRYPTO_QUALITY_STRONG
 
 std::string to_string(const GNUNET_HashCode& hash);
 std::string to_string_full(const GNUNET_HashCode& hash);
+std::string to_string(const GNUNET_CRYPTO_EcdsaPrivateKey& key);
+std::string to_string(const GNUNET_CRYPTO_EcdsaPublicKey& key);
+
+GNUNET_CRYPTO_EcdsaPublicKey get_public_key(const GNUNET_CRYPTO_EcdsaPrivateKey& key);
 }
