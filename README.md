@@ -35,13 +35,18 @@ auto hmac = crypto::hmac("hmac_key", "zap");
 std::cout << crypto::to_string(hmac) << "\n";
 ```
 
-`gnunet-search` like functionality is also provided
+Search and download files from the GNUnet File Sharing service.
 
 ```cpp
 FS::search({"jpg"}, [](const std::string_view uri, const std::string_view name) {
    std::cout << "Found " << filename << " at " << std::endl << std::endl;
    return true;
 }, std::chrono::seconds(30));
+
+FS::downlad("gnunet://fs/...", "foobar.jpg", [](DownloadStatus status) {
+    if(status == DownloadStatus::Completed)
+      // yay! we're done
+});
 ```
 
 Wich generates the following output
