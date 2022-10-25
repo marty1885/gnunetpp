@@ -20,7 +20,7 @@ struct UniqueData
         size_t id = 0;
         do {
             id = g_rng();
-        } while(data.find(id) != data.end());
+        } while(id != 0 && data.find(id) != data.end());
         data[id] = std::move(d);
         return {id, data[id]};
     }

@@ -6,58 +6,56 @@
 #include "inner/UniqueData.hpp"
 #include "inner/Infra.hpp"
 
+#include "gnunetpp-scheduler.hpp"
+
 #include <vector>
 #include <string>
 #include <functional>
 #include <chrono>
+#include <memory>
 
-namespace gnunetpp
+namespace gnunetpp::FS
 {
-struct FS : public Service
+using FSCallbackFunctor = std::function<void(const GNUNET_FS_ProgressInfo *)>;
+namespace detail
 {
-    enum class OpType
-    {
-        Search,
-        Download
-    };
-    struct CallbackData
-    {
-        std::function<bool(const std::string_view)> callback;
-        FS* self;
-        OpType type;
-    };
-    FS(const GNUNET_CONFIGURATION_Handle* cfg);
-    ~FS()
-    {
-        shutdown();
-        removeService(this);
-    }
-
-    void shutdown() override
-    {
-        if (fs_handle)
-        {
-            GNUNET_FS_stop(fs_handle);
-            fs_handle = nullptr;
-        }
-    }
-
-    GNUNET_FS_SearchContext* search(const std::vector<std::string>& keywords
-        , std::function<bool(const std::string_view)> callback
-        , std::chrono::duration<double> search_timeout = std::chrono::seconds(30)
-        , GNUNET_FS_SearchOptions options = GNUNET_FS_SEARCH_OPTION_NONE
-        , unsigned int anonymity_level = 1);
-
-    GNUNET_FS_Handle* native_handle() const
-    {
-        return fs_handle;
-    }
-    
-protected:
-    GNUNET_FS_Handle* fs_handle = NULL;
-    std::map<GNUNET_FS_SearchContext*, CallbackData*> ongoing_operations;
-
-    static void* progress_callback(void *cls, const struct GNUNET_FS_ProgressInfo *info);
-    void* progress_callback_real(const struct GNUNET_FS_ProgressInfo *info);
+struct FSCallbackData
+{
+    FSCallbackFunctor fn;
+    GNUNET_FS_Handle* fs;
+    GNUNET_FS_SearchContext* sc;
+    GNUNET_FS_DownloadContext* dc;
+    TaskID timeout_task;
 };
+extern std::map<GNUNET_FS_Handle*, detail::FSCallbackData*> g_fs_handlers;
+GNUNET_FS_Handle* makeHandle(const GNUNET_CONFIGURATION_Handle* cfg, FSCallbackFunctor callback);
+void* fs_callback_trampoline(void *cls, const struct GNUNET_FS_ProgressInfo *info);
+
+}
+
+GNUNET_FS_SearchContext* search(
+    const GNUNET_CONFIGURATION_Handle* cfg,
+    const std::vector<std::string>& keywords,
+    std::function<bool(const std::string_view, const std::string_view)> fn,
+    std::chrono::duration<double> timeout = std::chrono::seconds(30),
+    GNUNET_FS_SearchOptions options = GNUNET_FS_SEARCH_OPTION_NONE,
+    unsigned anonymity_level = 1);
+
+enum class DownloadStatus
+{
+    Started,
+    Error,
+    Completed,
+    Progress,
+    Cancelled
+};
+
+GNUNET_FS_DownloadContext* download(
+    const GNUNET_CONFIGURATION_Handle* cfg,
+    const std::string& uri,
+    const std::string& filename,
+    std::function<void(DownloadStatus)> fn,
+    unsigned anonymity_level = 1);
+
+void cancel(GNUNET_FS_SearchContext* sc);
 }

@@ -6,6 +6,8 @@ IMO GNUNet is a cool project which shows what decentralized systems could look l
 
 **IMPORTAN**: This is not a part of the GNUNet project. The [author](https://github.com/marty1885) created it because he wants to use GNUNet in C++.
 
+**ALSO IMPORTANT**: Don't expect the code base be clean. GNUNet is a _very_ C project. Lifetime managment is all over the place. I did my best to create a sane API out of it.
+
 [ttfhw]: https://www.moesif.com/blog/technical/api-product-management/What-is-TTFHW/ 
 
 ## Show me some code!
@@ -33,6 +35,26 @@ auto hmac = crypto::hmac("hmac_key", "zap");
 std::cout << crypto::to_string(hmac) << "\n";
 ```
 
+`gnunet-search` like functionality is also provided
+
+```cpp
+FS::search({"jpg"}, [](const std::string_view uri, const std::string_view name) {
+   std::cout << "Found " << filename << " at " << std::endl << std::endl;
+   return true;
+}, std::chrono::seconds(30));
+```
+
+Wich generates the following output
+
+```
+Found IMG_20220528_134243_161.jpg at gnunet://fs/chk/N59XZ8KPMQ0975JBTPV9AGEAD5T7V694QYWNK21683Q74TTRMQB2CHW4AZVTM3A5NFC57K0N6PD5EGCGMJABTZ6HKMV9ZC1T52FTVSG.2RJ19QYFPBJ2TBMZSNECXP9KHDTX90B6ZCTBSJYQKPK016156HNCPE5RJMNEM3A1NTRHMVWK8GCJ1MVG4S25F8A4TW1S70PCDMSG94R.2778934
+
+Found 1651945314526m.jpg at gnunet://fs/chk/R4MCF6MTQDR4VKKKMD1H8PD9THRKGV1ER0BXP57BKVT2580KW7S25HFSW7MK0BM1JBPBEHG6P0SHDHDERX7MTPFA5YE68E7Q43H8Z78.4J604CQR9AESPQ3X894PE2P56X3P21QJWBBQQXH4SR07X4KXX5TBH62BHSDT6HWY70XP5DZB5S5FADDJ7TDYENEX67H4JN6Q1KP725G.91907
+
+Found ball.jpg at gnunet://fs/chk/3ZJRZJRDD6V6R54TG9VAC4G3ZQ4WGZ5ZVSP5BZ12X004CYTGDNTB9P8STZ0P1Y2REB28EA8FZ3JZ4900V5FVEMYAESDWVGATZ37WJAR.46BHSJS8BXTT6KN4NTBS66VAYSDKRFST71439H6RAAKPT294T3ECY6AEQCN726ZQXW039YD7Z0Q17385HMH8RQWT92AR8AQ4B47X60R.241099
+...
+```
+
 [opendht]: https://github.com/savoirfairelinux/opendht
 
 ## Requirments
@@ -52,7 +74,7 @@ This project aims to create a easy to use wapper for the commonly used part of G
 - File Sharing
   - [ ] Download
   - [ ] Publish
-  - [ ] Search
+  - [x] Search
 - Crypto
   - [x] Hash
   - [x] HMAC

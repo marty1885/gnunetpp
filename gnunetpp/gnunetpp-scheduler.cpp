@@ -47,7 +47,7 @@ void runOnShutdown(std::function<void()> fn)
 
 void run(std::function<void()> fn)
 {
-    GNUNET_SCHEDULER_run([] (void *cls) {
+    GNUNET_SCHEDULER_add_now([] (void *cls) {
         auto fn = reinterpret_cast<std::function<void()>*>(cls);
         (*fn)();
         delete fn;
