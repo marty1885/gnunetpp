@@ -34,6 +34,8 @@ std::string to_string(const GNUNET_HashCode& hash);
 std::string to_string_full(const GNUNET_HashCode& hash);
 std::string to_string(const GNUNET_CRYPTO_EcdsaPrivateKey& key);
 std::string to_string(const GNUNET_CRYPTO_EcdsaPublicKey& key);
+std::string to_string(const GNUNET_CRYPTO_EddsaPrivateKey& key);
+std::string to_string(const GNUNET_CRYPTO_EddsaPublicKey& key);
 
 GNUNET_CRYPTO_EcdsaPublicKey get_public_key(const GNUNET_CRYPTO_EcdsaPrivateKey& key);
 }

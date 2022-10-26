@@ -82,6 +82,23 @@ std::string to_string(const GNUNET_CRYPTO_EcdsaPublicKey& key)
     return res;
 }
 
+std::string to_string(const GNUNET_CRYPTO_EddsaPrivateKey& key)
+{
+    GNUNET_CRYPTO_EddsaPublicKey pub;
+    char* privs = GNUNET_CRYPTO_eddsa_private_key_to_string(&key);
+    std::string res(privs);
+    GNUNET_free(privs);
+    return res;
+}
+
+std::string to_string(const GNUNET_CRYPTO_EddsaPublicKey& key)
+{
+    char* pubs = GNUNET_CRYPTO_eddsa_public_key_to_string(&key);
+    std::string res(pubs);
+    GNUNET_free(pubs);
+    return res;
+}
+
 GNUNET_CRYPTO_EcdsaPublicKey get_public_key(const GNUNET_CRYPTO_EcdsaPrivateKey& key)
 {
     GNUNET_CRYPTO_EcdsaPublicKey pub;

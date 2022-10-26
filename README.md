@@ -60,6 +60,8 @@ Found ball.jpg at gnunet://fs/chk/3ZJRZJRDD6V6R54TG9VAC4G3ZQ4WGZ5ZVSP5BZ12X004CY
 ...
 ```
 
+Examples with ~~exhaustive comments~~ can be found in the [examples](examples) directory.
+
 [opendht]: https://github.com/savoirfairelinux/opendht
 
 ## Requirments
@@ -83,7 +85,7 @@ This project aims to create a easy to use wapper for the commonly used part of G
 - Crypto
   - [x] Hash
   - [x] HMAC
-  - [ ] ECDSA/EDDSA/ECDHE
+  - [x] ECDSA/EDDSA
   - [ ] to_string
 - CADET
   - [ ] Server
@@ -93,8 +95,8 @@ This project aims to create a easy to use wapper for the commonly used part of G
   - [ ] Register/modify record
   - [ ] Ego
 - Identity
-  - [ ] Create
-  - [ ] Delte
+  - [x] Create
+  - [x] Delte
   - [x] Get Ego
 - Scheduler
   - [x] Delayed run
