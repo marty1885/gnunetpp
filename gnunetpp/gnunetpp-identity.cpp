@@ -1,12 +1,13 @@
 #include "gnunetpp-identity.hpp"
 
 #include <stdexcept>
+#include <iostream>
 
 namespace gnunetpp::identity
 {
 namespace detail
 {
-void identity_create_trampline(void* cls, const struct GNUNET_IDENTITY_PrivateKey* id, const char* emsg)
+static void identity_create_trampline(void* cls, const struct GNUNET_IDENTITY_PrivateKey* id, const char* emsg)
 {
     auto cb = reinterpret_cast<std::function<void(const GNUNET_IDENTITY_PrivateKey& sk, const std::string& err)>*>(cls);
     std::string err_msg = emsg ? emsg : "";
@@ -14,11 +15,18 @@ void identity_create_trampline(void* cls, const struct GNUNET_IDENTITY_PrivateKe
     delete cb;
 }
 
-void identity_delete_trampline(void* cls, const char* emsg)
+static void identity_delete_trampline(void* cls, const char* emsg)
 {
     auto cb = reinterpret_cast<std::function<void(const std::string& err)>*>(cls);
     std::string err_msg = emsg ? emsg : "";
     (*cb)(err_msg);
+    delete cb;
+}
+
+static void ego_lookup_trampline(void* cls, struct GNUNET_IDENTITY_Ego* ego)
+{
+    auto cb = reinterpret_cast<std::function<void(GNUNET_IDENTITY_Ego*)>*>(cls);
+    (*cb)(const_cast<GNUNET_IDENTITY_Ego*>(ego));
     delete cb;
 }
 }
@@ -35,15 +43,16 @@ IdentityService::IdentityService(const GNUNET_CONFIGURATION_Handle* cfg)
 IdentityService::~IdentityService()
 {
     shutdown();
+    removeService(this);
 }
 
 void IdentityService::shutdown()
 {
+    std::cerr << "IdentityService::shutdown" << std::endl;
     if(handle != nullptr) {
         GNUNET_IDENTITY_disconnect(handle);
         handle = nullptr;
     }
-    removeService(this);
 }
 
 GNUNET_IDENTITY_Operation* IdentityService::create_identity(const std::string& name
@@ -60,6 +69,30 @@ GNUNET_IDENTITY_Operation* IdentityService::delete_identity(const std::string& n
 {
     auto cb = new std::function<void(const std::string&)>(fn);
     return GNUNET_IDENTITY_delete(handle, name.c_str(), &detail::identity_delete_trampline, cb);
+}
+
+GNUNET_IDENTITY_EgoLookup* lookup_ego(const GNUNET_CONFIGURATION_Handle* cfg
+    , const std::string& name, std::function<void(GNUNET_IDENTITY_Ego*)> fn)
+{
+    return GNUNET_IDENTITY_ego_lookup(cfg, name.c_str(), &detail::ego_lookup_trampline
+        , new std::function<void(GNUNET_IDENTITY_Ego*)>(std::move(fn)));
+}
+
+GNUNET_IDENTITY_Ego* anonymous_ego()
+{
+    return GNUNET_IDENTITY_ego_get_anonymous();
+}
+
+GNUNET_IDENTITY_PublicKey get_public_key(GNUNET_IDENTITY_Ego* ego)
+{
+    GNUNET_IDENTITY_PublicKey pk;
+    GNUNET_IDENTITY_ego_get_public_key(ego, &pk);
+    return pk;
+}
+
+const GNUNET_IDENTITY_PrivateKey* get_private_key(const GNUNET_IDENTITY_Ego* ego)
+{
+    return GNUNET_IDENTITY_ego_get_private_key(ego);
 }
 
 std::string to_string(const GNUNET_IDENTITY_PrivateKey& key)

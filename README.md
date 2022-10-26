@@ -92,6 +92,10 @@ This project aims to create a easy to use wapper for the commonly used part of G
   - [ ] Resolve
   - [ ] Register/modify record
   - [ ] Ego
+- Identity
+  - [ ] Create
+  - [ ] Delte
+  - [x] Get Ego
 - Scheduler
   - [x] Delayed run
   - [x] Run on exit
