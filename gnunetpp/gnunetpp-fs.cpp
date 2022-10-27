@@ -1,4 +1,5 @@
 #include "gnunetpp-fs.hpp"
+#include "gnunetpp-identity.hpp"
 
 #include <stdexcept>
 #include <iostream>
@@ -167,7 +168,7 @@ publish_inspector (void *cls,
 //   {
 //     fn = GNUNET_CONTAINER_meta_data_get_by_type (
 //       m,
-//       EXTRACTOR_METATYPE_GNUNET_ORIGINAL_FILENAME);
+//       (EXTRACTOR_MetaType)EXTRACTOR_METATYPE_GNUNET_ORIGINAL_FILENAME);
 //     fs = GNUNET_STRINGS_byte_size_fancy (length);
 //     fprintf (stdout, _ ("Meta data for file `%s' (%s)\n"), fn, fs);
 //     GNUNET_CONTAINER_meta_data_iterate (m, &meta_printer, NULL);
@@ -380,7 +381,7 @@ void publish(
     if(fs_handle == NULL)
         throw std::runtime_error("Failed to connect to FS service");
     
-    scan(cfg, filename, [fs_handle, this_id, next_id, block_options](GNUNET_FS_DirScanner* ds, const std::string& filename, bool is_dir, GNUNET_FS_DirScannerProgressUpdateReason reason){
+    scan(cfg, filename, [fs_handle, this_id, next_id, block_options, ego](GNUNET_FS_DirScanner* ds, const std::string& filename, bool is_dir, GNUNET_FS_DirScannerProgressUpdateReason reason){
         if(reason == GNUNET_FS_DIRSCANNER_FINISHED) {
             auto directory_scan_result = GNUNET_FS_directory_scan_get_result(ds);
             GNUNET_FS_share_tree_trim(directory_scan_result);
@@ -390,17 +391,19 @@ void publish(
                 // TODO: Need a better way to handle this
                 throw std::runtime_error("Failed to get file information");
             GNUNET_FS_file_information_inspect(fi, &detail::publish_inspector, NULL);
-            // TODO: Support identity
             const struct GNUNET_CRYPTO_EcdsaPrivateKey *priv = NULL;
-            bool do_simulate = false;
+            if(ego != NULL) {
+                auto sk = identity::get_private_key(ego);
+                if(sk->type != GNUNET_IDENTITY_TYPE_ECDSA)
+                    throw std::runtime_error("Only ECDSA keys are supported");
+                priv = &sk->ecdsa_key;
+            }
             auto pc = GNUNET_FS_publish_start (fs_handle,
                                 fi,
                                 priv,
                                 this_id.c_str(),
                                 next_id.c_str(),
-                                (do_simulate)
-                                ? GNUNET_FS_PUBLISH_OPTION_SIMULATE_ONLY
-                                : GNUNET_FS_PUBLISH_OPTION_NONE);
+                                GNUNET_FS_PUBLISH_OPTION_NONE);
             if(pc == NULL)
                 throw std::runtime_error("Failed to start publish");
         }

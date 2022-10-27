@@ -26,8 +26,9 @@ void service(const GNUNET_CONFIGURATION_Handle* cfg)
     //     }
     // });
 
-    gnunetpp::FS::publish(cfg, "Makefile", {"test_file"}, [](const std::string& uri) {
-        std::cout << "Published at " << uri << std::endl;
+    std::string publish_file = "install";
+    gnunetpp::FS::publish(cfg, publish_file, {"test_file"}, [publish_file](const std::string& uri) {
+        std::cout << "Published " << publish_file <<" at " << uri << std::endl;
         gnunetpp::shutdown();
     });
 }
