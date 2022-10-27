@@ -319,9 +319,10 @@ GNUNET_FS_DownloadContext* download(
 void publish(
     const GNUNET_CONFIGURATION_Handle* cfg,
     const std::string& filename,
-    const std::vector<std::string>& keywords,
     std::function<void(const std::string&)> fn,
-    GNUNET_IDENTITY_Ego* ego, 
+    const std::vector<std::string>& keywords,
+    std::chrono::seconds experation,
+    GNUNET_IDENTITY_Ego* ego,
     const std::string& this_id,
     const std::string& next_id,
     GNUNET_FS_BlockOptions block_options)
@@ -367,6 +368,8 @@ void publish(
     if(fs_handle == NULL)
         throw std::runtime_error("Failed to connect to FS service");
     
+    uint64_t usec = std::chrono::duration_cast<std::chrono::microseconds>(experation).count();
+    block_options.expiration_time = {GNUNET_TIME_relative_to_absolute(GNUNET_TIME_Relative{usec})};
     scan(cfg, filename, [fs_handle, this_id, next_id, block_options, ego, keywords](GNUNET_FS_DirScanner* ds, const std::string& filename, bool is_dir, GNUNET_FS_DirScannerProgressUpdateReason reason){
         if(reason == GNUNET_FS_DIRSCANNER_FINISHED) {
             auto directory_scan_result = GNUNET_FS_directory_scan_get_result(ds);
@@ -377,7 +380,6 @@ void publish(
                 // TODO: Need a better way to handle this
                 throw std::runtime_error("Failed to get file information");
             auto insp_data = new detail::InspectData;
-            // FIXME: Keywords seems to not be working
             insp_data->keywords = std::move(keywords);
             GNUNET_FS_file_information_inspect(fi, &detail::publish_inspector, insp_data);
             delete insp_data;
