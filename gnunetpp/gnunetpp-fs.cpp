@@ -319,7 +319,7 @@ GNUNET_FS_DownloadContext* download(
 void publish(
     const GNUNET_CONFIGURATION_Handle* cfg,
     const std::string& filename,
-    std::function<void(const std::string&)> fn,
+    PublishCallbackFunctor fn,
     const std::vector<std::string>& keywords,
     std::chrono::seconds experation,
     GNUNET_IDENTITY_Ego* ego,
@@ -332,23 +332,31 @@ void publish(
     
     auto fs_handle = detail::makeHandle(cfg, [cb=std::move(fn)](const GNUNET_FS_ProgressInfo * info){
         if(info->status == GNUNET_FS_STATUS_PUBLISH_COMPLETED) {
+            // We only care about the root operation (could be publishing files in a directory)
+            if(info->value.publish.pctx != NULL)
+                return;
+            auto uri = GNUNET_FS_uri_to_string(info->value.publish.specifics.completed.chk_uri);
+            GNUNET_assert(uri != NULL);
+            std::string namespace_uri;
+            if (NULL != info->value.publish.specifics.completed.sks_uri) {
+                auto suri = GNUNET_FS_uri_to_string (
+                    info->value.publish.specifics.completed.sks_uri);
+                namespace_uri = suri;
+                GNUNET_free (suri);
+            }
+            cb(PublishResult::Success, uri, namespace_uri);
+            GNUNET_free(uri);
+
+            // Cleanup
             auto it = detail::g_fs_handlers.find(info->fsh);
             assert(it != detail::g_fs_handlers.end());
             assert(it->second->fs = info->fsh);
             auto pack = it->second;
-            auto fn = pack->fn;
-            auto uri = GNUNET_FS_uri_to_string(info->value.publish.specifics.completed.chk_uri);
-            assert(uri != NULL);
-            cb(uri);
-            GNUNET_free_nz(uri);
-
-            if(info->value.publish.pctx == NULL) {
-                detail::g_fs_handlers.erase(it);
-                    scheduler::run([fsh=info->fsh, pack](){
-                    GNUNET_FS_stop(fsh);
-                    delete pack;
-                });
-            }
+            scheduler::run([fsh=info->fsh, pack](){
+                GNUNET_FS_stop(fsh);
+                delete pack;
+            });
+            detail::g_fs_handlers.erase(it);
         }
         else if(info->status == GNUNET_FS_STATUS_PUBLISH_ERROR)
         {
@@ -357,7 +365,8 @@ void publish(
             assert(it->second->fs = info->fsh);
             auto pack = it->second;
             auto fn = pack->fn;
-            cb(info->value.publish.specifics.error.message);
+            std::cerr << "GNUNet++ publish error: " << info->value.publish.specifics.error.message << std::endl;
+            cb(PublishResult::Error, "", "");
             detail::g_fs_handlers.erase(it);
             scheduler::run([fsh=info->fsh, pack](){
                 GNUNET_FS_stop(fsh);

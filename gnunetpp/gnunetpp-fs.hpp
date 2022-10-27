@@ -17,8 +17,14 @@
 
 namespace gnunetpp::FS
 {
+enum class PublishResult
+{
+    Success,
+    Error
+};
 using FSCallbackFunctor = std::function<void(const GNUNET_FS_ProgressInfo *)>;
 using ScanCallbackFunctor = std::function<void(GNUNET_FS_DirScanner*, const std::string&, bool, GNUNET_FS_DirScannerProgressUpdateReason)>;
+using PublishCallbackFunctor = std::function<void(PublishResult, const std::string&, const std::string&)>;
 namespace detail
 {
 struct FSCallbackData
@@ -70,7 +76,7 @@ GNUNET_FS_DownloadContext* download(
 void publish(
     const GNUNET_CONFIGURATION_Handle* cfg,
     const std::string& filename,
-    std::function<void(const std::string&)> fn,
+    PublishCallbackFunctor fn,
     const std::vector<std::string>& keywords,
     std::chrono::seconds experation = std::chrono::seconds(3600*24*365),
     GNUNET_IDENTITY_Ego* ego = nullptr, 
