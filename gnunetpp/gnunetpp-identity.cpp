@@ -48,7 +48,6 @@ IdentityService::~IdentityService()
 
 void IdentityService::shutdown()
 {
-    std::cerr << "IdentityService::shutdown" << std::endl;
     if(handle != nullptr) {
         GNUNET_IDENTITY_disconnect(handle);
         handle = nullptr;
@@ -111,6 +110,18 @@ std::string to_string(const GNUNET_IDENTITY_PublicKey& key)
     return ret;
 }
 
+std::string to_string(GNUNET_IDENTITY_KeyType type)
+{
+    switch(type) {
+        case GNUNET_IDENTITY_TYPE_ECDSA:
+            return "ECDSA";
+        case GNUNET_IDENTITY_TYPE_EDDSA:
+            return "EdDSA";
+        default:
+            return "Unknown";
+    }
+}
+
 GNUNET_IDENTITY_PublicKey get_public_key(const GNUNET_IDENTITY_PrivateKey& key)
 {
     GNUNET_IDENTITY_PublicKey pk;
@@ -118,5 +129,10 @@ GNUNET_IDENTITY_PublicKey get_public_key(const GNUNET_IDENTITY_PrivateKey& key)
     return pk;
 }
 
+GNUNET_IDENTITY_KeyType get_key_type(GNUNET_IDENTITY_Ego* ego)
+{
+    GNUNET_IDENTITY_PublicKey pk = get_public_key(ego);
+    return (GNUNET_IDENTITY_KeyType)ntohl(pk.type);
+}
 
 }
