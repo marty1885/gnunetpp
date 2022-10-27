@@ -6,7 +6,7 @@ IMO GNUNet is a cool project which shows what decentralized systems could look l
 
 **IMPORTAN**: This is not a part of the GNUNet project. The [author](https://github.com/marty1885) created it because he wants to use GNUNet in C++.
 
-**ALSO IMPORTANT**: Don't expect the code base be clean. GNUNet is a _very_ C project. Lifetime managment is all over the place. I did my best to create a sane API out of it.
+**ALSO IMPORTANT**: Don't expect the code base be clean. GNUNet is a _very_ C project. Lifetime managment is all over the place. I did my best to create a sane API out of it. Nor it is production ready. The API might go through major changes in the future. Nor ABI stability is guaranteed.
 
 [ttfhw]: https://www.moesif.com/blog/technical/api-product-management/What-is-TTFHW/ 
 
@@ -70,6 +70,9 @@ First you need the dependencies
 
 * C++17 capable compiler
 * A installation of GNUNet
+
+(For examples)
+* CLI11
 
 ## Roadmap
 
