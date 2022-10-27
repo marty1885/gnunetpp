@@ -292,14 +292,15 @@ GNUNET_FS_DownloadContext* download(
         auto safe_cleanup = [fsh=info->fsh](){
                 auto it = detail::g_fs_handlers.find(fsh);
                 assert(it != detail::g_fs_handlers.end());
-                assert(it->second->fs = fsh);
+                auto pack = it->second;
+                assert(pack->fs = fsh);
 
-                auto timeout_task = it->second->timeout_task;
+                auto timeout_task = pack->timeout_task;
                 // if(timeout_task != 0)
                 //     scheduler::cancel(it->second->timeout_task);
-                delete it->second;
                 detail::g_fs_handlers.erase(it);
                 GNUNET_FS_stop(fsh);
+                delete pack;
             };
         if(info->status == GNUNET_FS_STATUS_DOWNLOAD_STOPPED) {
             fn(DownloadStatus::Cancelled);
@@ -356,7 +357,10 @@ void publish(
             cb(uri);
             GNUNET_free_nz(uri);
             detail::g_fs_handlers.erase(it);
-            GNUNET_FS_stop(info->fsh);
+            scheduler::run([fsh=info->fsh, pack](){
+                GNUNET_FS_stop(fsh);
+                delete pack;
+            });
         }
         else if(info->status == GNUNET_FS_STATUS_PUBLISH_ERROR)
         {
@@ -367,7 +371,10 @@ void publish(
             auto fn = pack->fn;
             cb(info->value.publish.specifics.error.message);
             detail::g_fs_handlers.erase(it);
-            GNUNET_FS_stop(info->fsh);
+            scheduler::run([fsh=info->fsh, pack](){
+                GNUNET_FS_stop(fsh);
+                delete pack;
+            });
         }
     });
     if(fs_handle == NULL)
