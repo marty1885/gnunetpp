@@ -8,6 +8,11 @@ namespace gnunetpp::FS
 {
 namespace detail
 {
+struct InspectData
+{
+    std::vector<std::string> keywords;
+    GNUNET_FS_FileInformation* fi = nullptr;
+};
 std::map<GNUNET_FS_Handle*, detail::FSCallbackData*> g_fs_handlers;
 void* fs_callback_trampoline(void *cls, const struct GNUNET_FS_ProgressInfo *info)
 {
@@ -134,53 +139,31 @@ publish_inspector (void *cls,
   char *fs;
   struct GNUNET_FS_Uri *new_uri;
 
-  if (cls == fi)
+  auto data = reinterpret_cast<detail::InspectData*>(cls);
+  if (data->fi == fi)
     return GNUNET_OK;
-  if (/*(disable_extractor) &&*/ (NULL != *uri))
+  if(data->keywords.size() > 0)
   {
-    GNUNET_FS_uri_destroy (*uri);
-    *uri = NULL;
+    std::vector<const char*> keywords;
+    for(auto& kw : data->keywords)
+        keywords.push_back(kw.c_str());
+    auto keyword_uri = GNUNET_FS_uri_ksk_create_from_args(keywords.size(), keywords.data());
+    if(*uri == NULL)
+        *uri = keyword_uri;
+    else {
+        auto new_uri = GNUNET_FS_uri_ksk_merge(keyword_uri, *uri);
+        GNUNET_FS_uri_destroy(*uri);
+        *uri = new_uri;
+        GNUNET_FS_uri_destroy(keyword_uri);
+    }
+    data->keywords.clear();
   }
-//   if (NULL != topKeywords)
-//   {
-//     if (NULL != *uri)
-//     {
-//       new_uri = GNUNET_FS_uri_ksk_merge (topKeywords, *uri);
-//       GNUNET_FS_uri_destroy (*uri);
-//       *uri = new_uri;
-//       GNUNET_FS_uri_destroy (topKeywords);
-//     }
-//     else
-//     {
-//       *uri = topKeywords;
-//     }
-//     topKeywords = NULL;
-//   }
-//   if (NULL != meta)
-//   {
-//     GNUNET_CONTAINER_meta_data_merge (m, meta);
-//     GNUNET_CONTAINER_meta_data_destroy (meta);
-//     meta = NULL;
-//   }
   if (/*enable_creation_time*/ true)
     GNUNET_CONTAINER_meta_data_add_publication_date (m);
-//   if (extract_only)
-//   {
-//     fn = GNUNET_CONTAINER_meta_data_get_by_type (
-//       m,
-//       (EXTRACTOR_MetaType)EXTRACTOR_METATYPE_GNUNET_ORIGINAL_FILENAME);
-//     fs = GNUNET_STRINGS_byte_size_fancy (length);
-//     fprintf (stdout, _ ("Meta data for file `%s' (%s)\n"), fn, fs);
-//     GNUNET_CONTAINER_meta_data_iterate (m, &meta_printer, NULL);
-//     fprintf (stdout, _ ("Keywords for file `%s' (%s)\n"), fn, fs);
-//     GNUNET_free (fn);
-//     GNUNET_free (fs);
-//     if (NULL != *uri)
-//       GNUNET_FS_uri_ksk_get_keywords (*uri, &keyword_printer, NULL);
-//     fprintf (stdout, "%s", "\n");
-//   }
-  if (GNUNET_YES == GNUNET_FS_meta_data_test_for_directory(m))
-    GNUNET_FS_file_information_inspect(fi, &publish_inspector, fi);
+  if (GNUNET_YES == GNUNET_FS_meta_data_test_for_directory(m)) {
+    data->fi = fi;
+    GNUNET_FS_file_information_inspect(fi, &publish_inspector, data);
+  }
   return GNUNET_OK;
 }
 
@@ -357,11 +340,14 @@ void publish(
             assert(uri != NULL);
             cb(uri);
             GNUNET_free_nz(uri);
-            detail::g_fs_handlers.erase(it);
-            scheduler::run([fsh=info->fsh, pack](){
-                GNUNET_FS_stop(fsh);
-                delete pack;
-            });
+
+            if(info->value.publish.pctx == NULL) {
+                detail::g_fs_handlers.erase(it);
+                    scheduler::run([fsh=info->fsh, pack](){
+                    GNUNET_FS_stop(fsh);
+                    delete pack;
+                });
+            }
         }
         else if(info->status == GNUNET_FS_STATUS_PUBLISH_ERROR)
         {
@@ -381,7 +367,7 @@ void publish(
     if(fs_handle == NULL)
         throw std::runtime_error("Failed to connect to FS service");
     
-    scan(cfg, filename, [fs_handle, this_id, next_id, block_options, ego](GNUNET_FS_DirScanner* ds, const std::string& filename, bool is_dir, GNUNET_FS_DirScannerProgressUpdateReason reason){
+    scan(cfg, filename, [fs_handle, this_id, next_id, block_options, ego, keywords](GNUNET_FS_DirScanner* ds, const std::string& filename, bool is_dir, GNUNET_FS_DirScannerProgressUpdateReason reason){
         if(reason == GNUNET_FS_DIRSCANNER_FINISHED) {
             auto directory_scan_result = GNUNET_FS_directory_scan_get_result(ds);
             GNUNET_FS_share_tree_trim(directory_scan_result);
@@ -390,7 +376,12 @@ void publish(
             if(fi == NULL)
                 // TODO: Need a better way to handle this
                 throw std::runtime_error("Failed to get file information");
-            GNUNET_FS_file_information_inspect(fi, &detail::publish_inspector, NULL);
+            auto insp_data = new detail::InspectData;
+            // FIXME: Keywords seems to not be working
+            insp_data->keywords = std::move(keywords);
+            GNUNET_FS_file_information_inspect(fi, &detail::publish_inspector, insp_data);
+            delete insp_data;
+
             const struct GNUNET_CRYPTO_EcdsaPrivateKey *priv = NULL;
             if(ego != NULL) {
                 auto sk = identity::get_private_key(ego);
