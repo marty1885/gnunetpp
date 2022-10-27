@@ -7,6 +7,7 @@ namespace gnunetpp::FS
 {
 namespace detail
 {
+static GNUNET_FS_BlockOptions bo = { { 0LL }, 1, 365, 1 };
 std::map<GNUNET_FS_Handle*, detail::FSCallbackData*> g_fs_handlers;
 void* fs_callback_trampoline(void *cls, const struct GNUNET_FS_ProgressInfo *info)
 {
@@ -44,6 +45,143 @@ GNUNET_FS_Handle* makeHandle(const GNUNET_CONFIGURATION_Handle* cfg, FSCallbackF
     if (!fs_handle)
         throw std::runtime_error("GNUNET_FS_start failed");
     return fs_handle;
+}
+
+static void directory_scan_trampoline(void *cls,
+    const char *filename,
+    int is_directory,
+    enum GNUNET_FS_DirScannerProgressUpdateReason reason)
+{
+    auto pack = reinterpret_cast<detail::ScanCallbackData*>(cls);
+    std::string name;
+    if(filename)
+        name = filename;
+    pack->fn(pack->ds, name, is_directory, reason);
+
+    if(reason == GNUNET_FS_DIRSCANNER_FINISHED || reason == GNUNET_FS_DIRSCANNER_INTERNAL_ERROR)
+        delete pack;
+}
+
+/**
+ * YANKED FROM GNUNET DIRECTLY
+ * Iterate over the results from the directory scan and extract
+ * the desired information for the publishing operation.
+ *
+ * @param item root with the data from the directory scan
+ * @return handle with the information for the publishing operation
+ */
+static struct GNUNET_FS_FileInformation *
+get_file_information (GNUNET_FS_Handle* fsh, GNUNET_FS_ShareTreeItem *item, bool insert = false)
+{
+  struct GNUNET_FS_FileInformation *fi;
+  struct GNUNET_FS_FileInformation *fic;
+  struct GNUNET_FS_ShareTreeItem *child;
+
+  if (GNUNET_YES == item->is_directory)
+  {
+    if (NULL == item->meta)
+      item->meta = GNUNET_CONTAINER_meta_data_create ();
+    GNUNET_CONTAINER_meta_data_delete (item->meta,
+                                       EXTRACTOR_METATYPE_MIMETYPE,
+                                       NULL,
+                                       0);
+    GNUNET_FS_meta_data_make_directory (item->meta);
+    if (NULL == item->ksk_uri)
+    {
+      const char *mime = GNUNET_FS_DIRECTORY_MIME;
+      item->ksk_uri = GNUNET_FS_uri_ksk_create_from_args (1, &mime);
+    }
+    else
+      GNUNET_FS_uri_ksk_add_keyword (item->ksk_uri,
+                                     GNUNET_FS_DIRECTORY_MIME,
+                                     GNUNET_NO);
+    fi = GNUNET_FS_file_information_create_empty_directory (fsh,
+                                                            NULL,
+                                                            item->ksk_uri,
+                                                            item->meta,
+                                                            &bo,
+                                                            item->filename);
+    for (child = item->children_head; child; child = child->next)
+    {
+      fic = get_file_information(fsh, child);
+      GNUNET_break (GNUNET_OK == GNUNET_FS_file_information_add (fi, fic));
+    }
+  }
+  else
+  {
+    fi = GNUNET_FS_file_information_create_from_file (fsh,
+                                                      NULL,
+                                                      item->filename,
+                                                      item->ksk_uri,
+                                                      item->meta,
+                                                      ! insert,
+                                                      &bo);
+  }
+  return fi;
+}
+
+static int
+publish_inspector (void *cls,
+                   struct GNUNET_FS_FileInformation *fi,
+                   uint64_t length,
+                   struct GNUNET_CONTAINER_MetaData *m,
+                   struct GNUNET_FS_Uri **uri,
+                   struct GNUNET_FS_BlockOptions *bo,
+                   int *do_index,
+                   void **client_info)
+{
+  char *fn;
+  char *fs;
+  struct GNUNET_FS_Uri *new_uri;
+
+  if (cls == fi)
+    return GNUNET_OK;
+  if (/*(disable_extractor) &&*/ (NULL != *uri))
+  {
+    GNUNET_FS_uri_destroy (*uri);
+    *uri = NULL;
+  }
+//   if (NULL != topKeywords)
+//   {
+//     if (NULL != *uri)
+//     {
+//       new_uri = GNUNET_FS_uri_ksk_merge (topKeywords, *uri);
+//       GNUNET_FS_uri_destroy (*uri);
+//       *uri = new_uri;
+//       GNUNET_FS_uri_destroy (topKeywords);
+//     }
+//     else
+//     {
+//       *uri = topKeywords;
+//     }
+//     topKeywords = NULL;
+//   }
+//   if (NULL != meta)
+//   {
+//     GNUNET_CONTAINER_meta_data_merge (m, meta);
+//     GNUNET_CONTAINER_meta_data_destroy (meta);
+//     meta = NULL;
+//   }
+  if (/*enable_creation_time*/ true)
+    GNUNET_CONTAINER_meta_data_add_publication_date (m);
+//   if (extract_only)
+//   {
+//     fn = GNUNET_CONTAINER_meta_data_get_by_type (
+//       m,
+//       EXTRACTOR_METATYPE_GNUNET_ORIGINAL_FILENAME);
+//     fs = GNUNET_STRINGS_byte_size_fancy (length);
+//     fprintf (stdout, _ ("Meta data for file `%s' (%s)\n"), fn, fs);
+//     GNUNET_CONTAINER_meta_data_iterate (m, &meta_printer, NULL);
+//     fprintf (stdout, _ ("Keywords for file `%s' (%s)\n"), fn, fs);
+//     GNUNET_free (fn);
+//     GNUNET_free (fs);
+//     if (NULL != *uri)
+//       GNUNET_FS_uri_ksk_get_keywords (*uri, &keyword_printer, NULL);
+//     fprintf (stdout, "%s", "\n");
+//   }
+  if (GNUNET_YES == GNUNET_FS_meta_data_test_for_directory(m))
+    GNUNET_FS_file_information_inspect(fi, &publish_inspector, fi);
+  return GNUNET_OK;
 }
 
 }
@@ -193,4 +331,94 @@ GNUNET_FS_DownloadContext* download(
     GNUNET_FS_uri_destroy(gnet_uri);
     return download;
 }
+
+void publish(
+    const GNUNET_CONFIGURATION_Handle* cfg,
+    const std::string& filename,
+    const std::vector<std::string>& keywords,
+    std::function<void(const std::string&)> fn,
+    GNUNET_IDENTITY_Ego* ego, 
+    const std::string& this_id,
+    const std::string& next_id)
+{
+    if(next_id.empty() ^ this_id.empty())
+        throw std::runtime_error("Must specify both this_id and next_id or neither");
+    
+    auto fs_handle = detail::makeHandle(cfg, [cb=std::move(fn)](const GNUNET_FS_ProgressInfo * info){
+        if(info->status == GNUNET_FS_STATUS_PUBLISH_COMPLETED) {
+            auto it = detail::g_fs_handlers.find(info->fsh);
+            assert(it != detail::g_fs_handlers.end());
+            assert(it->second->fs = info->fsh);
+            auto pack = it->second;
+            auto fn = pack->fn;
+            auto uri = GNUNET_FS_uri_to_string (info->value.publish.specifics.completed.chk_uri);
+            assert(uri != NULL);
+            cb(uri);
+            GNUNET_free_nz(uri);
+        }
+        else if(GNUNET_FS_STATUS_PUBLISH_ERROR)
+        {
+            auto it = detail::g_fs_handlers.find(info->fsh);
+            assert(it != detail::g_fs_handlers.end());
+            assert(it->second->fs = info->fsh);
+            auto pack = it->second;
+            auto fn = pack->fn;
+            cb(info->value.publish.specifics.error.message);
+        }
+    });
+    if(fs_handle == NULL)
+        throw std::runtime_error("Failed to connect to FS service");
+    
+    scan(cfg, filename, [fs_handle, this_id, next_id](GNUNET_FS_DirScanner* ds, const std::string& filename, bool is_dir, GNUNET_FS_DirScannerProgressUpdateReason reason){
+        if(reason == GNUNET_FS_DIRSCANNER_FINISHED) {
+            auto directory_scan_result = GNUNET_FS_directory_scan_get_result(ds);
+            GNUNET_FS_share_tree_trim(directory_scan_result);
+            auto fi = detail::get_file_information(fs_handle, directory_scan_result, false);
+            GNUNET_FS_share_tree_free(directory_scan_result);
+            if(fi == NULL)
+                // TODO: Need a better way to handle this
+                throw std::runtime_error("Failed to get file information");
+            GNUNET_FS_file_information_inspect(fi, &detail::publish_inspector, NULL);
+            // TODO: Support identity
+            const struct GNUNET_CRYPTO_EcdsaPrivateKey *priv = NULL;
+            bool do_simulate = false;
+            auto pc = GNUNET_FS_publish_start (fs_handle,
+                                fi,
+                                priv,
+                                this_id.c_str(),
+                                next_id.c_str(),
+                                (do_simulate)
+                                ? GNUNET_FS_PUBLISH_OPTION_SIMULATE_ONLY
+                                : GNUNET_FS_PUBLISH_OPTION_NONE);
+            if(pc == NULL)
+                throw std::runtime_error("Failed to start publish");
+        }
+    });
+}
+
+GNUNET_FS_DirScanner* scan(
+    const GNUNET_CONFIGURATION_Handle* cfg,
+    const std::string& filename,
+    ScanCallbackFunctor fn)
+{
+    if(access(filename.c_str(), R_OK) != 0)
+        throw std::runtime_error("Cannot access " + filename);
+
+    char* ex = NULL;
+    if(GNUNET_CONFIGURATION_get_value_string(cfg, "fs", "EXTRACTORS", &ex) != GNUNET_OK)
+        ex = NULL;
+    
+    auto data = new detail::ScanCallbackData;
+    data->fn = std::move(fn);
+    auto ds = GNUNET_FS_directory_scan_start(filename.c_str(), false, ex, &detail::directory_scan_trampoline, data);
+    if(ds == NULL) {
+        GNUNET_free(ex);
+        delete data;
+        throw std::runtime_error("Failed to start meta directory scanner. Is gnunet-helper-publish-fs installed?");
+    }
+    data->ds = ds;
+    GNUNET_free(ex);
+    return ds;
+}
+
 }

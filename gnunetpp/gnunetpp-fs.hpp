@@ -7,6 +7,7 @@
 #include "inner/Infra.hpp"
 
 #include "gnunetpp-scheduler.hpp"
+#include "gnunetpp-identity.hpp"
 
 #include <vector>
 #include <string>
@@ -17,6 +18,7 @@
 namespace gnunetpp::FS
 {
 using FSCallbackFunctor = std::function<void(const GNUNET_FS_ProgressInfo *)>;
+using ScanCallbackFunctor = std::function<void(GNUNET_FS_DirScanner*, const std::string&, bool, GNUNET_FS_DirScannerProgressUpdateReason)>;
 namespace detail
 {
 struct FSCallbackData
@@ -26,6 +28,11 @@ struct FSCallbackData
     GNUNET_FS_SearchContext* sc;
     GNUNET_FS_DownloadContext* dc;
     TaskID timeout_task;
+};
+struct ScanCallbackData
+{
+    ScanCallbackFunctor fn;
+    GNUNET_FS_DirScanner* ds;
 };
 extern std::map<GNUNET_FS_Handle*, detail::FSCallbackData*> g_fs_handlers;
 GNUNET_FS_Handle* makeHandle(const GNUNET_CONFIGURATION_Handle* cfg, FSCallbackFunctor callback);
@@ -59,6 +66,20 @@ GNUNET_FS_DownloadContext* download(
     unsigned anonymity_level = 1,
     unsigned download_parallelism = 16,
     unsigned request_parallelism = 4092);
+
+void publish(
+    const GNUNET_CONFIGURATION_Handle* cfg,
+    const std::string& filename,
+    const std::vector<std::string>& keywords,
+    std::function<void(const std::string&)> fn,
+    GNUNET_IDENTITY_Ego* ego = nullptr, 
+    const std::string& this_id = "",
+    const std::string& next_id = "");
+
+GNUNET_FS_DirScanner* scan(
+    const GNUNET_CONFIGURATION_Handle* cfg,
+    const std::string& filename,
+    ScanCallbackFunctor fn);
 
 void cancel(GNUNET_FS_SearchContext* sc);
 }

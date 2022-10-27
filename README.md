@@ -69,7 +69,7 @@ Examples with ~~exhaustive comments~~ can be found in the [examples](examples) d
 First you need the dependencies
 
 * C++17 capable compiler
-* A installation on GNUNet
+* A installation of GNUNet
 
 ## Roadmap
 
@@ -86,7 +86,8 @@ This project aims to create a easy to use wapper for the commonly used part of G
   - [x] Hash
   - [x] HMAC
   - [x] ECDSA/EDDSA
-  - [ ] to_string
+  - [x] to_string
+  - [ ] RSA
 - CADET
   - [ ] Server
   - [ ] Client
