@@ -76,8 +76,8 @@ GNUNET_FS_DownloadContext* download(
 void publish(
     const GNUNET_CONFIGURATION_Handle* cfg,
     const std::string& filename,
-    PublishCallbackFunctor fn,
     const std::vector<std::string>& keywords,
+    PublishCallbackFunctor fn,
     std::chrono::seconds experation = std::chrono::seconds(3600*24*365),
     GNUNET_IDENTITY_Ego* ego = nullptr, 
     const std::string& this_id = "",

@@ -27,7 +27,8 @@ void service(const GNUNET_CONFIGURATION_Handle* cfg)
     // });
 
     std::string publish_file = "install";
-    gnunetpp::FS::publish(cfg, publish_file, [publish_file](gnunetpp::FS::PublishResult status, const std::string& uri, const std::string& namespace_uri) {
+    gnunetpp::FS::publish(cfg, publish_file, {"test_file"}
+        , [publish_file](gnunetpp::FS::PublishResult status, const std::string& uri, const std::string& namespace_uri) {
         if(status == gnunetpp::FS::PublishResult::Success) {
             std::cout << "Published " << publish_file << " at " << uri << std::endl;
             std::cout << "Namespace URI: " << (namespace_uri.empty() ? "(none)" : namespace_uri.c_str()) << std::endl;
@@ -36,7 +37,7 @@ void service(const GNUNET_CONFIGURATION_Handle* cfg)
             std::cout << "Publish failed" << std::endl;
         }
         
-    }, {"test_file"});
+    });
 }
 
 int main()

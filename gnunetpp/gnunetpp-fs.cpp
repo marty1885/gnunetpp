@@ -67,104 +67,71 @@ static void directory_scan_trampoline(void *cls,
         delete pack;
 }
 
-/**
- * YANKED FROM GNUNET DIRECTLY
- * Iterate over the results from the directory scan and extract
- * the desired information for the publishing operation.
- *
- * @param item root with the data from the directory scan
- * @return handle with the information for the publishing operation
- */
-static struct GNUNET_FS_FileInformation *
-get_file_information (GNUNET_FS_Handle* fsh, GNUNET_FS_ShareTreeItem *item, const GNUNET_FS_BlockOptions& bo, bool insert = false)
+GNUNET_FS_FileInformation * get_file_information (GNUNET_FS_Handle* fsh, GNUNET_FS_ShareTreeItem *item
+    , const GNUNET_FS_BlockOptions& bo, bool insert = false)
 {
-  struct GNUNET_FS_FileInformation *fi;
-  struct GNUNET_FS_FileInformation *fic;
-  struct GNUNET_FS_ShareTreeItem *child;
+    GNUNET_FS_FileInformation *fi;
 
-  if (GNUNET_YES == item->is_directory)
-  {
-    if (NULL == item->meta)
-      item->meta = GNUNET_CONTAINER_meta_data_create ();
-    GNUNET_CONTAINER_meta_data_delete (item->meta,
-                                       EXTRACTOR_METATYPE_MIMETYPE,
-                                       NULL,
-                                       0);
-    GNUNET_FS_meta_data_make_directory (item->meta);
-    if (NULL == item->ksk_uri)
+    if (GNUNET_YES == item->is_directory)
     {
-      const char *mime = GNUNET_FS_DIRECTORY_MIME;
-      item->ksk_uri = GNUNET_FS_uri_ksk_create_from_args (1, &mime);
+        if (item->meta == NULL)
+            item->meta = GNUNET_CONTAINER_meta_data_create ();
+        GNUNET_CONTAINER_meta_data_delete (item->meta, EXTRACTOR_METATYPE_MIMETYPE, NULL, 0);
+        GNUNET_FS_meta_data_make_directory (item->meta);
+        if (item->ksk_uri == NULL) {
+            const char *mime = GNUNET_FS_DIRECTORY_MIME;
+            item->ksk_uri = GNUNET_FS_uri_ksk_create_from_args (1, &mime);
+        }
+        else
+            GNUNET_FS_uri_ksk_add_keyword (item->ksk_uri, GNUNET_FS_DIRECTORY_MIME, GNUNET_NO);
+        fi = GNUNET_FS_file_information_create_empty_directory (fsh, NULL, item->ksk_uri,
+            item->meta, &bo, item->filename);
+        for (auto child = item->children_head; child; child = child->next) {
+            auto fic = get_file_information(fsh, child, bo, insert);
+            GNUNET_break (GNUNET_OK == GNUNET_FS_file_information_add (fi, fic));
+        }
     }
     else
-      GNUNET_FS_uri_ksk_add_keyword (item->ksk_uri,
-                                     GNUNET_FS_DIRECTORY_MIME,
-                                     GNUNET_NO);
-    fi = GNUNET_FS_file_information_create_empty_directory (fsh,
-                                                            NULL,
-                                                            item->ksk_uri,
-                                                            item->meta,
-                                                            &bo,
-                                                            item->filename);
-    for (child = item->children_head; child; child = child->next)
     {
-      fic = get_file_information(fsh, child, bo, insert);
-      GNUNET_break (GNUNET_OK == GNUNET_FS_file_information_add (fi, fic));
+        fi = GNUNET_FS_file_information_create_from_file (fsh, NULL, item->filename,
+            item->ksk_uri, item->meta, ! insert, &bo);
     }
-  }
-  else
-  {
-    fi = GNUNET_FS_file_information_create_from_file (fsh,
-                                                      NULL,
-                                                      item->filename,
-                                                      item->ksk_uri,
-                                                      item->meta,
-                                                      ! insert,
-                                                      &bo);
-  }
   return fi;
 }
 
-static int
-publish_inspector (void *cls,
-                   struct GNUNET_FS_FileInformation *fi,
-                   uint64_t length,
-                   struct GNUNET_CONTAINER_MetaData *m,
-                   struct GNUNET_FS_Uri **uri,
-                   struct GNUNET_FS_BlockOptions *bo,
-                   int *do_index,
-                   void **client_info)
+static int publish_inspector (void *cls, GNUNET_FS_FileInformation *fi, uint64_t length,
+    GNUNET_CONTAINER_MetaData *m, GNUNET_FS_Uri **uri, GNUNET_FS_BlockOptions *bo,
+    int *do_index, void **client_info)
 {
-  char *fn;
-  char *fs;
-  struct GNUNET_FS_Uri *new_uri;
+    char *fn;
+    char *fs;
+    GNUNET_FS_Uri *new_uri;
 
-  auto data = reinterpret_cast<detail::InspectData*>(cls);
-  if (data->fi == fi)
-    return GNUNET_OK;
-  if(data->keywords.size() > 0)
-  {
-    std::vector<const char*> keywords;
-    for(auto& kw : data->keywords)
-        keywords.push_back(kw.c_str());
-    auto keyword_uri = GNUNET_FS_uri_ksk_create_from_args(keywords.size(), keywords.data());
-    if(*uri == NULL)
-        *uri = keyword_uri;
-    else {
-        auto new_uri = GNUNET_FS_uri_ksk_merge(keyword_uri, *uri);
-        GNUNET_FS_uri_destroy(*uri);
-        *uri = new_uri;
-        GNUNET_FS_uri_destroy(keyword_uri);
+    auto data = reinterpret_cast<detail::InspectData*>(cls);
+    if (data->fi == fi)
+        return GNUNET_OK;
+    if(data->keywords.size() > 0) {
+        std::vector<const char*> keywords;
+        for(auto& kw : data->keywords)
+            keywords.push_back(kw.c_str());
+        auto keyword_uri = GNUNET_FS_uri_ksk_create_from_args(keywords.size(), keywords.data());
+        if(*uri == NULL)
+            *uri = keyword_uri;
+        else {
+            auto new_uri = GNUNET_FS_uri_ksk_merge(keyword_uri, *uri);
+            GNUNET_FS_uri_destroy(*uri);
+            *uri = new_uri;
+            GNUNET_FS_uri_destroy(keyword_uri);
+        }
+        data->keywords.clear();
     }
-    data->keywords.clear();
-  }
-  if (/*enable_creation_time*/ true)
-    GNUNET_CONTAINER_meta_data_add_publication_date (m);
-  if (GNUNET_YES == GNUNET_FS_meta_data_test_for_directory(m)) {
-    data->fi = fi;
-    GNUNET_FS_file_information_inspect(fi, &publish_inspector, data);
-  }
-  return GNUNET_OK;
+    if (/*enable_creation_time*/ true)
+        GNUNET_CONTAINER_meta_data_add_publication_date (m);
+    if (GNUNET_YES == GNUNET_FS_meta_data_test_for_directory(m)) {
+        data->fi = fi;
+        GNUNET_FS_file_information_inspect(fi, &publish_inspector, data);
+    }
+    return GNUNET_OK;
 }
 
 }
@@ -319,8 +286,8 @@ GNUNET_FS_DownloadContext* download(
 void publish(
     const GNUNET_CONFIGURATION_Handle* cfg,
     const std::string& filename,
-    PublishCallbackFunctor fn,
     const std::vector<std::string>& keywords,
+    PublishCallbackFunctor fn,
     std::chrono::seconds experation,
     GNUNET_IDENTITY_Ego* ego,
     const std::string& this_id,
@@ -335,17 +302,19 @@ void publish(
             // We only care about the root operation (could be publishing files in a directory)
             if(info->value.publish.pctx != NULL)
                 return;
-            auto uri = GNUNET_FS_uri_to_string(info->value.publish.specifics.completed.chk_uri);
-            GNUNET_assert(uri != NULL);
-            std::string namespace_uri;
-            if (NULL != info->value.publish.specifics.completed.sks_uri) {
-                auto suri = GNUNET_FS_uri_to_string (
-                    info->value.publish.specifics.completed.sks_uri);
-                namespace_uri = suri;
-                GNUNET_free (suri);
+            if(cb) {
+                auto uri = GNUNET_FS_uri_to_string(info->value.publish.specifics.completed.chk_uri);
+                GNUNET_assert(uri != NULL);
+                std::string namespace_uri;
+                if (NULL != info->value.publish.specifics.completed.sks_uri) {
+                    auto suri = GNUNET_FS_uri_to_string (
+                        info->value.publish.specifics.completed.sks_uri);
+                    namespace_uri = suri;
+                    GNUNET_free (suri);
+                }
+                cb(PublishResult::Success, uri, namespace_uri);
+                GNUNET_free(uri);
             }
-            cb(PublishResult::Success, uri, namespace_uri);
-            GNUNET_free(uri);
 
             // Cleanup
             auto it = detail::g_fs_handlers.find(info->fsh);
@@ -366,7 +335,8 @@ void publish(
             auto pack = it->second;
             auto fn = pack->fn;
             std::cerr << "GNUNet++ publish error: " << info->value.publish.specifics.error.message << std::endl;
-            cb(PublishResult::Error, "", "");
+            if(cb)
+                cb(PublishResult::Error, "", "");
             detail::g_fs_handlers.erase(it);
             scheduler::run([fsh=info->fsh, pack](){
                 GNUNET_FS_stop(fsh);
