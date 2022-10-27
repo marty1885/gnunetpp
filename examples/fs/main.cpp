@@ -1,46 +1,86 @@
+#include "CLI/App.hpp"
+#include "CLI/Formatter.hpp"
+#include "CLI/Config.hpp"
+
 #include <gnunetpp.hpp>
 #include <iostream>
 
+std::string uri;
+std::string output_name;
+std::vector<std::string> keywords;
+std::string filename;
+size_t timeout = 10;
+size_t max_results = 0;
+uint32_t anonymity_level = 1;
+
+bool run_download;
+bool run_search;
+bool run_publish;
+
+
 void service(const GNUNET_CONFIGURATION_Handle* cfg)
 {
-    // gnunetpp::FS::search(cfg, {"txt"}, [](const std::string_view uri, const std::string_view original_file_name) -> bool {
-    //     std::cout << "Found " << original_file_name << " at " << uri << std::endl;
-    //     return true;
-    // }, std::chrono::seconds(10), GNUNET_FS_SEARCH_OPTION_NONE, 1);
+    if(run_search) {
+        gnunetpp::FS::search(cfg, keywords, [n=0](const std::string_view uri, const std::string_view original_file_name) mutable -> bool {
+            std::cout << "Found " << original_file_name << std::endl
+                << "gnunetpp-fs download -o '" << original_file_name << "' " << uri << std::endl
+                << std::endl;
+            return ++n < max_results;
+        }, std::chrono::seconds(timeout), GNUNET_FS_SEARCH_OPTION_NONE, anonymity_level);
+    }
 
-    // gnunetpp::FS::download(cfg, "gnunet://fs/chk/N59XZ8KPMQ0975JBTPV9AGEAD5T7V694QYWNK21683Q74TTRMQB2CHW4AZVTM3A5NFC57K0N6PD5EGCGMJABTZ6HKMV9ZC1T52FTVSG.2RJ19QYFPBJ2TBMZSNECXP9KHDTX90B6ZCTBSJYQKPK016156HNCPE5RJMNEM3A1NTRHMVWK8GCJ1MVG4S25F8A4TW1S70PCDMSG94R.2778934"
-    //     , "test.jpg"
-    //     , [](gnunetpp::FS::DownloadStatus status) {
-    //         std::cout << "Download status: " << static_cast<int>(status) << std::endl;
-    //         if(status == gnunetpp::FS::DownloadStatus::Completed)
-    //             gnunetpp::shutdown();
-    // }, 1);
+    else if(run_download) {
+        gnunetpp::FS::download(cfg, uri, output_name
+            , [](gnunetpp::FS::DownloadStatus status) {
+                // TODO: Make this look nicer
+                std::cout << "Download status: " << static_cast<int>(status) << std::endl;
+                if(status == gnunetpp::FS::DownloadStatus::Completed)
+                    gnunetpp::shutdown();
+        }, anonymity_level);
+    }
 
-    // gnunetpp::FS::scan(cfg, "CMakeCache.txt", [](GNUNET_FS_DirScanner* ds, const std::string& filename, bool is_dir, GNUNET_FS_DirScannerProgressUpdateReason reason) {
-    //     if(reason == GNUNET_FS_DIRSCANNER_FINISHED) {
-    //         std::cout << "Scan finished" << std::endl;
-    //         gnunetpp::shutdown();
-    //     }
-    //     if(reason == GNUNET_FS_DIRSCANNER_FILE_START) {
-    //         std::cout << "scanning " << filename << std::endl;
-    //     }
-    // });
-
-    std::string publish_file = "install";
-    gnunetpp::FS::publish(cfg, publish_file, {"test_file"}
-        , [publish_file](gnunetpp::FS::PublishResult status, const std::string& uri, const std::string& namespace_uri) {
-        if(status == gnunetpp::FS::PublishResult::Success) {
-            std::cout << "Published " << publish_file << " at " << uri << std::endl;
-            std::cout << "Namespace URI: " << (namespace_uri.empty() ? "(none)" : namespace_uri.c_str()) << std::endl;
-        }
-        else {
-            std::cout << "Publish failed" << std::endl;
-        }
-        
-    });
+    else if(run_publish) {
+        gnunetpp::FS::publish(cfg, filename, keywords
+            , [](gnunetpp::FS::PublishResult status, const std::string& uri, const std::string& namespace_uri) {
+            if(status == gnunetpp::FS::PublishResult::Success) {
+                std::cout << "Published " << filename << " at " << uri << std::endl;
+                if(namespace_uri.size() > 0)
+                    std::cout << "Namespace URI: " << (namespace_uri.empty() ? "(none)" : namespace_uri.c_str()) << std::endl;
+            }
+            else {
+                std::cout << "Publish failed" << std::endl;
+            }
+        });
+    }
 }
 
-int main()
+int main(int argc, char** argv)
 {
+    CLI::App app{"gnunetpp-fs"};
+    app.require_subcommand(1);
+
+    auto download = app.add_subcommand("download", "Download a file from GNUnet");
+    download->add_option("uri", uri, "URI of the file to download")->required();
+    download->add_option("-o,--output", output_name, "Output file name")->required();
+    download->add_option("-a,--anonymity", anonymity_level, "Anonymity level [0, inf]. "
+        "0 is none; 1 with GAP; >1 with cover traffic")->default_val(uint32_t{1});
+
+    auto search = app.add_subcommand("search", "Search files with keywords");
+    search->add_option("keywords", keywords, "Keywords to search for")->required();
+    search->add_option("-t,--timeout", timeout, "Timeout in seconds")->default_val(size_t{10});
+    search->add_option("-n,--max-results", max_results, "Maximum number of results to return (0 means unlimited)")->default_val(size_t{0});
+    search->add_option("-a,--anonymity", anonymity_level, "Anonymity level [0, inf]. "
+        "0 is none; 1 with GAP; >1 with cover traffic")->default_val(uint32_t{1});
+
+    auto publish = app.add_subcommand("publish", "Publish file/directory to GNUnet");
+    publish->add_option("file", filename, "File or directory to publish")->required();
+    publish->add_option("-k,--keyword", keywords, "Keywords to publish with");
+
+    CLI11_PARSE(app, argc, argv);
+
+    run_download = download->parsed();
+    run_search = search->parsed();
+    run_publish = publish->parsed();
+
     gnunetpp::run(service);
 }

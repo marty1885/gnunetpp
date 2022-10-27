@@ -23,7 +23,9 @@ void service(const GNUNET_CONFIGURATION_Handle* cfg)
             std::cout << "Put completed" << std::endl;
             gnunetpp::shutdown();
         }, std::chrono::seconds(expiration), replication);
-    } else {
+    }
+    
+    else {
         // Retrieve value associated with key from the DHT. Be aware that there might be multiple values
         // on the same key. The callback will be called for each value.
         dht->get(key, [](std::string_view payload) -> bool {
