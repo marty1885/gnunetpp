@@ -38,7 +38,7 @@ extern std::map<GNUNET_FS_Handle*, detail::FSCallbackData*> g_fs_handlers;
 GNUNET_FS_Handle* makeHandle(const GNUNET_CONFIGURATION_Handle* cfg, FSCallbackFunctor callback);
 GNUNET_FS_Handle* makeHandle(const GNUNET_CONFIGURATION_Handle* cfg, FSCallbackFunctor callback, unsigned download_parallelism, unsigned request_parallelism);
 void* fs_callback_trampoline(void *cls, const struct GNUNET_FS_ProgressInfo *info);
-
+static GNUNET_FS_BlockOptions default_block_options = { { 0LL }, 1, 365, 1 };
 }
 
 GNUNET_FS_SearchContext* search(
@@ -74,7 +74,8 @@ void publish(
     std::function<void(const std::string&)> fn,
     GNUNET_IDENTITY_Ego* ego = nullptr, 
     const std::string& this_id = "",
-    const std::string& next_id = "");
+    const std::string& next_id = "",
+    GNUNET_FS_BlockOptions block_options = detail::default_block_options);
 
 GNUNET_FS_DirScanner* scan(
     const GNUNET_CONFIGURATION_Handle* cfg,

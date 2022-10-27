@@ -7,7 +7,6 @@ namespace gnunetpp::FS
 {
 namespace detail
 {
-static GNUNET_FS_BlockOptions bo = { { 0LL }, 1, 365, 1 };
 std::map<GNUNET_FS_Handle*, detail::FSCallbackData*> g_fs_handlers;
 void* fs_callback_trampoline(void *cls, const struct GNUNET_FS_ProgressInfo *info)
 {
@@ -71,7 +70,7 @@ static void directory_scan_trampoline(void *cls,
  * @return handle with the information for the publishing operation
  */
 static struct GNUNET_FS_FileInformation *
-get_file_information (GNUNET_FS_Handle* fsh, GNUNET_FS_ShareTreeItem *item, bool insert = false)
+get_file_information (GNUNET_FS_Handle* fsh, GNUNET_FS_ShareTreeItem *item, const GNUNET_FS_BlockOptions& bo, bool insert = false)
 {
   struct GNUNET_FS_FileInformation *fi;
   struct GNUNET_FS_FileInformation *fic;
@@ -103,7 +102,7 @@ get_file_information (GNUNET_FS_Handle* fsh, GNUNET_FS_ShareTreeItem *item, bool
                                                             item->filename);
     for (child = item->children_head; child; child = child->next)
     {
-      fic = get_file_information(fsh, child);
+      fic = get_file_information(fsh, child, bo, insert);
       GNUNET_break (GNUNET_OK == GNUNET_FS_file_information_add (fi, fic));
     }
   }
@@ -339,7 +338,8 @@ void publish(
     std::function<void(const std::string&)> fn,
     GNUNET_IDENTITY_Ego* ego, 
     const std::string& this_id,
-    const std::string& next_id)
+    const std::string& next_id,
+    GNUNET_FS_BlockOptions block_options)
 {
     if(next_id.empty() ^ this_id.empty())
         throw std::runtime_error("Must specify both this_id and next_id or neither");
@@ -351,12 +351,14 @@ void publish(
             assert(it->second->fs = info->fsh);
             auto pack = it->second;
             auto fn = pack->fn;
-            auto uri = GNUNET_FS_uri_to_string (info->value.publish.specifics.completed.chk_uri);
+            auto uri = GNUNET_FS_uri_to_string(info->value.publish.specifics.completed.chk_uri);
             assert(uri != NULL);
             cb(uri);
             GNUNET_free_nz(uri);
+            detail::g_fs_handlers.erase(it);
+            GNUNET_FS_stop(info->fsh);
         }
-        else if(GNUNET_FS_STATUS_PUBLISH_ERROR)
+        else if(info->status == GNUNET_FS_STATUS_PUBLISH_ERROR)
         {
             auto it = detail::g_fs_handlers.find(info->fsh);
             assert(it != detail::g_fs_handlers.end());
@@ -364,16 +366,18 @@ void publish(
             auto pack = it->second;
             auto fn = pack->fn;
             cb(info->value.publish.specifics.error.message);
+            detail::g_fs_handlers.erase(it);
+            GNUNET_FS_stop(info->fsh);
         }
     });
     if(fs_handle == NULL)
         throw std::runtime_error("Failed to connect to FS service");
     
-    scan(cfg, filename, [fs_handle, this_id, next_id](GNUNET_FS_DirScanner* ds, const std::string& filename, bool is_dir, GNUNET_FS_DirScannerProgressUpdateReason reason){
+    scan(cfg, filename, [fs_handle, this_id, next_id, block_options](GNUNET_FS_DirScanner* ds, const std::string& filename, bool is_dir, GNUNET_FS_DirScannerProgressUpdateReason reason){
         if(reason == GNUNET_FS_DIRSCANNER_FINISHED) {
             auto directory_scan_result = GNUNET_FS_directory_scan_get_result(ds);
             GNUNET_FS_share_tree_trim(directory_scan_result);
-            auto fi = detail::get_file_information(fs_handle, directory_scan_result, false);
+            auto fi = detail::get_file_information(fs_handle, directory_scan_result, block_options, false);
             GNUNET_FS_share_tree_free(directory_scan_result);
             if(fi == NULL)
                 // TODO: Need a better way to handle this

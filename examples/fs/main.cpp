@@ -26,7 +26,7 @@ void service(const GNUNET_CONFIGURATION_Handle* cfg)
     //     }
     // });
 
-    gnunetpp::FS::publish(cfg, "CMakeCache.txt", {"test_file"}, [](const std::string& uri) {
+    gnunetpp::FS::publish(cfg, "Makefile", {"test_file"}, [](const std::string& uri) {
         std::cout << "Published at " << uri << std::endl;
         gnunetpp::shutdown();
     });
