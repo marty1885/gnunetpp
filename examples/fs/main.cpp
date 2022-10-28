@@ -16,6 +16,7 @@ uint32_t anonymity_level = 1;
 bool run_download;
 bool run_search;
 bool run_publish;
+bool run_unindex;
 
 
 void service(const GNUNET_CONFIGURATION_Handle* cfg)
@@ -52,6 +53,15 @@ void service(const GNUNET_CONFIGURATION_Handle* cfg)
             }
         });
     }
+
+    else if(run_unindex) {
+        gnunetpp::FS::unindex(cfg, filename, [](bool success, const std::string& error) {
+            if(success)
+                std::cout << "Unindexed " << filename << std::endl;
+            else
+                std::cout << "Unindex failed: " << error << std::endl;
+        });
+    }
 }
 
 int main(int argc, char** argv)
@@ -76,11 +86,15 @@ int main(int argc, char** argv)
     publish->add_option("file", filename, "File or directory to publish")->required();
     publish->add_option("-k,--keyword", keywords, "Keywords to publish with");
 
+    auto unindex = app.add_subcommand("unindex", "Unindex file/directory from local index");
+    unindex->add_option("file", filename, "File or directory to unindex")->required();
+
     CLI11_PARSE(app, argc, argv);
 
     run_download = download->parsed();
     run_search = search->parsed();
     run_publish = publish->parsed();
+    run_unindex = unindex->parsed();
 
     gnunetpp::run(service);
 }

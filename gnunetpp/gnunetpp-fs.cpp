@@ -407,4 +407,40 @@ GNUNET_FS_DirScanner* scan(
     return ds;
 }
 
+GNUNET_FS_UnindexContext* unindex(
+    const GNUNET_CONFIGURATION_Handle* cfg,
+    const std::string& filename,
+    UnindexCallbackFunctor fn)
+{
+    auto fs_handle = detail::makeHandle(cfg, [fn=std::move(fn)](const GNUNET_FS_ProgressInfo * info) {
+        auto cleanup = [&info](){
+            auto it = detail::g_fs_handlers.find(info->fsh);
+            assert(it != detail::g_fs_handlers.end());
+            assert(it->second->fs = info->fsh);
+            auto pack = it->second;
+            detail::g_fs_handlers.erase(it);
+            scheduler::run([fsh=info->fsh, pack](){
+                GNUNET_FS_stop(fsh);
+                delete pack;
+            });
+        };
+        if(info->status == GNUNET_FS_STATUS_UNINDEX_COMPLETED) {
+            if(fn)
+                fn(true, "");
+            cleanup();
+        }
+        else if(info->status == GNUNET_FS_STATUS_UNINDEX_ERROR) {
+            if(fn)
+                fn(false, info->value.unindex.specifics.error.message);
+            cleanup();
+        }
+    });
+    if(fs_handle == NULL)
+        throw std::runtime_error("Failed to connect to FS service");
+    auto uc = GNUNET_FS_unindex_start(fs_handle, filename.c_str(), NULL);
+    if(uc == NULL)
+        throw std::runtime_error("Failed to start unindex");
+    return uc;
+}
+
 }

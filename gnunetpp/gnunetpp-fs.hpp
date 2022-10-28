@@ -25,6 +25,7 @@ enum class PublishResult
 using FSCallbackFunctor = std::function<void(const GNUNET_FS_ProgressInfo *)>;
 using ScanCallbackFunctor = std::function<void(GNUNET_FS_DirScanner*, const std::string&, bool, GNUNET_FS_DirScannerProgressUpdateReason)>;
 using PublishCallbackFunctor = std::function<void(PublishResult, const std::string&, const std::string&)>;
+using UnindexCallbackFunctor = std::function<void(bool, const std::string&)>;
 namespace detail
 {
 struct FSCallbackData
@@ -33,6 +34,7 @@ struct FSCallbackData
     GNUNET_FS_Handle* fs;
     GNUNET_FS_SearchContext* sc;
     GNUNET_FS_DownloadContext* dc;
+    GNUNET_FS_UnindexContext* uc;
     TaskID timeout_task;
 };
 struct ScanCallbackData
@@ -88,6 +90,10 @@ GNUNET_FS_DirScanner* scan(
     const GNUNET_CONFIGURATION_Handle* cfg,
     const std::string& filename,
     ScanCallbackFunctor fn);
+GNUNET_FS_UnindexContext* unindex(
+    const GNUNET_CONFIGURATION_Handle* cfg,
+    const std::string& file,
+    UnindexCallbackFunctor fn);
 
 void cancel(GNUNET_FS_SearchContext* sc);
 }
