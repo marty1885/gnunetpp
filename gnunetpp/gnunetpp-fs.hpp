@@ -66,11 +66,13 @@ enum class DownloadStatus
     Cancelled
 };
 
+using DownloadCallbackFunctor = std::function<void(DownloadStatus, const std::string&, size_t, size_t)>;
+
 GNUNET_FS_DownloadContext* download(
     const GNUNET_CONFIGURATION_Handle* cfg,
     const std::string& uri,
     const std::string& filename,
-    std::function<void(DownloadStatus)> fn,
+    DownloadCallbackFunctor fn,
     unsigned anonymity_level = 1,
     unsigned download_parallelism = 16,
     unsigned request_parallelism = 4092);

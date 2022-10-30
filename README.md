@@ -60,7 +60,7 @@ Found ball.jpg at gnunet://fs/chk/3ZJRZJRDD6V6R54TG9VAC4G3ZQ4WGZ5ZVSP5BZ12X004CY
 ...
 ```
 
-Examples with ~~exhaustive comments~~ can be found in the [examples](examples) directory.
+Examples with exhaustive comments can be found in the [examples](examples) directory.
 
 [opendht]: https://github.com/savoirfairelinux/opendht
 

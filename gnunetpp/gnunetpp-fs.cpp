@@ -225,7 +225,7 @@ GNUNET_FS_DownloadContext* download(
     const GNUNET_CONFIGURATION_Handle* cfg,
     const std::string& uri,
     const std::string& filename,
-    std::function<void(DownloadStatus)> fn,
+    DownloadCallbackFunctor fn,
     unsigned anonymity_level,
     unsigned download_parallelism,
     unsigned request_parallelism)
@@ -254,23 +254,26 @@ GNUNET_FS_DownloadContext* download(
                 delete pack;
             };
         if(info->status == GNUNET_FS_STATUS_DOWNLOAD_STOPPED) {
-            fn(DownloadStatus::Cancelled);
+            fn(DownloadStatus::Cancelled, "Download cancelled", 0, 0);
             scheduler::run(safe_cleanup);
             return;
         }
         else if(info->status == GNUNET_FS_STATUS_DOWNLOAD_ERROR) {
-            fn(DownloadStatus::Error);
+            fn(DownloadStatus::Error, "Download error: " + std::string(info->value.download.specifics.error.message), 0, 0);
             scheduler::run(safe_cleanup);
         }
         else if(info->status == GNUNET_FS_STATUS_DOWNLOAD_PROGRESS) {
-            fn(DownloadStatus::Progress);
+            auto total_size = info->value.download.size;
+            auto downloaded = info->value.download.completed;
+            auto filename = info->value.download.filename;
+            fn(DownloadStatus::Progress, filename, downloaded, total_size);
         }
         else if(info->status == GNUNET_FS_STATUS_DOWNLOAD_COMPLETED) {
-            fn(DownloadStatus::Completed);
+            fn(DownloadStatus::Completed, "Download completed", 0, 0);
             scheduler::run(safe_cleanup);
         }
         else if(info->status == GNUNET_FS_STATUS_DOWNLOAD_START) {
-            fn(DownloadStatus::Started);
+            fn(DownloadStatus::Started, "Download started", 0, 0);
         }
     }, download_parallelism, request_parallelism);
 

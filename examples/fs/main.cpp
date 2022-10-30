@@ -4,6 +4,7 @@
 
 #include <gnunetpp.hpp>
 #include <iostream>
+#include <iomanip>
 
 std::string uri;
 std::string output_name;
@@ -23,20 +24,40 @@ void service(const GNUNET_CONFIGURATION_Handle* cfg)
 {
     if(run_search) {
         gnunetpp::FS::search(cfg, keywords, [n=0](const std::string_view uri, const std::string_view original_file_name) mutable -> bool {
-            std::cout << "Found " << original_file_name << std::endl
+            // the last number at the end of the uri is the file size (according to the spec). We can extract it and print it.
+            auto pos = uri.find_last_of('.');
+            assert(pos != std::string_view::npos);
+            auto size = std::stoull(std::string(uri.substr(pos+1)));
+            std::stringstream ss;
+            ss << std::fixed << std::setprecision(2);
+            if(size > 1000*1000)
+                ss << size / (float)(1000*1000) << " MB";
+            else if(size > 1000)
+                ss << size / (float)1000 << " KB";
+            else
+                ss << size << " B";
+
+            std::cout << "Found " << original_file_name << ". size " << ss.str() << std::endl
                 << "gnunetpp-fs download -o '" << original_file_name << "' " << uri << std::endl
                 << std::endl;
-            return ++n < max_results;
+            return max_results == 0 || ++n < max_results;
         }, std::chrono::seconds(timeout), GNUNET_FS_SEARCH_OPTION_NONE, anonymity_level);
     }
 
     else if(run_download) {
         gnunetpp::FS::download(cfg, uri, output_name
-            , [](gnunetpp::FS::DownloadStatus status) {
-                // TODO: Make this look nicer
-                std::cout << "Download status: " << static_cast<int>(status) << std::endl;
-                if(status == gnunetpp::FS::DownloadStatus::Completed)
+            , [](gnunetpp::FS::DownloadStatus status, const std::string& message, size_t downloaded, size_t total) {
+                if(status == gnunetpp::FS::DownloadStatus::Progress) {
+                    double percent = (double)downloaded / (double)total * 100.0;
+                    std::cout << "\33[2K\rDownloaded " << downloaded << " of " << total << " bytes (" << percent << "%)" << std::flush;
+                }
+                else if(status == gnunetpp::FS::DownloadStatus::Completed) {
+                    std::cout << "\nDone." << std::endl;
                     gnunetpp::shutdown();
+                }
+                else if(status == gnunetpp::FS::DownloadStatus::Started) {
+                    std::cout << "Starting to download!" << std::endl;
+                }
         }, anonymity_level);
     }
 
@@ -55,6 +76,8 @@ void service(const GNUNET_CONFIGURATION_Handle* cfg)
     }
 
     else if(run_unindex) {
+        // Unindex removes the file from the index. But it does not un-publish it. Un-publishing can't be done as
+        // other nodes might still have the file.
         gnunetpp::FS::unindex(cfg, filename, [](bool success, const std::string& error) {
             if(success)
                 std::cout << "Unindexed " << filename << std::endl;
