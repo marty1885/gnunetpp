@@ -79,7 +79,7 @@ int main(int argc, char** argv)
 
     create_identity->add_option("name", identity_name, "Name of the identity")->required();
     create_identity->add_option("-t,--type", key_type, "Key type. Valid values are EDCSA/EdDSA. EdDSA is experimental")
-        ->default_val("DCESA");
+        ->default_val("ECDSA");
 
     delete_identity->add_option("name", identity_name, "Name of the identity")->required();
     get->add_option("name", identity_name, "Name of the identity")->required();

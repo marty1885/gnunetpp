@@ -3,4 +3,7 @@ project(gnunetpp)
 
 add_subdirectory(gnunetpp)
 
-add_subdirectory(examples)
+option(GNUNETPP_BUILD_EXAMPLES "Build examples" ON)
+if(GNUNETPP_BUILD_EXAMPLES)
+    add_subdirectory(examples)
+endif()
