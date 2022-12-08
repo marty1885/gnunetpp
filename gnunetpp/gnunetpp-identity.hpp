@@ -1,7 +1,6 @@
 #pragma once
-#include <gnunet/platform.h>
 #include <gnunet/gnunet_identity_service.h>
-#include <gnunet/gnunet_crypto_lib.h>
+#include <gnunet/gnunet_util_lib.h>
 
 #include "inner/Infra.hpp"
 

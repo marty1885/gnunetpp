@@ -7,18 +7,18 @@ namespace gnunetpp::identity
 {
 namespace detail
 {
-static void identity_create_trampline(void* cls, const struct GNUNET_IDENTITY_PrivateKey* id, const char* emsg)
+static void identity_create_trampline(void* cls, const struct GNUNET_IDENTITY_PrivateKey* id, GNUNET_ErrorCode ec)
 {
     auto cb = reinterpret_cast<std::function<void(const GNUNET_IDENTITY_PrivateKey& sk, const std::string& err)>*>(cls);
-    std::string err_msg = emsg ? emsg : "";
+    std::string err_msg = GNUNET_ErrorCode_get_hint(ec);
     (*cb)(*id, err_msg);
     delete cb;
 }
 
-static void identity_delete_trampline(void* cls, const char* emsg)
+static void identity_delete_trampline(void* cls, GNUNET_ErrorCode ec)
 {
     auto cb = reinterpret_cast<std::function<void(const std::string& err)>*>(cls);
-    std::string err_msg = emsg ? emsg : "";
+    std::string err_msg = GNUNET_ErrorCode_get_hint(ec);
     (*cb)(err_msg);
     delete cb;
 }

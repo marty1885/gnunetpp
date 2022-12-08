@@ -1,6 +1,5 @@
 #pragma once
 
-#include <gnunet/platform.h>
 #include <gnunet/gnunet_fs_service.h>
 
 #include "inner/UniqueData.hpp"

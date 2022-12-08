@@ -4,6 +4,9 @@
 #include <stdexcept>
 #include <iostream>
 
+#include <unistd.h>
+#include <gnunet/gnunet_fs_service.h>
+
 namespace gnunetpp::FS
 {
 namespace detail
@@ -75,8 +78,8 @@ GNUNET_FS_FileInformation * get_file_information (GNUNET_FS_Handle* fsh, GNUNET_
     if (GNUNET_YES == item->is_directory)
     {
         if (item->meta == NULL)
-            item->meta = GNUNET_CONTAINER_meta_data_create ();
-        GNUNET_CONTAINER_meta_data_delete (item->meta, EXTRACTOR_METATYPE_MIMETYPE, NULL, 0);
+            item->meta = GNUNET_FS_meta_data_create ();
+        GNUNET_FS_meta_data_delete (item->meta, EXTRACTOR_METATYPE_MIMETYPE, NULL, 0);
         GNUNET_FS_meta_data_make_directory (item->meta);
         if (item->ksk_uri == NULL) {
             const char *mime = GNUNET_FS_DIRECTORY_MIME;
@@ -100,7 +103,7 @@ GNUNET_FS_FileInformation * get_file_information (GNUNET_FS_Handle* fsh, GNUNET_
 }
 
 static int publish_inspector (void *cls, GNUNET_FS_FileInformation *fi, uint64_t length,
-    GNUNET_CONTAINER_MetaData *m, GNUNET_FS_Uri **uri, GNUNET_FS_BlockOptions *bo,
+    GNUNET_FS_MetaData *m, GNUNET_FS_Uri **uri, GNUNET_FS_BlockOptions *bo,
     int *do_index, void **client_info)
 {
     char *fn;
@@ -126,7 +129,7 @@ static int publish_inspector (void *cls, GNUNET_FS_FileInformation *fi, uint64_t
         data->keywords.clear();
     }
     if (/*enable_creation_time*/ true)
-        GNUNET_CONTAINER_meta_data_add_publication_date (m);
+        GNUNET_FS_meta_data_add_publication_date (m);
     if (GNUNET_YES == GNUNET_FS_meta_data_test_for_directory(m)) {
         data->fi = fi;
         GNUNET_FS_file_information_inspect(fi, &publish_inspector, data);
@@ -172,7 +175,7 @@ GNUNET_FS_SearchContext* search(
         else if(info->status != GNUNET_FS_STATUS_SEARCH_RESULT)
             return;
         char* uri = GNUNET_FS_uri_to_string(info->value.search.specifics.result.uri);
-        char* filename = GNUNET_CONTAINER_meta_data_get_by_type (
+        char* filename = GNUNET_FS_meta_data_get_by_type (
             info->value.search.specifics.result.meta,
             (EXTRACTOR_MetaType)EXTRACTOR_METATYPE_GNUNET_ORIGINAL_FILENAME);
         bool keep_running = fn(uri, filename);

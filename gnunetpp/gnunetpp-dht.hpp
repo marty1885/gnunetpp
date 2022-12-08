@@ -1,6 +1,5 @@
 #pragma once
 
-#include <gnunet/platform.h>
 #include <gnunet/gnunet_core_service.h>
 #include <gnunet/gnunet_dht_service.h>
 

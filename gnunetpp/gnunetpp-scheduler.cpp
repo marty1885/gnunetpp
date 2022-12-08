@@ -1,5 +1,4 @@
 #include "gnunetpp-scheduler.hpp"
-#include "gnunet/platform.h"
 #include <gnunet/gnunet_core_service.h>
 
 #include "inner/UniqueData.hpp"
