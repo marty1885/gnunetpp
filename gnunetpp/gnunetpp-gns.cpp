@@ -18,6 +18,7 @@ struct GnsCallbackPack
     GNUNET_GNS_LookupWithTldRequest* lr = nullptr;
     TaskID id = 0;
     TaskID timeout_id = 0;
+    uint32_t record_type = GNUNET_GNSRECORD_TYPE_ANY;
 };
 
 static detail::UniqueData<GnsCallbackPack*> gns_lookup_requests;
@@ -30,21 +31,22 @@ process_lookup_result (void *cls,
     auto pack = static_cast<GnsCallbackPack*>(cls);
     if (rd_count == 0) {
         pack->cb({});
-        return;
+    }
+    else {
+        std::vector<std::string> results;
+        for (unsigned int i = 0; i < rd_count; i++)
+        {
+            if(pack->record_type != GNUNET_GNSRECORD_TYPE_ANY && rd[i].record_type != pack->record_type)
+                continue;
+            char *rd_str = GNUNET_GNSRECORD_value_to_string (rd[i].record_type,
+                                                    rd[i].data,
+                                                    rd[i].data_size);
+            results.push_back(rd_str);
+            GNUNET_free (rd_str);
+        }
+        pack->cb(std::move(results));
     }
 
-    std::vector<std::string> results;
-    for (unsigned int i = 0; i < rd_count; i++)
-    {
-        
-        char *rd_str = GNUNET_GNSRECORD_value_to_string (rd[i].record_type,
-                                                   rd[i].data,
-                                                   rd[i].data_size);
-        results.push_back(rd_str);
-        GNUNET_free (rd_str);
-    }
-
-    pack->cb(results);
     gns_lookup_requests.remove(pack->id);
     scheduler::cancel(pack->timeout_id);
     delete pack;
@@ -74,6 +76,7 @@ void GNS::lookup(const std::string &name, std::chrono::milliseconds timeout,
 
     auto pack = new GnsCallbackPack;
     pack->cb = cb;
+    pack->record_type = record_type;
     auto lr = GNUNET_GNS_lookup_with_tld(gns, lookup_name.c_str(), record_type, GNUNET_GNS_LO_DEFAULT, process_lookup_result, pack);
     pack->lr = lr;
     auto [id, _] = gns_lookup_requests.add((GnsCallbackPack*){pack});
@@ -85,4 +88,13 @@ void GNS::lookup(const std::string &name, std::chrono::milliseconds timeout,
         delete pack;
     }, true);
     pack->timeout_id = timeout_id;
+}
+
+void GNS::lookup(const std::string &name, std::chrono::milliseconds timeout,
+    GnsCallback cb, const std::string_view record_type, bool dns_compatability)
+{
+    uint32_t type = GNUNET_GNSRECORD_typename_to_number(record_type.data());
+    if(type == UINT32_MAX)
+        throw std::runtime_error("Invalid record type");
+    lookup(name, timeout, cb, type, dns_compatability);
 }

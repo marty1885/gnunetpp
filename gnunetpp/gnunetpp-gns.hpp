@@ -28,6 +28,11 @@ struct GNS : public Service
                 , GnsCallback cb
                 , uint32_t record_type = GNUNET_GNSRECORD_TYPE_ANY
                 , bool dns_compatability = true);
+    
+    void lookup(const std::string &name, std::chrono::milliseconds timeout
+                , GnsCallback cb
+                , const std::string_view record_type
+                , bool dns_compatability = true);
 
     ~GNS()
     {
