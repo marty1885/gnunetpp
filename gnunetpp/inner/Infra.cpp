@@ -57,8 +57,7 @@ void run(std::function<void(const GNUNET_CONFIGURATION_Handle*)> f)
                 g_running = true;
                 // Needed to make GNUNet react to Ctrl+C
                 scheduler::runOnShutdown([]{
-                    scheduler::shutdown();
-                    g_running = false;
+                    shutdown();
                 });
                 (*functor)(c);
             }
