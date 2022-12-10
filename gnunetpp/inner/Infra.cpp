@@ -69,6 +69,7 @@ void run(std::function<void(const GNUNET_CONFIGURATION_Handle*)> f)
 void shutdown()
 {
     GNUNET_SCHEDULER_add_now([] (void* d) {
+        scheduler::cancelAll();
         removeAllServices();
         scheduler::shutdown();
     }, NULL);

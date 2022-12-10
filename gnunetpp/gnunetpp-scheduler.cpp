@@ -89,23 +89,19 @@ void cancel(TaskID id)
 
 void cancelAll()
 {
-    for(auto& [id, data] : g_tasks)
+    for(auto& [id, data] : g_tasks) {
+        if(data.run_on_shutdown)
+            data.fn();
         GNUNET_SCHEDULER_cancel(data.handle);
+    }
     g_tasks.clear();
 }
 
 static bool running = true;
 void shutdown()
 {
-    if(running) {
-        for(auto& [id, data] : g_tasks) {
-            if(data.run_on_shutdown)
-                data.fn();
-            GNUNET_SCHEDULER_cancel(data.handle);
-        }
-        g_tasks.clear();
+    if(running)
         GNUNET_SCHEDULER_shutdown();
-    }
     running = false;
 }
 

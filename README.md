@@ -1,4 +1,4 @@
-# GNUnet++ - A C++ wrapper for GNUnet
+# GNUnet++ - High level C++ wrapper for GNUnet
 
 ## Why GNUnet++?
 
