@@ -38,7 +38,7 @@ void service(const GNUNET_CONFIGURATION_Handle* cfg)
         // stop looking for values after timeout. This ends the program
         gnunetpp::scheduler::runLater(std::chrono::seconds(timeout), [] {
             gnunetpp::shutdown();
-        });
+        }, true);
     }
 }
 

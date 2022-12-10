@@ -1,18 +1,18 @@
-# GNUNet++ - A C++ wrapper for GNUNet
+# GNUnet++ - A C++ wrapper for GNUnet
 
-## Why GNUNet++?
+## Why GNUnet++?
 
-IMO GNUNet is a cool project which shows what decentralized systems could look like. However the [time to first hello world][ttfhw] is way too long, API is not well documented and everything is written GNU style C. Which are all factors against it's adoption. GNUNet++ wraps all the C-ness into a (more or less) modern C++ style API. Provides proper lifetime management and an easier learning path. Hopefully leading to a better development experience.
+IMO GNUnet is a cool project which shows what decentralized systems could look like. However the [time to first hello world][ttfhw] is way too long, API is not well documented and everything is written GNU style C. Which are all factors against it's adoption. GNUnet++ wraps all the C-ness into a (more or less) modern C++ style highlevel API. Provides proper lifetime management and an easier learning path. Hopefully leading to a better development experience.
 
-**IMPORTAN**: This is not a part of the GNUNet project. The [author](https://github.com/marty1885) created it because he wants to use GNUNet in C++.
+**IMPORTAN**: This is not a part of the GNUnet project. The [author](https://github.com/marty1885) created it because he wants to use GNUnet in C++.
 
-**ALSO IMPORTANT**: Don't expect the code base be clean. GNUNet is a _very_ C project. Lifetime managment is all over the place. I did my best to create a sane API out of it. Nor it is production ready. The API might go through major changes in the future. Nor ABI stability is guaranteed.
+**ALSO IMPORTANT**: Don't expect the code base be clean. GNUnet is a _very_ C project. Lifetime managment is all over the place. I did my best to create a sane API out of it. Nor it is production ready. The API might go through major changes in the future. Nor ABI stability is guaranteed.
 
 [ttfhw]: https://www.moesif.com/blog/technical/api-product-management/What-is-TTFHW/ 
 
 ## Show me some code!
 
-The DHT class provides easy access to GNUnet's DHT. It's API is designed to look like [OpenDHT][opendht]'s for more familiarity to potential users. Note that need GNUNet running on your system before running the samples.
+The DHT class provides easy access to GNUnet's DHT. It's API is designed to look like [OpenDHT][opendht]'s for more familiarity to potential users. Note that need GNUnet running on your system before running the samples.
 
 ```cpp
 // Max 32 simultaneous operations
@@ -69,14 +69,14 @@ Examples with comments can be found in the [examples](examples) directory.
 First you need the dependencies
 
 * C++17 capable compiler
-* A installation of GNUNet
+* A installation of GNUnet 0.19 (or likely the latest version)
 
 (For examples)
 * CLI11
 
 ## Roadmap
 
-This project aims to create a easy to use wapper for the commonly used part of GNUNet.
+This project aims to create a easy to use wapper for the commonly used part of GNUnet.
 
 - DHT
   - [x] Basic operations (put/get)

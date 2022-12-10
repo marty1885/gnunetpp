@@ -68,7 +68,7 @@ GNUNET_DHT_GetHandle* DHT::get(const std::string_view key, GetCallbackFunctor co
         GNUNET_DHT_get_stop(data->handle);
         delete data;
         get_handles.erase(data);
-    });
+    }, true);
     return handle;
 }
 
