@@ -44,8 +44,34 @@ struct UniqueData
 
     bool contains(size_t id)
     {
-	std::lock_guard l(mtx);
-	return data.find(id) != data.end();
+        std::lock_guard l(mtx);
+        return data.find(id) != data.end();
+    }
+
+    auto begin()
+    {
+        return data.begin();
+    }
+
+    auto end()
+    {
+        return data.end();
+    }
+
+    auto begin() const
+    {
+        return data.begin();
+    }
+
+    auto end() const
+    {
+        return data.end();
+    }
+
+    void clear()
+    {
+        std::lock_guard l(mtx);
+        data.clear();
     }
 protected:
     std::mutex mtx;

@@ -15,5 +15,6 @@ TaskID runEvery(std::chrono::duration<double> delay, std::function<void()> fn);
 void runOnShutdown(std::function<void()> fn);
 void run(std::function<void()> fn);
 void cancel(TaskID id);
+void cancelAll();
 void shutdown();
 }

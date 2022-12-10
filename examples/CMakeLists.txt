@@ -6,3 +6,6 @@ target_link_libraries(gnunetpp-fs gnunetfs gnunetcore gnunetidentity gnunetutil 
 
 add_executable(gnunetpp-identity identity/main.cpp)
 target_link_libraries(gnunetpp-identity gnunetidentity gnunetcore gnunetutil gnunetpp)
+
+add_executable(gnunetpp-scheduler scheduler/main.cpp)
+target_link_libraries(gnunetpp-scheduler gnunetcore gnunetutil gnunetpp)

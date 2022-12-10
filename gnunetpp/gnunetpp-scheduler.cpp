@@ -84,11 +84,20 @@ void cancel(TaskID id)
     g_tasks.remove(id);
 }
 
+void cancelAll()
+{
+    for(auto& [id, data] : g_tasks)
+        GNUNET_SCHEDULER_cancel(data.handle);
+    g_tasks.clear();
+}
+
 static bool running = true;
 void shutdown()
 {
-    if(running)
+    if(running) {
+        cancelAll();
         GNUNET_SCHEDULER_shutdown();
+    }
     running = false;
 }
 
