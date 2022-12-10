@@ -8,6 +8,8 @@
 #include <mutex>
 #include <random>
 
+#include <iostream>
+
 namespace gnunetpp::scheduler
 {
 
@@ -16,6 +18,7 @@ struct TaskData
     GNUNET_SCHEDULER_Task* handle;
     std::function<void()> fn;
     bool repeat = false;
+    bool run_on_shutdown = false;
 };
 
 static detail::UniqueData<TaskData> g_tasks;
@@ -36,27 +39,27 @@ static void timer_callback_trampoline(void* cls)
         g_tasks.remove(id);
 }
 
-static TaskID runDelay(std::chrono::duration<double> delay, std::function<void()> fn, bool repeat)
+static TaskID runDelay(std::chrono::duration<double> delay, std::function<void()> fn, bool repeat, bool run_on_shutdown)
 {
     using namespace std::chrono;
     const uint64_t usec = duration_cast<microseconds>(delay).count();
     GNUNET_TIME_Relative time{usec};
 
-    auto [id, data] = g_tasks.add({nullptr, std::move(fn), repeat});
+    auto [id, data] = g_tasks.add({nullptr, std::move(fn), repeat, run_on_shutdown});
     static_assert(sizeof(TaskID) == sizeof(void*));
     auto handle = GNUNET_SCHEDULER_add_delayed(time,timer_callback_trampoline , reinterpret_cast<void*>(id));
     data.handle = handle;
     return id;
 }
 
-TaskID runLater(std::chrono::duration<double> delay, std::function<void()> fn)
+TaskID runLater(std::chrono::duration<double> delay, std::function<void()> fn, bool run_on_shutdown)
 {
-    return runDelay(delay, std::move(fn), false);
+    return runDelay(delay, std::move(fn), false, run_on_shutdown);
 }
 
 TaskID runEvery(std::chrono::duration<double> delay, std::function<void()> fn)
 {
-    return runDelay(delay, std::move(fn), true);
+    return runDelay(delay, std::move(fn), true, false);
 }
 
 void runOnShutdown(std::function<void()> fn)
@@ -95,7 +98,12 @@ static bool running = true;
 void shutdown()
 {
     if(running) {
-        cancelAll();
+        for(auto& [id, data] : g_tasks) {
+            if(data.run_on_shutdown)
+                data.fn();
+            GNUNET_SCHEDULER_cancel(data.handle);
+        }
+        g_tasks.clear();
         GNUNET_SCHEDULER_shutdown();
     }
     running = false;

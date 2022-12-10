@@ -210,7 +210,7 @@ GNUNET_FS_SearchContext* search(
     TaskID timeout_task = scheduler::runLater(timeout, [fs_handle, search, pack](){
         pack->timeout_task = 0;
         GNUNET_FS_search_stop(search);
-    });
+    }, true);
     pack->timeout_task = timeout_task;
 
     GNUNET_FS_uri_destroy(uri);
