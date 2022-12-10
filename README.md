@@ -39,7 +39,7 @@ Search and download files from the GNUnet File Sharing service.
 
 ```cpp
 FS::search({"jpg"}, [](const std::string_view uri, const std::string_view name) {
-   std::cout << "Found " << filename << " at " << std::endl << std::endl;
+   std::cout << "Found " << filename << " at " << uri << std::endl;
    return true;
 }, std::chrono::seconds(30));
 
@@ -95,7 +95,7 @@ This project aims to create a easy to use wapper for the commonly used part of G
   - [ ] Server
   - [ ] Client
 - GNS
-  - [ ] Resolve
+  - [x] Resolve
   - [ ] Register/modify record
   - [ ] Ego
 - Identity
