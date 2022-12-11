@@ -78,6 +78,8 @@ First you need the dependencies
 
 This project aims to create a easy to use wapper for the commonly used part of GNUnet.
 
+- General
+  - [ ] Move applicable APIs to C++ coroutines
 - DHT
   - [x] Basic operations (put/get)
   - [ ] Monitor
