@@ -10,11 +10,54 @@ using TaskID = size_t;
 
 namespace gnunetpp::scheduler
 {
+/**
+ * @brief Run a function after a delay
+ * 
+ * @param delay delay in seconds
+ * @param fn function to run
+ * @param run_on_shutdown if true, the function will run at shutdown even if it hasn't timed out yet
+ * @return TaskID Handle to the task
+ */
 TaskID runLater(std::chrono::duration<double> delay, std::function<void()> fn, bool run_on_shutdown = false);
+
+/**
+ * @brief Run a function every `delay` seconds
+ * 
+ * @param delay delay in seconds
+ * @param fn function to run
+ * @return TaskID Handle to the task
+ */
 TaskID runEvery(std::chrono::duration<double> delay, std::function<void()> fn);
+
+/**
+ * @brief Register a function to run on shutdown
+ * 
+ * @param fn function to run
+ */
 void runOnShutdown(std::function<void()> fn);
+
+/**
+ * @brief Run a function immediately after the main thread enters the scheduler
+ * 
+ * @param fn function to run
+ */
 void run(std::function<void()> fn);
+
+/**
+ * @brief Cancel a task
+ * 
+ * @param id the task ID to cancel
+ */
 void cancel(TaskID id);
+
+/**
+ * @brief Cancel all tasks
+ * 
+ */
 void cancelAll();
+
+/**
+ * @brief Shutdown the scheduler
+ */
 void shutdown();
 }

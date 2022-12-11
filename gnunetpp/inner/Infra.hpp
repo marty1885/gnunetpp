@@ -23,7 +23,17 @@ protected:
 void registerService(Service* service);
 void removeService(Service* service);
 void removeAllServices();
+
+/**
+ * @brief Starts GNUnet and runs the event loop
+ * 
+ * @param f Callback to call when GNUnet is started
+ */
 void run(std::function<void(const GNUNET_CONFIGURATION_Handle*)> f);
+
+/**
+ * @brief Shutdown all services and timer. Stop the event loop
+ */
 void shutdown();
 
 }

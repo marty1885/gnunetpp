@@ -48,6 +48,17 @@ void* fs_callback_trampoline(void *cls, const struct GNUNET_FS_ProgressInfo *inf
 static GNUNET_FS_BlockOptions default_block_options = { { 0LL }, 1, 365, 1 };
 }
 
+/**
+ * @brief Searches the File Share for files matching the given keywords.
+ * 
+ * @param cfg handle to GNUnet
+ * @param keywords the keywords to search for
+ * @param fn callback function that is called for each result
+ * @param timeout how long to wait for results
+ * @param options search options
+ * @param anonymity_level the anonymity level to use for the search (> 1 uses GAP for anonymity)
+ * @return GNUNET_FS_SearchContext* handle to the operation. Can be used to cancel the search.
+ */
 GNUNET_FS_SearchContext* search(
     const GNUNET_CONFIGURATION_Handle* cfg,
     const std::vector<std::string>& keywords,
@@ -67,6 +78,18 @@ enum class DownloadStatus
 
 using DownloadCallbackFunctor = std::function<void(DownloadStatus, const std::string&, size_t, size_t)>;
 
+/**
+ * @brief Downloads a file from the File Share.
+ * 
+ * @param cfg handle to GNUnet
+ * @param uri KSK or CHK the URI of the file to download
+ * @param filename the filename to save the file to
+ * @param fn callback function that is called on download progress
+ * @param anonymity_level the anonymity level to use for the download (> 1 uses GAP for anonymity)
+ * @param download_parallelism Number of parallel downloads to use
+ * @param request_parallelism Number of requests to send in parallel
+ * @return GNUNET_FS_DownloadContext* handle to the operation. Can be used to cancel the download.
+ */
 GNUNET_FS_DownloadContext* download(
     const GNUNET_CONFIGURATION_Handle* cfg,
     const std::string& uri,
@@ -87,14 +110,30 @@ void publish(
     const std::string& next_id = "",
     GNUNET_FS_BlockOptions block_options = detail::default_block_options);
 
+// Should this be considered an internal function?
 GNUNET_FS_DirScanner* scan(
     const GNUNET_CONFIGURATION_Handle* cfg,
     const std::string& filename,
     ScanCallbackFunctor fn);
+
+/**
+ * @brief Unindexes a file from the local File Share.
+ * @note This DOES NOT remove the file from the network as other nodes may have it.
+ * 
+ * @param cfg handle to GNUnet
+ * @param file the file to unindex (path to local file)
+ * @param fn callback function that is called when the operation is complete
+ * @return GNUNET_FS_UnindexContext* handle to the operation. Can be used to cancel the unindexing.
+ */
 GNUNET_FS_UnindexContext* unindex(
     const GNUNET_CONFIGURATION_Handle* cfg,
     const std::string& file,
     UnindexCallbackFunctor fn);
 
+/**
+ * @brief Cancels a search operation.
+ * 
+ * @param sc handle to the search operation
+ */
 void cancel(GNUNET_FS_SearchContext* sc);
 }

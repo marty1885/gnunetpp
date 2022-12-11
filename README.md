@@ -68,7 +68,7 @@ Examples with comments can be found in the [examples](examples) directory.
 
 First you need the dependencies
 
-* C++17 capable compiler
+* C++20 capable compiler
 * A installation of GNUnet 0.19 (or likely the latest version)
 
 (For examples)
