@@ -70,9 +70,9 @@ void service(const GNUNET_CONFIGURATION_Handle* cfg)
     }
 
     else if(run_list) {
-        gnunetpp::identity::get_identities(cfg, [](const std::string& name, const GNUNET_IDENTITY_PublicKey& pk) {
+        gnunetpp::identity::get_identities(cfg, [](const std::string& name, GNUNET_IDENTITY_Ego* ego) {
             if(name != "")
-                std::cout << name << " - " << to_string(pk) << std::endl;
+                std::cout << name << " - " << to_string(get_public_key(ego)) << " " << to_string(get_key_type(ego)) << std::endl;
             else
                 gnunetpp::shutdown();
         });

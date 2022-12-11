@@ -6,7 +6,7 @@
 
 struct IdentityCallbackPack
 {
-    std::function<void(const std::string&, const GNUNET_IDENTITY_PublicKey&)> fn;
+    std::function<void(const std::string&, GNUNET_IDENTITY_Ego*)> fn;
     GNUNET_IDENTITY_Handle* handle;
 };
 
@@ -49,14 +49,13 @@ static void identity_info_trampoline(void *cls,
             GNUNET_IDENTITY_disconnect(pack->handle);
             delete pack;
         });
-        pack->fn("", GNUNET_IDENTITY_PublicKey{});
+        pack->fn("", nullptr);
         return;
     }
 
     if(identifier == nullptr) // Deleted ego
         return;
-    auto pub_key = get_public_key(ego);
-    pack->fn(identifier, pub_key);
+    pack->fn(identifier, ego);
 }
 
 }
@@ -107,7 +106,7 @@ GNUNET_IDENTITY_EgoLookup* lookup_ego(const GNUNET_CONFIGURATION_Handle* cfg
         , new std::function<void(GNUNET_IDENTITY_Ego*)>(std::move(fn)));
 }
 
-void get_identities(const GNUNET_CONFIGURATION_Handle* cfg, std::function<void(const std::string&, const GNUNET_IDENTITY_PublicKey&)> fn)
+void get_identities(const GNUNET_CONFIGURATION_Handle* cfg, std::function<void(const std::string&, GNUNET_IDENTITY_Ego* ego)> fn)
 {
     auto pack = new IdentityCallbackPack{std::move(fn), nullptr};
     auto handle = GNUNET_IDENTITY_connect(cfg, detail::identity_info_trampoline, pack);

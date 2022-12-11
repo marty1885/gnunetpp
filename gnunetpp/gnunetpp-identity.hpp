@@ -32,7 +32,7 @@ std::string to_string(const GNUNET_IDENTITY_PrivateKey& key);
 std::string to_string(const GNUNET_IDENTITY_PublicKey& key);
 std::string to_string(GNUNET_IDENTITY_KeyType key);
 
-void get_identities(const GNUNET_CONFIGURATION_Handle* cfg, std::function<void(const std::string&, const GNUNET_IDENTITY_PublicKey&)> fn);
+void get_identities(const GNUNET_CONFIGURATION_Handle* cfg, std::function<void(const std::string&, GNUNET_IDENTITY_Ego* ego)> fn);
 
 GNUNET_IDENTITY_PublicKey get_public_key(const GNUNET_IDENTITY_PrivateKey& key);
 GNUNET_IDENTITY_EgoLookup* lookup_ego(const GNUNET_CONFIGURATION_Handle* cfg
