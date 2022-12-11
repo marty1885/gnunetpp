@@ -449,4 +449,19 @@ GNUNET_FS_UnindexContext* unindex(
     return uc;
 }
 
+cppcoro::task<> unindex(const GNUNET_CONFIGURATION_Handle* cfg, const std::string& filename) {
+    struct UnindexAwaiter : public EagerAwaiter<> {
+        UnindexAwaiter(const GNUNET_CONFIGURATION_Handle* cfg, const std::string& filename)
+        {
+            unindex(cfg, filename, [this](bool success, const std::string& message){
+                if(success)
+                    setValue();
+                else
+                    setException(std::make_exception_ptr(std::runtime_error(message)));
+            });
+        }
+    };
+    co_await UnindexAwaiter(cfg, filename);
+}
+
 }

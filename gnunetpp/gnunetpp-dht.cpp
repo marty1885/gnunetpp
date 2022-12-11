@@ -1,6 +1,7 @@
 #include "gnunetpp-dht.hpp"
 
 #include <iostream>
+#include <unordered_map>
 
 namespace gnunetpp
 {
@@ -58,7 +59,6 @@ cppcoro::task<> DHT::put(const std::string_view key, const std::string_view data
         }
     };
     co_await PutAwaiter(this, key, data, expiration, replication, data_type, routing_options);
-    co_return;
 }
 
 GNUNET_DHT_GetHandle* DHT::get(const std::string_view key, GetCallbackFunctor completedCallback

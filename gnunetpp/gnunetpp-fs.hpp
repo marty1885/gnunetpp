@@ -99,6 +99,19 @@ GNUNET_FS_DownloadContext* download(
     unsigned download_parallelism = 16,
     unsigned request_parallelism = 4092);
 
+/**
+ * @brief Publishes a file to the File Share.
+ * 
+ * @param cfg handle to GNUnet
+ * @param filename path to the file to publish
+ * @param keywords additional keywords to publish with the file
+ * @param fn callback function that is called when the operation is complete
+ * @param experation how long the file should be published for (may be ignored by peers)
+ * @param ego the ego to publish the file with (nullptr for none)
+ * @param this_id the last file ID (for updating files. must provide an ego)
+ * @param next_id the expected next file ID (for updating files. must provide an ego)
+ * @param block_options options for the file blocks. Experation is overriden by the experation parameter.
+ */
 void publish(
     const GNUNET_CONFIGURATION_Handle* cfg,
     const std::string& filename,
@@ -129,6 +142,10 @@ GNUNET_FS_UnindexContext* unindex(
     const GNUNET_CONFIGURATION_Handle* cfg,
     const std::string& file,
     UnindexCallbackFunctor fn);
+
+cppcoro::task<> unindex(
+    const GNUNET_CONFIGURATION_Handle* cfg,
+    const std::string& file);
 
 /**
  * @brief Cancels a search operation.

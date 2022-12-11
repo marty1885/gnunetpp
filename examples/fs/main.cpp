@@ -20,7 +20,7 @@ bool run_publish;
 bool run_unindex;
 
 
-void service(const GNUNET_CONFIGURATION_Handle* cfg)
+cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
 {
     if(run_search) {
         gnunetpp::FS::search(cfg, keywords, [n=0](const std::string_view uri, const std::string_view original_file_name) mutable -> bool {
@@ -78,12 +78,13 @@ void service(const GNUNET_CONFIGURATION_Handle* cfg)
     else if(run_unindex) {
         // Unindex removes the file from the index. But it does not un-publish it. Un-publishing can't be done as
         // other nodes might still have the file.
-        gnunetpp::FS::unindex(cfg, filename, [](bool success, const std::string& error) {
-            if(success)
-                std::cout << "Unindexed " << filename << std::endl;
-            else
-                std::cout << "Unindex failed: " << error << std::endl;
-        });
+        try {
+            co_await gnunetpp::FS::unindex(cfg, filename);
+            std::cout << "Unindexed " << filename << std::endl;
+        }
+        catch(const std::exception& e) {
+            std::cout << "Unindex failed: " << e.what() << std::endl;
+        }
     }
 }
 
@@ -119,5 +120,5 @@ int main(int argc, char** argv)
     run_publish = publish->parsed();
     run_unindex = unindex->parsed();
 
-    gnunetpp::run(service);
+    gnunetpp::start(service);
 }
