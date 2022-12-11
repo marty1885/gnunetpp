@@ -152,9 +152,12 @@ cppcoro::task<GNUNET_IDENTITY_Ego*> lookup_ego(const GNUNET_CONFIGURATION_Handle
     {
         EgoLookupAwaiter(const GNUNET_CONFIGURATION_Handle* cfg, const std::string& name)
         {
-            lookup_ego(cfg, name, [this](GNUNET_IDENTITY_Ego* ego){
+            auto handle = lookup_ego(cfg, name, [this](GNUNET_IDENTITY_Ego* ego){
                 setValue(ego);
             });
+            if(handle == nullptr) {
+                setException(std::make_exception_ptr(std::runtime_error("GNUNET_IDENTITY_ego_lookup failed")));
+            }
         }
     };
     co_return co_await EgoLookupAwaiter(cfg, name);
