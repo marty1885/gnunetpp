@@ -22,7 +22,7 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
 
 int main(int argc, char** argv)
 {
-    CLI::App app{"gnunetpp-gns"};
+    CLI::App app{"Name resolution usign GNS", "gnunetpp-gns"};
 
     app.add_option("-t,--timeout", timeout, "Timeout in seconds")->default_val(10);
     app.add_option("name", name, "Name to lookup")->required();

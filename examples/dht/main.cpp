@@ -43,7 +43,7 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
 
 int main(int argc, char** argv)
 {
-    CLI::App app{"gnunetpp-dht"};
+    CLI::App app("Interact with GNUnet R5N DHT", "gnunetpp-dht");
     app.require_subcommand(1);
     auto put = app.add_subcommand("put", "Put a key-value pair into the GNUnet DHT");
     auto get = app.add_subcommand("get", "Get a value from the GNUnet DHT");

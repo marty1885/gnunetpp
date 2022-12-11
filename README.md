@@ -27,12 +27,12 @@ dht->get("some_super_secret", [](const std::string_view data) {
 }, std::chrono::seconds(30)); // Max searching for 30 seconds
 ```
 
-The cryptographic library is also easily accessable
+Identity managment is also easily accessable
 
 ```cpp
-auto hash = crypto::hash("foobar");
-auto hmac = crypto::hmac("hmac_key", "zap");
-std::cout << crypto::to_string(hmac) << "\n";
+auto identity = std::make_shared<IdentityService>(cfg);
+co_await identity->create_identity("my_super_duper_name");
+auto ego = co_await identity::lookup_ego("my_super_duper_name");
 ```
 
 Search and download files from the GNUnet File Sharing service.
@@ -69,6 +69,7 @@ Examples with comments can be found in the [examples](examples) directory.
 First you need the dependencies
 
 * C++20 capable compiler
+  * Tested with GCC 12.1 and Clang 14.0
 * A installation of GNUnet 0.19 (or likely the latest version)
 * libidn2
 * cppcoro
@@ -81,7 +82,7 @@ First you need the dependencies
 This project aims to create a easy to use wapper for the commonly used part of GNUnet.
 
 - General
-  - [ ] Move applicable APIs to C++ coroutines
+  - [x] Move applicable APIs to C++ coroutines
 - DHT
   - [x] Basic operations (put/get)
   - [ ] Monitor
@@ -89,6 +90,7 @@ This project aims to create a easy to use wapper for the commonly used part of G
   - [x] Download
   - [x] Publish
   - [x] Search
+  - [x] Unindex
 - Crypto
   - [x] Hash
   - [x] HMAC

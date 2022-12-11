@@ -61,6 +61,7 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
     }
 
     else if(run_list) {
+        // This function does not have a coro version yet
         gnunetpp::identity::get_identities(cfg, [](const std::string& name, GNUNET_IDENTITY_Ego* ego) {
             if(name != "")
                 std::cout << name << " - " << to_string(get_public_key(ego)) << " " << to_string(get_key_type(ego)) << std::endl;
@@ -72,7 +73,7 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
 
 int main(int argc, char** argv)
 {
-    CLI::App app{"gnunetpp-identity"};
+    CLI::App app("GNUnet++ program to manage GNUnet identities", "gnunetpp-identity");
     app.require_subcommand(1);
     auto create_identity = app.add_subcommand("create", "Create a new identity");
     auto delete_identity = app.add_subcommand("delete", "Delete an identity");

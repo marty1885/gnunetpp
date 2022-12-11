@@ -90,7 +90,7 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
 
 int main(int argc, char** argv)
 {
-    CLI::App app{"gnunetpp-fs"};
+    CLI::App app("GNUnet++ program to interact with the File Sharing GNUnet system", "gnunetpp-fs");
     app.require_subcommand(1);
 
     auto download = app.add_subcommand("download", "Download a file from GNUnet File Share");

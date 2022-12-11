@@ -6,7 +6,6 @@
 #include "gnunetpp.hpp"
 
 #include <iostream>
-#include <cppcoro/sync_wait.hpp>
 
 using namespace gnunetpp;
 
