@@ -8,8 +8,6 @@
 
 #include <idna.h>
 
-#include <iostream>
-
 using namespace gnunetpp;
 
 struct GnsCallbackPack
@@ -24,7 +22,7 @@ struct GnsCallbackPack
 static void process_lookup_result (void *cls,
     int was_gns,
     uint32_t rd_count,
-    const struct GNUNET_GNSRECORD_Data *rd)
+    const GNUNET_GNSRECORD_Data *rd)
 {
     auto pack = reinterpret_cast<GnsCallbackPack*>(cls);
     if (rd_count == 0) {
@@ -37,8 +35,8 @@ static void process_lookup_result (void *cls,
             if(pack->record_type != GNUNET_GNSRECORD_TYPE_ANY && rd[i].record_type != pack->record_type)
                 continue;
             char *rd_str = GNUNET_GNSRECORD_value_to_string (rd[i].record_type,
-                                                    rd[i].data,
-                                                    rd[i].data_size);
+                rd[i].data,
+                rd[i].data_size);
             results.push_back(rd_str);
             GNUNET_free (rd_str);
         }

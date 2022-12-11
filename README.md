@@ -70,6 +70,8 @@ First you need the dependencies
 
 * C++20 capable compiler
 * A installation of GNUnet 0.19 (or likely the latest version)
+* libidn2
+* cppcoro
 
 (For examples)
 * CLI11

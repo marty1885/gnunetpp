@@ -13,16 +13,15 @@ size_t expiration;
 uint32_t replication;
 
 std::shared_ptr<gnunetpp::DHT> dht;
-void service(const GNUNET_CONFIGURATION_Handle* cfg)
+cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
 {
     // Create a DHT service with a hashtable size of 1 since we only do 1 operation at a time
     dht = std::make_shared<gnunetpp::DHT>(cfg, 1);
     if(run_put) {
         // Put the key/value pair into the DHT
-        dht->put(key, value, [] {
-            std::cout << "Put completed" << std::endl;
-            gnunetpp::shutdown();
-        }, std::chrono::seconds(expiration), replication);
+        co_await dht->put(key, value, std::chrono::seconds(expiration), replication);
+        std::cout << "Put completed" << std::endl;
+        gnunetpp::shutdown();
     }
     
     else {
@@ -64,5 +63,5 @@ int main(int argc, char** argv)
     run_put = put->parsed();
 
     // Run the main service
-    gnunetpp::run(service);
+    gnunetpp::start(service);
 }

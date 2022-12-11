@@ -52,10 +52,12 @@ struct GNS : public Service
      * @param record_type The type of record to lookup. Defaults to ANY.
      * @return cppcoro::task<std::vector<std::string>> awiat to get the result
      */
+    [[nodiscard]]
     cppcoro::task<std::vector<std::string>> lookup(const std::string &name
         , std::chrono::milliseconds timeout
         , uint32_t record_type = GNUNET_GNSRECORD_TYPE_ANY
         , bool dns_compatability = true);
+    [[nodiscard]]
     cppcoro::task<std::vector<std::string>> lookup(const std::string &name
         , std::chrono::milliseconds timeout
         , const std::string_view record_type

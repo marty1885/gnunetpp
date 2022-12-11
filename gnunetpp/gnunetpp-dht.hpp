@@ -7,6 +7,7 @@
 #include <gnunetpp-scheduler.hpp>
 #include <gnunetpp-crypto.hpp>
 #include "inner/Infra.hpp"
+#include "inner/coroutine.hpp"
 
 #include <chrono>
 #include <stdexcept>
@@ -81,6 +82,12 @@ struct DHT : public Service
         , std::chrono::duration<double> search_timeout = std::chrono::seconds(10)
         , GNUNET_BLOCK_Type data_type = GNUNET_BLOCK_TYPE_TEST
         , unsigned int replication = 5
+        , GNUNET_DHT_RouteOption routing_options = GNUNET_DHT_RO_NONE);
+
+    cppcoro::task<> put(const std::string_view key, const std::string_view data
+        , std::chrono::duration<double> expiration = std::chrono::hours(1)
+        , unsigned int replication = 5
+        , GNUNET_BLOCK_Type data_type = GNUNET_BLOCK_TYPE_TEST
         , GNUNET_DHT_RouteOption routing_options = GNUNET_DHT_RO_NONE);
 
     /**

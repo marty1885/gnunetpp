@@ -45,6 +45,29 @@ GNUNET_DHT_PutHandle* DHT::put(const std::string_view key, const std::string_vie
     return handle;
 }
 
+cppcoro::task<> DHT::put(const std::string_view key, const std::string_view data
+        , std::chrono::duration<double> expiration
+        , unsigned int replication
+        , GNUNET_BLOCK_Type data_type
+        , GNUNET_DHT_RouteOption routing_options)
+{
+    struct PutAwaiter : public EagerAwaiter<>
+    {
+        PutAwaiter(DHT* dht, const std::string_view key, const std::string_view data
+            , std::chrono::duration<double> expiration
+            , unsigned int replication
+            , GNUNET_BLOCK_Type data_type
+            , GNUNET_DHT_RouteOption routing_options)
+        {
+            dht->put(key, data, [this] () {
+                setValue();
+            }, expiration, replication, data_type, routing_options);
+        }
+    };
+    co_await PutAwaiter(this, key, data, expiration, replication, data_type, routing_options);
+    co_return;
+}
+
 GNUNET_DHT_GetHandle* DHT::get(const std::string_view key, GetCallbackFunctor completedCallback
     , std::chrono::duration<double> search_timeout
     , GNUNET_BLOCK_Type data_type

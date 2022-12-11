@@ -213,16 +213,24 @@ template <>
 struct EagerAwaiter<void> : public CallbackAwaiter<>
 {
     std::coroutine_handle<> handle_ = std::noop_coroutine();
+    bool value_set = false;
     void await_suspend(std::coroutine_handle<> handle_) noexcept
     {
         this->handle_ = handle_;
-        if(exception_ != nullptr)
+        if(exception_ != nullptr || value_set)
             handle_.resume();
     }
 
     void setException(const std::exception_ptr &e)
     {
         CallbackAwaiter<>::setException(e);
+        if(handle_ != std::noop_coroutine())
+            handle_.resume();
+    }
+
+    void setValue()
+    {
+        value_set = true;
         if(handle_ != std::noop_coroutine())
             handle_.resume();
     }
