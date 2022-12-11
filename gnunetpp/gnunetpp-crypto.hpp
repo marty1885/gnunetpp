@@ -37,4 +37,7 @@ std::string to_string(const GNUNET_CRYPTO_EddsaPrivateKey& key);
 std::string to_string(const GNUNET_CRYPTO_EddsaPublicKey& key);
 
 GNUNET_CRYPTO_EcdsaPublicKey get_public_key(const GNUNET_CRYPTO_EcdsaPrivateKey& key);
+GNUNET_PeerIdentity my_peer_identity();
+
+std::string to_string(const GNUNET_PeerIdentity& peer);
 }

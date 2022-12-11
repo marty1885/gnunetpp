@@ -196,6 +196,7 @@ GNUNET_FS_SearchContext* search(
         }
     });
     std::vector<const char*> keywords_cstr;
+    keywords_cstr.reserve(keywords.size());
     for(const auto& keyword : keywords)
         keywords_cstr.push_back(keyword.c_str());
     GNUNET_FS_Uri* uri = GNUNET_FS_uri_ksk_create_from_args(keywords_cstr.size(), keywords_cstr.data());

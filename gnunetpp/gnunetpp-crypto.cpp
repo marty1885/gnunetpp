@@ -106,4 +106,19 @@ GNUNET_CRYPTO_EcdsaPublicKey get_public_key(const GNUNET_CRYPTO_EcdsaPrivateKey&
     return pub;
 }
 
+GNUNET_PeerIdentity my_peer_identity()
+{
+    GNUNET_PeerIdentity id;
+    if(GNUNET_CRYPTO_get_peer_identity(nullptr, &id) == GNUNET_OK)
+        return id;
+    throw std::runtime_error("Failed to get host peer identity");
+}
+
+std::string to_string(const GNUNET_PeerIdentity& id)
+{
+    const char* str = GNUNET_i2s_full(&id);
+    GNUNET_assert(str != nullptr);
+    return str;
+}
+
 }

@@ -19,12 +19,12 @@ std::string right_pad(std::string s, size_t n)
 cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
 {
     auto nse = std::make_unique<NSE>(cfg);
-    auto estimate = co_await nse->estimate();
+    auto [network_size, log2_stddev] = co_await nse->estimate();
     std::cout 
         << "-----------------------------------------\n"
         << "estimated network size     |  log2 stddev\n"
         << "-----------------------------------------\n"
-        << right_pad(std::to_string(estimate.first), 27) << "|  " << estimate.second << std::endl;
+        << right_pad(std::to_string(network_size), 27) << "|  " << network_size << std::endl;
 }
 
 int main(int argc, char** argv)
