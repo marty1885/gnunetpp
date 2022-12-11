@@ -13,13 +13,9 @@ bool run_list;
 std::string identity_name;
 std::string key_type;
 
-std::shared_ptr<gnunetpp::identity::IdentityService> identity;
-
-void service(const GNUNET_CONFIGURATION_Handle* cfg)
+cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
 {
     using namespace gnunetpp::identity;
-    // IdentityService is our interface to the GNUnet identity system
-    identity = std::make_shared<IdentityService>(cfg);
 
     if(run_create) {
         // GNUnet supports 2 key types: ECDSA and EdDSA. EdDSA has limited support (ex. no FS) so
@@ -32,14 +28,14 @@ void service(const GNUNET_CONFIGURATION_Handle* cfg)
             abort();
         }
 
+        // IdentityService is our interface to the GNUnet identity system
+        auto identity = std::make_shared<IdentityService>(cfg);
         // Create a new identity. The callback will be called when the identity is created or failed.
-        identity->create_identity(identity_name, [](const GNUNET_IDENTITY_PrivateKey& key, const std::string& err) {
-            if(err.empty())
-                std::cout << "Created identity " << identity_name << ": " << to_string(get_public_key(key)) << std::endl;
-            else
-                std::cout << "Error: " << err << std::endl;
-            gnunetpp::shutdown();
-        }, type);
+        auto pk = co_await identity->create_identity(identity_name, type);
+        if(pk != nullptr)
+            std::cout << "Created identity " << identity_name << " with key " << to_string(*pk) << std::endl;
+        else
+            std::cout << "Failed to create identity " << identity_name << std::endl;
     }
     
     else if(run_get) {
@@ -60,13 +56,8 @@ void service(const GNUNET_CONFIGURATION_Handle* cfg)
     else if(run_delete) {
         // Delete an identity. The callback will be called when the identity is deleted (or failed).
         // Be careful with this function,
-        identity->delete_identity(identity_name, [](const std::string& err) {
-            if(err.empty())
-                std::cout << "Deleted identity " << identity_name << std::endl;
-            else
-                std::cout << "Error: " << err << std::endl;
-            gnunetpp::shutdown();
-        });
+        auto identity = std::make_shared<IdentityService>(cfg);
+        co_await identity->delete_identity(identity_name);
     }
 
     else if(run_list) {
@@ -101,5 +92,5 @@ int main(int argc, char** argv)
     run_get = get->parsed();
     run_list = list->parsed();
 
-    gnunetpp::run(service);
+    gnunetpp::start(service);
 }

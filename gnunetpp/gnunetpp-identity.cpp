@@ -16,16 +16,16 @@ namespace detail
 {
 static void identity_create_trampline(void* cls, const struct GNUNET_IDENTITY_PrivateKey* id, GNUNET_ErrorCode ec)
 {
-    auto cb = reinterpret_cast<std::function<void(const GNUNET_IDENTITY_PrivateKey& sk, const std::string& err)>*>(cls);
-    std::string err_msg = GNUNET_ErrorCode_get_hint(ec);
-    (*cb)(*id, err_msg);
+    auto cb = reinterpret_cast<std::function<void(const GNUNET_IDENTITY_PrivateKey* sk, const std::string& err)>*>(cls);
+    std::string err_msg = ec != GNUNET_EC_NONE ? GNUNET_ErrorCode_get_hint(ec) : "";
+    (*cb)(id, err_msg);
     delete cb;
 }
 
 static void identity_delete_trampline(void* cls, GNUNET_ErrorCode ec)
 {
     auto cb = reinterpret_cast<std::function<void(const std::string& err)>*>(cls);
-    std::string err_msg = GNUNET_ErrorCode_get_hint(ec);
+    std::string err_msg = ec != GNUNET_EC_NONE ? GNUNET_ErrorCode_get_hint(ec) : "";
     (*cb)(err_msg);
     delete cb;
 }
@@ -78,18 +78,39 @@ IdentityService::~IdentityService()
 void IdentityService::shutdown()
 {
     if(handle != nullptr) {
-        GNUNET_IDENTITY_disconnect(handle);
+        scheduler::run([handle=this->handle](){
+            GNUNET_IDENTITY_disconnect(handle);
+        });
         handle = nullptr;
     }
 }
 
 GNUNET_IDENTITY_Operation* IdentityService::create_identity(const std::string& name
-        , std::function<void(const GNUNET_IDENTITY_PrivateKey&, const std::string&)> fn
+        , std::function<void(const GNUNET_IDENTITY_PrivateKey*, const std::string&)> fn
         , GNUNET_IDENTITY_KeyType type)
 {
-    auto cb = new std::function<void(const GNUNET_IDENTITY_PrivateKey&, const std::string&)>(fn);
+    auto cb = new std::function<void(const GNUNET_IDENTITY_PrivateKey*, const std::string&)>(fn);
     return GNUNET_IDENTITY_create(handle, name.c_str(), nullptr, type
         , &detail::identity_create_trampline, cb);
+}
+
+cppcoro::task<const GNUNET_IDENTITY_PrivateKey*> IdentityService::create_identity(const std::string& name
+        , GNUNET_IDENTITY_KeyType type)
+{
+    struct IdentityCreateAwaiter : public EagerAwaiter<const GNUNET_IDENTITY_PrivateKey*>
+    {
+        IdentityCreateAwaiter(IdentityService* identity, const std::string& name, GNUNET_IDENTITY_KeyType type)
+        {
+            identity->create_identity(name, [this](const GNUNET_IDENTITY_PrivateKey* sk, const std::string& err){
+                if(err.empty()) {
+                    setValue(sk);
+                } else {
+                    setException(std::make_exception_ptr(std::runtime_error(err)));
+                }
+            }, type);
+        }
+    };
+    co_return co_await IdentityCreateAwaiter(this, name, type);
 }
 
 GNUNET_IDENTITY_Operation* IdentityService::delete_identity(const std::string& name
@@ -99,11 +120,44 @@ GNUNET_IDENTITY_Operation* IdentityService::delete_identity(const std::string& n
     return GNUNET_IDENTITY_delete(handle, name.c_str(), &detail::identity_delete_trampline, cb);
 }
 
+cppcoro::task<> IdentityService::delete_identity(const std::string& name)
+{
+    struct IdentityDeleteAwaiter : public EagerAwaiter<void>
+    {
+        IdentityDeleteAwaiter(IdentityService* identity, const std::string& name)
+        {
+            identity->delete_identity(name, [this](const std::string& err){
+                if(err.empty()) {
+                    setValue();
+                } else {
+                    setException(std::make_exception_ptr(std::runtime_error(err)));
+                }
+            });
+        }
+    };
+    co_return co_await IdentityDeleteAwaiter(this, name);
+}
+
 GNUNET_IDENTITY_EgoLookup* lookup_ego(const GNUNET_CONFIGURATION_Handle* cfg
     , const std::string& name, std::function<void(GNUNET_IDENTITY_Ego*)> fn)
 {
     return GNUNET_IDENTITY_ego_lookup(cfg, name.c_str(), &detail::ego_lookup_trampline
         , new std::function<void(GNUNET_IDENTITY_Ego*)>(std::move(fn)));
+}
+
+cppcoro::task<GNUNET_IDENTITY_Ego*> lookup_ego(const GNUNET_CONFIGURATION_Handle* cfg
+    , const std::string& name)
+{
+    struct EgoLookupAwaiter : public EagerAwaiter<GNUNET_IDENTITY_Ego*>
+    {
+        EgoLookupAwaiter(const GNUNET_CONFIGURATION_Handle* cfg, const std::string& name)
+        {
+            lookup_ego(cfg, name, [this](GNUNET_IDENTITY_Ego* ego){
+                setValue(ego);
+            });
+        }
+    };
+    co_return co_await EgoLookupAwaiter(cfg, name);
 }
 
 void get_identities(const GNUNET_CONFIGURATION_Handle* cfg, std::function<void(const std::string&, GNUNET_IDENTITY_Ego* ego)> fn)
