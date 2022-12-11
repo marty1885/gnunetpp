@@ -13,7 +13,6 @@
 #include <stdexcept>
 #include <functional>
 #include <cassert>
-#include <set>
 #include <memory>
 
 
@@ -26,7 +25,6 @@ struct DHT : public Service
 
     struct GetCallbackPack
     {
-        DHT* self;
         GNUNET_DHT_GetHandle* handle;
         TaskID timer_task;
         GetCallbackFunctor callback;
@@ -130,7 +128,6 @@ protected:
                            const void *data);
 
     GNUNET_DHT_Handle *dht_handle = nullptr;
-    std::set<GetCallbackPack*> get_handles;
 };
 
 }

@@ -8,13 +8,6 @@ void DHT::shutdown()
 {
     if(dht_handle != NULL)
     {
-        for(auto pack : get_handles) {
-            GNUNET_DHT_get_stop(pack->handle);
-            scheduler::cancel(pack->timer_task);
-            delete pack;
-        }
-        get_handles.clear();
-
         GNUNET_DHT_disconnect(dht_handle);
         dht_handle = NULL;
     }
@@ -78,19 +71,18 @@ GNUNET_DHT_GetHandle* DHT::get(const std::string_view key, GetCallbackFunctor co
         throw std::runtime_error("DHT not connected");
     GNUNET_HashCode key_hash = crypto::hash(key);
     auto data = new GetCallbackPack;
-    data->callback = std::move(completedCallback);
-    data->self = this;
 
     GNUNET_DHT_GetHandle* handle = GNUNET_DHT_get_start(dht_handle, data_type, &key_hash, replication, routing_options
         , NULL, 0, &DHT::getCallback, data);
-    data->handle = handle;
-    if(handle == NULL)
+    if(handle == NULL) {
+        delete data;
         throw std::runtime_error("Failed to get data from GNUNet DHT");
-    get_handles.insert(data);
+    }
+    data->callback = std::move(completedCallback);
+    data->handle = handle;
     data->timer_task = scheduler::runLater(search_timeout, [data, this] () {
         GNUNET_DHT_get_stop(data->handle);
         delete data;
-        get_handles.erase(data);
     }, true);
     return handle;
 }
@@ -102,17 +94,10 @@ void DHT::cancle(GNUNET_DHT_PutHandle* handle)
 
 void DHT::cancle(GNUNET_DHT_GetHandle* handle)
 {
+    //TODO: Fix leak caused by not deleting GetCallbackPack
     GNUNET_DHT_get_stop(handle);
-    // HACK: Need a faster way to find the GetCallbackPack
-    for(auto pack : get_handles) {
-        if(pack->handle == handle) {
-            scheduler::cancel(pack->timer_task);
-            delete pack;
-            get_handles.erase(pack);
-            break;
-        }
-    }
 }
+
 void DHT::getCallback(void *cls,
     struct GNUNET_TIME_Absolute exp,
     const struct GNUNET_HashCode *query_hash,
@@ -130,7 +115,6 @@ void DHT::getCallback(void *cls,
     std::string_view data_view{reinterpret_cast<const char*>(data), size};
     bool keep_running = pack->callback(data_view);
     if(keep_running == false) {
-        pack->self->get_handles.erase(pack);
         GNUNET_DHT_get_stop(pack->handle);
         scheduler::cancel(pack->timer_task);
         delete pack;
