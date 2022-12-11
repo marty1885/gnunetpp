@@ -10,4 +10,6 @@
 #include <chrono>
 #include <mutex>
 
+// Fundamental features of the library
 #include "gnunetpp-scheduler.hpp"
+#include "inner/coroutine.hpp"

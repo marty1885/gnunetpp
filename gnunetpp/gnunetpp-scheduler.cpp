@@ -80,6 +80,23 @@ void run(std::function<void()> fn)
     }, new std::function<void()>(std::move(fn)));
 }
 
+cppcoro::task<> sleep(std::chrono::duration<double> delay)
+{
+    struct TimerAwaiter : public CallbackAwaiter<>
+    {
+        TimerAwaiter(std::chrono::duration<double> delay) : delay_(delay) {}
+
+        void await_suspend(std::coroutine_handle<> handle)
+        {
+            runLater(delay_, [handle] () mutable {
+                handle.resume();
+            }, false);
+        }
+        std::chrono::duration<double> delay_;
+    };
+    co_await TimerAwaiter(delay);
+}
+
 void cancel(TaskID id)
 {
     auto& data = g_tasks[id];

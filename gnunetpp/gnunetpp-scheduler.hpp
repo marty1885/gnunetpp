@@ -3,6 +3,8 @@
 #include <functional>
 #include <chrono>
 
+#include "inner/coroutine.hpp"
+
 namespace gnunetpp
 {
 using TaskID = size_t;
@@ -42,6 +44,15 @@ void runOnShutdown(std::function<void()> fn);
  * @param fn function to run
  */
 void run(std::function<void()> fn);
+
+/**
+ * @brief Resumes execution after a delay
+ * 
+ * @param delay delay in seconds
+ * @return cppcoro::task<> await on this to resume execution after the delay
+ */
+[[nodiscard]]
+cppcoro::task<> sleep(std::chrono::duration<double> delay);
 
 /**
  * @brief Cancel a task

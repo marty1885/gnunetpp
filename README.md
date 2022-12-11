@@ -105,6 +105,9 @@ This project aims to create a easy to use wapper for the commonly used part of G
   - [x] Delte
   - [x] Get Ego
   - [x] List
+- NSE (Network Size Estimatior)
+  - [x] Get value
+  - [x] Watch value
 - Scheduler
   - [x] Delayed run
   - [x] Run on exit

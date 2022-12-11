@@ -66,6 +66,15 @@ void run(std::function<void(const GNUNET_CONFIGURATION_Handle*)> f)
         throw std::runtime_error("GNUNet program run failed");
 }
 
+void start(std::function<cppcoro::task<void>(const GNUNET_CONFIGURATION_Handle*)> f)
+{
+    run([f = std::move(f)](const GNUNET_CONFIGURATION_Handle* c) {
+        async_run([f = std::move(f), c]() -> cppcoro::task<> {
+            co_await f(c);
+        });
+    });
+}
+
 void shutdown()
 {
     GNUNET_SCHEDULER_add_now([] (void* d) {

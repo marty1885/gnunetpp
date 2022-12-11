@@ -12,3 +12,6 @@ target_link_libraries(gnunetpp-scheduler gnunetcore gnunetutil gnunetpp)
 
 add_executable(gnunetpp-gns gns/main.cpp)
 target_link_libraries(gnunetpp-gns gnunetgns gnunetgnsrecord gnunetcore gnunetutil gnunetpp)
+
+add_executable(gnunetpp-nse nse/main.cpp)
+target_link_libraries(gnunetpp-nse gnunetnse gnunetcore gnunetutil gnunetpp)

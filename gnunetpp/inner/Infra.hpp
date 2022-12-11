@@ -3,6 +3,7 @@
 #include <functional>
 
 #include <gnunet/gnunet_core_service.h>
+#include "coroutine.hpp"
 
 namespace gnunetpp
 {
@@ -30,6 +31,13 @@ void removeAllServices();
  * @param f Callback to call when GNUnet is started
  */
 void run(std::function<void(const GNUNET_CONFIGURATION_Handle*)> f);
+
+/**
+ * @brief run but the coroutine version
+ * 
+ * @param f Callback to call when GNUnet is started
+ */
+void start(std::function<cppcoro::task<>(const GNUNET_CONFIGURATION_Handle*)> f);
 
 /**
  * @brief Shutdown all services and timer. Stop the event loop
