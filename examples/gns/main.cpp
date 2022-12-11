@@ -18,7 +18,6 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
         std::cout << "No results found under domain name: " << name << std::endl;
     for (const auto& r : result)
         std::cout << r << std::endl;
-    gnunetpp::shutdown();
 }
 
 int main(int argc, char** argv)

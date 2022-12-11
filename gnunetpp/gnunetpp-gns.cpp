@@ -16,26 +16,26 @@ struct GnsCallbackPack
 {
     GnsCallback cb;
     GNUNET_GNS_LookupWithTldRequest* lr = nullptr;
-    TaskID id = 0;
     TaskID timeout_id = 0;
     uint32_t record_type = GNUNET_GNSRECORD_TYPE_ANY;
 };
 
-static detail::UniqueData<GnsCallbackPack*> gns_lookup_requests;
+static detail::UniqueData<GnsCallbackPack> gns_lookup_requests;
 static void process_lookup_result (void *cls,
     int was_gns,
     uint32_t rd_count,
     const struct GNUNET_GNSRECORD_Data *rd)
 {
-    auto pack = static_cast<GnsCallbackPack*>(cls);
+    size_t id = (size_t)cls;
+    auto& pack = gns_lookup_requests[id];
     if (rd_count == 0) {
-        pack->cb({});
+        pack.cb({});
     }
     else {
         std::vector<std::string> results;
         results.reserve(rd_count);
         for (uint32_t i = 0; i < rd_count; i++) {
-            if(pack->record_type != GNUNET_GNSRECORD_TYPE_ANY && rd[i].record_type != pack->record_type)
+            if(pack.record_type != GNUNET_GNSRECORD_TYPE_ANY && rd[i].record_type != pack.record_type)
                 continue;
             char *rd_str = GNUNET_GNSRECORD_value_to_string (rd[i].record_type,
                                                     rd[i].data,
@@ -43,12 +43,11 @@ static void process_lookup_result (void *cls,
             results.push_back(rd_str);
             GNUNET_free (rd_str);
         }
-        pack->cb(std::move(results));
+        pack.cb(std::move(results));
     }
 
-    gns_lookup_requests.remove(pack->id);
-    scheduler::cancel(pack->timeout_id);
-    delete pack;
+    scheduler::cancel(pack.timeout_id);
+    gns_lookup_requests.remove(id);
 }
 
 GNS::GNS(const GNUNET_CONFIGURATION_Handle *cfg)
@@ -84,20 +83,18 @@ void GNS::lookup(const std::string &name, std::chrono::milliseconds timeout,
         free(str);
     }
 
-    auto pack = new GnsCallbackPack;
-    pack->cb = std::move(cb);
-    pack->record_type = record_type;
-    auto lr = GNUNET_GNS_lookup_with_tld(gns, lookup_name.c_str(), record_type, GNUNET_GNS_LO_DEFAULT, process_lookup_result, pack);
-    pack->lr = lr;
-    auto [id, _] = gns_lookup_requests.add((GnsCallbackPack*){pack});
-    pack->id = id;
-    auto timeout_id = scheduler::runLater(timeout, [pack]() {
-        pack->cb({});
-        GNUNET_GNS_lookup_with_tld_cancel(pack->lr);
-        gns_lookup_requests.remove(pack->id);
-        delete pack;
+    auto [id, pack] = gns_lookup_requests.add({});
+    auto lr = GNUNET_GNS_lookup_with_tld(gns, lookup_name.c_str(), record_type, GNUNET_GNS_LO_DEFAULT, process_lookup_result, (void*)id);
+    auto timeout_id = scheduler::runLater(timeout, [id]() {
+        auto& pack = gns_lookup_requests[id];
+        pack.cb({});
+        GNUNET_GNS_lookup_with_tld_cancel(pack.lr);
+        gns_lookup_requests.remove(id);
     }, true);
-    pack->timeout_id = timeout_id;
+    pack.cb = std::move(cb);
+    pack.record_type = record_type;
+    pack.lr = lr;
+    pack.timeout_id = timeout_id;
 }
 
 void GNS::lookup(const std::string &name, std::chrono::milliseconds timeout,
