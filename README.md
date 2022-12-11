@@ -102,6 +102,7 @@ This project aims to create a easy to use wapper for the commonly used part of G
   - [x] Create
   - [x] Delte
   - [x] Get Ego
+  - [x] List
 - Scheduler
   - [x] Delayed run
   - [x] Run on exit

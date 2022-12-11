@@ -7,3 +7,7 @@
 #include <functional>
 #include <utility>
 #include <stdexcept>
+#include <chrono>
+#include <mutex>
+
+#include "gnunetpp-scheduler.hpp"
