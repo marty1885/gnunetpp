@@ -33,10 +33,13 @@ GNUNET_FS_Handle* makeHandle(const GNUNET_CONFIGURATION_Handle* cfg, FSCallbackF
     data->fn = callback;
     GNUNET_FS_Handle* fs_handle = GNUNET_FS_start(cfg, "gnunetpp-fs", &fs_callback_trampoline
         , data, GNUNET_FS_FLAGS_NONE, GNUNET_FS_OPTIONS_END);
+    if (!fs_handle) {
+        delete data;
+        throw std::runtime_error("GNUNET_FS_start failed");
+    }
+
     data->fs = fs_handle;
     g_fs_handlers[fs_handle] = data;
-    if (!fs_handle)
-        throw std::runtime_error("GNUNET_FS_start failed");
     return fs_handle;
 }
 
@@ -48,10 +51,12 @@ GNUNET_FS_Handle* makeHandle(const GNUNET_CONFIGURATION_Handle* cfg, FSCallbackF
         , data, GNUNET_FS_FLAGS_NONE, GNUNET_FS_OPTIONS_DOWNLOAD_PARALLELISM, download_parallelism
         , GNUNET_FS_OPTIONS_REQUEST_PARALLELISM, request_parallelism
         , GNUNET_FS_OPTIONS_END);
+    if (!fs_handle) {
+        delete data;
+        throw std::runtime_error("GNUNET_FS_start failed");
+    }
     data->fs = fs_handle;
     g_fs_handlers[fs_handle] = data;
-    if (!fs_handle)
-        throw std::runtime_error("GNUNET_FS_start failed");
     return fs_handle;
 }
 
