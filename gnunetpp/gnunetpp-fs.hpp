@@ -143,6 +143,7 @@ GNUNET_FS_UnindexContext* unindex(
     const std::string& file,
     UnindexCallbackFunctor fn);
 
+[[nodiscard]]
 cppcoro::task<> unindex(
     const GNUNET_CONFIGURATION_Handle* cfg,
     const std::string& file);
