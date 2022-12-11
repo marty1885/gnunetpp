@@ -15,6 +15,7 @@ using namespace gnunetpp;
 struct GnsCallbackPack
 {
     GnsCallback cb;
+    GnsErrorCallback err_cb;
     GNUNET_GNS_LookupWithTldRequest* lr = nullptr;
     TaskID timeout_id = 0;
     uint32_t record_type = GNUNET_GNSRECORD_TYPE_ANY;
@@ -68,7 +69,7 @@ void GNS::shutdown()
 }
 
 void GNS::lookup(const std::string &name, std::chrono::milliseconds timeout,
-    GnsCallback cb, uint32_t record_type, bool dns_compatability)
+    GnsCallback cb, GnsErrorCallback err_cb, uint32_t record_type, bool dns_compatability)
 {
     std::string lookup_name = name;
     if(gns == nullptr)
@@ -84,23 +85,24 @@ void GNS::lookup(const std::string &name, std::chrono::milliseconds timeout,
     auto pack = new GnsCallbackPack;
     auto lr = GNUNET_GNS_lookup_with_tld(gns, lookup_name.c_str(), record_type, GNUNET_GNS_LO_DEFAULT, process_lookup_result, pack);
     auto timeout_id = scheduler::runLater(timeout, [pack]() {
-        pack->cb({});
+        pack->err_cb("Timeout");
         GNUNET_GNS_lookup_with_tld_cancel(pack->lr);
         delete pack;
     }, true);
     pack->cb = std::move(cb);
+    pack->err_cb = std::move(err_cb);
     pack->record_type = record_type;
     pack->lr = lr;
     pack->timeout_id = timeout_id;
 }
 
 void GNS::lookup(const std::string &name, std::chrono::milliseconds timeout,
-    GnsCallback cb, const std::string_view record_type, bool dns_compatability)
+    GnsCallback cb, GnsErrorCallback err_cb, const std::string_view record_type, bool dns_compatability)
 {
     uint32_t type = GNUNET_GNSRECORD_typename_to_number(record_type.data());
     if(type == UINT32_MAX)
         throw std::runtime_error("Invalid record type");
-    lookup(name, timeout, cb, type, dns_compatability);
+    lookup(name, timeout, std::move(cb), std::move(err_cb), type, dns_compatability);
 }
 
 cppcoro::task<std::vector<std::string>> GNS::lookup(const std::string &name, std::chrono::milliseconds timeout,
@@ -113,6 +115,9 @@ cppcoro::task<std::vector<std::string>> GNS::lookup(const std::string &name, std
         {
             gns.lookup(name, timeout, [this](std::vector<std::string> results) {
                 setValue(std::move(results));
+            }, [this](const std::string& err){
+                auto exception = std::make_exception_ptr(std::runtime_error(err));
+                setException(exception);
             }, record_type, dns_compatability);
         }
     };

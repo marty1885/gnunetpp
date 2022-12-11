@@ -12,6 +12,7 @@ namespace gnunetpp
 {
 
 using GnsCallback = std::function<void(const std::vector<std::string> &)>;
+using GnsErrorCallback = std::function<void(const std::string &)>;
 struct GNS : public Service
 {
 
@@ -34,10 +35,12 @@ struct GNS : public Service
      */
     void lookup(const std::string &name, std::chrono::milliseconds timeout
                 , GnsCallback cb
+                , GnsErrorCallback err_cb
                 , uint32_t record_type = GNUNET_GNSRECORD_TYPE_ANY
                 , bool dns_compatability = true);
     void lookup(const std::string &name, std::chrono::milliseconds timeout
                 , GnsCallback cb
+                , GnsErrorCallback err_cb
                 , const std::string_view record_type
                 , bool dns_compatability = true);
     
