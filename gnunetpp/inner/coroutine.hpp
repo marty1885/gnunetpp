@@ -131,7 +131,7 @@ struct CallbackAwaiter
         return result_.value();
     }
 
-  private:
+  protected:
     // HACK: Not all desired types are default constructable. But we need the
     // entire struct to be constructed for awaiting. std::optional takes care of
     // that.
@@ -167,13 +167,64 @@ struct CallbackAwaiter<void>
             std::rethrow_exception(exception_);
     }
 
-  private:
+  protected:
     std::exception_ptr exception_{nullptr};
 
-  protected:
     void setException(const std::exception_ptr &e)
     {
         exception_ = e;
+    }
+};
+
+template <typename T = void>
+struct EagerAwaiter : public CallbackAwaiter<T>
+{
+    std::coroutine_handle<> handle_ = std::noop_coroutine();
+    void await_suspend(std::coroutine_handle<> handle_) noexcept
+    {
+        this->handle_ = handle_;
+        if(CallbackAwaiter<T>::result_.has_value() || CallbackAwaiter<T>::exception_ != nullptr)
+            handle_.resume();
+    }
+
+    void setValue(const T &v)
+    {
+        CallbackAwaiter<T>::setValue(v);
+        if(handle_ != std::noop_coroutine())
+            handle_.resume();
+    }
+
+    void setValue(T &&v)
+    {
+        CallbackAwaiter<T>::setValue(std::move(v));
+        if(handle_ != std::noop_coroutine())
+            handle_.resume();
+    }
+
+    void setException(const std::exception_ptr &e)
+    {
+        CallbackAwaiter<T>::setException(e);
+        if(handle_ != std::noop_coroutine())
+            handle_.resume();
+    }
+};
+
+template <>
+struct EagerAwaiter<void> : public CallbackAwaiter<>
+{
+    std::coroutine_handle<> handle_ = std::noop_coroutine();
+    void await_suspend(std::coroutine_handle<> handle_) noexcept
+    {
+        this->handle_ = handle_;
+        if(exception_ != nullptr)
+            handle_.resume();
+    }
+
+    void setException(const std::exception_ptr &e)
+    {
+        CallbackAwaiter<>::setException(e);
+        if(handle_ != std::noop_coroutine())
+            handle_.resume();
     }
 };
 

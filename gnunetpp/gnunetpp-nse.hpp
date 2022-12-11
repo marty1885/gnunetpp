@@ -18,8 +18,17 @@ struct NSE : public Service
     ~NSE();
     void shutdown() override;
 
+    /**
+     * @brief  Get the GNUnet network size estimate
+    */
     [[nodiscard]]
     cppcoro::task<std::pair<double, double>> estimate();
+
+    /**
+     * @brief Watch for estimate changes
+     * 
+     * @param callback Gets called when the estimate changes
+     */
     void watch(std::function<void(std::pair<double, double>)> callback);
 
     GNUNET_NSE_Handle* nse = nullptr;

@@ -6,6 +6,7 @@
 #include <gnunet/gnunet_gns_service.h>
 
 #include "inner/Infra.hpp"
+#include "inner/coroutine.hpp"
 
 namespace gnunetpp
 {
@@ -15,14 +16,12 @@ struct GNS : public Service
 {
 
     GNS(const GNUNET_CONFIGURATION_Handle *cfg);
-
-    void shutdown() override
+    ~GNS()
     {
-        if(gns != nullptr) {
-            GNUNET_GNS_disconnect(gns);
-            gns = nullptr;
-        }
+        shutdown();
+        removeService(this);
     }
+    void shutdown() override;
 
     /**
      * @brief Lookup a name in the GNS
@@ -41,12 +40,23 @@ struct GNS : public Service
                 , GnsCallback cb
                 , const std::string_view record_type
                 , bool dns_compatability = true);
-
-    ~GNS()
-    {
-        shutdown();
-        removeService(this);
-    }
+    
+    /**
+     * @brief Lookup a name in the GNS. The coroutine version.
+     * 
+     * @param name Domain name to lookup (e.g. "gnunet.org")
+     * @param timeout Timeout for the lookup
+     * @param record_type The type of record to lookup. Defaults to ANY.
+     * @return cppcoro::task<std::vector<std::string>> awiat to get the result
+     */
+    cppcoro::task<std::vector<std::string>> lookup(const std::string &name
+        , std::chrono::milliseconds timeout
+        , uint32_t record_type = GNUNET_GNSRECORD_TYPE_ANY
+        , bool dns_compatability = true);
+    cppcoro::task<std::vector<std::string>> lookup(const std::string &name
+        , std::chrono::milliseconds timeout
+        , const std::string_view record_type
+        , bool dns_compatability = true);
 
     GNUNET_GNS_Handle *gns = nullptr;
 };

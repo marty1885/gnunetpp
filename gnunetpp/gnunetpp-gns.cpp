@@ -22,11 +22,10 @@ struct GnsCallbackPack
 };
 
 static detail::UniqueData<GnsCallbackPack*> gns_lookup_requests;
-static void
-process_lookup_result (void *cls,
-                       int was_gns,
-                       uint32_t rd_count,
-                       const struct GNUNET_GNSRECORD_Data *rd)
+static void process_lookup_result (void *cls,
+    int was_gns,
+    uint32_t rd_count,
+    const struct GNUNET_GNSRECORD_Data *rd)
 {
     auto pack = static_cast<GnsCallbackPack*>(cls);
     if (rd_count == 0) {
@@ -34,8 +33,8 @@ process_lookup_result (void *cls,
     }
     else {
         std::vector<std::string> results;
-        for (unsigned int i = 0; i < rd_count; i++)
-        {
+        results.reserve(rd_count);
+        for (uint32_t i = 0; i < rd_count; i++) {
             if(pack->record_type != GNUNET_GNSRECORD_TYPE_ANY && rd[i].record_type != pack->record_type)
                 continue;
             char *rd_str = GNUNET_GNSRECORD_value_to_string (rd[i].record_type,
@@ -60,6 +59,17 @@ GNS::GNS(const GNUNET_CONFIGURATION_Handle *cfg)
     registerService(this);
 }
 
+void GNS::shutdown()
+{
+    if(gns == nullptr)
+        return;
+    // In case we destruct while handling a lookup result
+    scheduler::run([gns=this->gns]() {
+        GNUNET_GNS_disconnect(gns);
+    });
+    gns = nullptr;
+}
+
 void GNS::lookup(const std::string &name, std::chrono::milliseconds timeout,
     GnsCallback cb, uint32_t record_type, bool dns_compatability)
 {
@@ -75,7 +85,7 @@ void GNS::lookup(const std::string &name, std::chrono::milliseconds timeout,
     }
 
     auto pack = new GnsCallbackPack;
-    pack->cb = cb;
+    pack->cb = std::move(cb);
     pack->record_type = record_type;
     auto lr = GNUNET_GNS_lookup_with_tld(gns, lookup_name.c_str(), record_type, GNUNET_GNS_LO_DEFAULT, process_lookup_result, pack);
     pack->lr = lr;
@@ -97,4 +107,29 @@ void GNS::lookup(const std::string &name, std::chrono::milliseconds timeout,
     if(type == UINT32_MAX)
         throw std::runtime_error("Invalid record type");
     lookup(name, timeout, cb, type, dns_compatability);
+}
+
+cppcoro::task<std::vector<std::string>> GNS::lookup(const std::string &name, std::chrono::milliseconds timeout,
+    uint32_t record_type, bool dns_compatability)
+{
+    struct RecordAwaiter : public EagerAwaiter<std::vector<std::string>>
+    {
+        RecordAwaiter(GNS& gns, const std::string& name, std::chrono::milliseconds timeout,
+            uint32_t record_type, bool dns_compatability)
+        {
+            gns.lookup(name, timeout, [this](std::vector<std::string> results) {
+                setValue(std::move(results));
+            }, record_type, dns_compatability);
+        }
+    };
+    co_return co_await RecordAwaiter(*this, name, timeout, record_type, dns_compatability);
+}
+
+cppcoro::task<std::vector<std::string>> GNS::lookup(const std::string &name, std::chrono::milliseconds timeout,
+    const std::string_view record_type, bool dns_compatability)
+{
+    uint32_t type = GNUNET_GNSRECORD_typename_to_number(record_type.data());
+    if(type == UINT32_MAX)
+        throw std::runtime_error("Invalid record type");
+    co_return co_await lookup(name, timeout, type, dns_compatability);
 }

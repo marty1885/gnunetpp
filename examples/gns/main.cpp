@@ -3,25 +3,22 @@
 #include "CLI/Config.hpp"
 
 #include "gnunetpp-gns.hpp"
+#include "gnunetpp-scheduler.hpp"
+#include "inner/coroutine.hpp"
 
 std::string name;
 std::string record_type;
 int timeout;
 
-std::shared_ptr<gnunetpp::GNS> gns;
-void service(const GNUNET_CONFIGURATION_Handle* cfg)
+cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
 {
-    gns = std::make_shared<gnunetpp::GNS>(cfg);
-    gns->lookup(name, std::chrono::seconds(timeout), [](const std::vector<std::string>& result) {
-        if(result.empty()) {
-            std::cout << "No results found under domain name: " << name << std::endl;
-            gnunetpp::shutdown();
-            return;
-        }
-        for (const auto& r : result)
-            std::cout << r << std::endl;
-        gnunetpp::shutdown();
-    }, record_type);
+    auto gns = std::make_shared<gnunetpp::GNS>(cfg);
+    auto result = co_await gns->lookup(name, std::chrono::seconds(timeout), record_type);
+    if(result.empty())
+        std::cout << "No results found under domain name: " << name << std::endl;
+    for (const auto& r : result)
+        std::cout << r << std::endl;
+    gnunetpp::shutdown();
 }
 
 int main(int argc, char** argv)
@@ -33,7 +30,7 @@ int main(int argc, char** argv)
     app.add_option("--type", record_type, "Record type to lookup (Ex. A, AAAA)")->default_val("ANY");
 
     CLI11_PARSE(app, argc, argv);
-    gnunetpp::run(service);
+    gnunetpp::start(service);
 
     return 0;
 }
