@@ -46,19 +46,19 @@ int main(int argc, char** argv)
 {
     CLI::App app{"gnunetpp-dht"};
     app.require_subcommand(1);
-    auto put = app.add_subcommand("put", "Put a key-value pair into the DHT");
-    auto get = app.add_subcommand("get", "Get a value from the DHT");
+    auto put = app.add_subcommand("put", "Put a key-value pair into the GNUnet DHT");
+    auto get = app.add_subcommand("get", "Get a value from the GNUnet DHT");
 
-    put->add_option("-k,--key", key, "Key for the DHT")->required();
-    put->add_option("-v,--value", value, "Value for the DHT")->required();
+    put->add_option("-k,--key", key, "Key of the key value pair")->required();
+    put->add_option("-v,--value", value, "Value of the key value pair")->required();
     put->add_option("-e,--expiration", expiration, "Expiration time for the value in seconds")->default_val(size_t{3600});
     put->add_option("-r,--replication", replication, "Estimation of how many nearest peer this request reaches "
-        "(not replicating data on DHT)")->default_val(uint32_t{5});
+        "(not data replication count)")->default_val(uint32_t{5});
 
-    get->add_option("-k,--key", key, "Key for the DHT")->required();
-    get->add_option("-t,--timeout", timeout, "Timeout for the DHT operation in seconds")->default_val(size_t{10});
+    get->add_option("-k,--key", key, "Key to look for in  the DHT")->required();
+    get->add_option("-t,--timeout", timeout, "Timeout for the DHT search in seconds")->default_val(size_t{10});
     get->add_option("-r,--replication", replication, "Estimation of how many nearest peer this request reaches "
-        "(not replicating data on DHT)")->default_val(uint32_t{5});
+        "(not data replication count)")->default_val(uint32_t{5});
 
     CLI11_PARSE(app, argc, argv);
     run_put = put->parsed();

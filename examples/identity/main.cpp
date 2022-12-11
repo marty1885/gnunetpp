@@ -8,6 +8,7 @@
 bool run_create;
 bool run_delete;
 bool run_get;
+bool run_list;
 
 std::string identity_name;
 std::string key_type;
@@ -67,6 +68,15 @@ void service(const GNUNET_CONFIGURATION_Handle* cfg)
             gnunetpp::shutdown();
         });
     }
+
+    else if(run_list) {
+        gnunetpp::identity::get_identities(cfg, [](const std::string& name, const GNUNET_IDENTITY_PublicKey& pk) {
+            if(name != "")
+                std::cout << name << " - " << to_string(pk) << std::endl;
+            else
+                gnunetpp::shutdown();
+        });
+    }
 }
 
 int main(int argc, char** argv)
@@ -76,6 +86,7 @@ int main(int argc, char** argv)
     auto create_identity = app.add_subcommand("create", "Create a new identity");
     auto delete_identity = app.add_subcommand("delete", "Delete an identity");
     auto get = app.add_subcommand("get", "Get an identity (ego)");
+    auto list = app.add_subcommand("list", "List all identities");
 
     create_identity->add_option("name", identity_name, "Name of the identity")->required();
     create_identity->add_option("-t,--type", key_type, "Key type. Valid values are EDCSA/EdDSA. EdDSA is experimental")
@@ -88,6 +99,7 @@ int main(int argc, char** argv)
     run_create = create_identity->parsed();
     run_delete = delete_identity->parsed();
     run_get = get->parsed();
+    run_list = list->parsed();
 
     gnunetpp::run(service);
 }

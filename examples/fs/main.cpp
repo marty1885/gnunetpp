@@ -92,20 +92,20 @@ int main(int argc, char** argv)
     CLI::App app{"gnunetpp-fs"};
     app.require_subcommand(1);
 
-    auto download = app.add_subcommand("download", "Download a file from GNUnet");
+    auto download = app.add_subcommand("download", "Download a file from GNUnet File Share");
     download->add_option("uri", uri, "URI of the file to download")->required();
     download->add_option("-o,--output", output_name, "Output file name")->required();
     download->add_option("-a,--anonymity", anonymity_level, "Anonymity level [0, inf]. "
         "0 is none; 1 with GAP; >1 with cover traffic")->default_val(uint32_t{1});
 
-    auto search = app.add_subcommand("search", "Search files with keywords");
+    auto search = app.add_subcommand("search", "Search GNUnet File Share using keywords");
     search->add_option("keywords", keywords, "Keywords to search for")->required();
     search->add_option("-t,--timeout", timeout, "Timeout in seconds")->default_val(size_t{10});
     search->add_option("-n,--max-results", max_results, "Maximum number of results to return (0 means unlimited)")->default_val(size_t{0});
     search->add_option("-a,--anonymity", anonymity_level, "Anonymity level [0, inf]. "
         "0 is none; 1 with GAP; >1 with cover traffic")->default_val(uint32_t{1});
 
-    auto publish = app.add_subcommand("publish", "Publish file/directory to GNUnet");
+    auto publish = app.add_subcommand("publish", "Publish file/directory to GNUnet File Share");
     publish->add_option("file", filename, "File or directory to publish")->required();
     publish->add_option("-k,--keyword", keywords, "Keywords to publish with");
 

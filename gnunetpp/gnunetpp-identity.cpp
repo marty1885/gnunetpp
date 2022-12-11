@@ -1,7 +1,14 @@
 #include "gnunetpp-identity.hpp"
+#include "gnunetpp-scheduler.hpp"
 
 #include <stdexcept>
 #include <iostream>
+
+struct IdentityCallbackPack
+{
+    std::function<void(const std::string&, const GNUNET_IDENTITY_PublicKey&)> fn;
+    GNUNET_IDENTITY_Handle* handle;
+};
 
 namespace gnunetpp::identity
 {
@@ -29,6 +36,29 @@ static void ego_lookup_trampline(void* cls, struct GNUNET_IDENTITY_Ego* ego)
     (*cb)(const_cast<GNUNET_IDENTITY_Ego*>(ego));
     delete cb;
 }
+
+static void identity_info_trampoline(void *cls,
+           struct GNUNET_IDENTITY_Ego *ego,
+           void **ctx,
+           const char *identifier)
+{
+    auto pack = reinterpret_cast<IdentityCallbackPack*>(cls);
+    if(ego == nullptr) {
+        // iteration finished
+        gnunetpp::scheduler::run([pack](){
+            GNUNET_IDENTITY_disconnect(pack->handle);
+            delete pack;
+        });
+        pack->fn("", GNUNET_IDENTITY_PublicKey{});
+        return;
+    }
+
+    if(identifier == nullptr) // Deleted ego
+        return;
+    auto pub_key = get_public_key(ego);
+    pack->fn(identifier, pub_key);
+}
+
 }
 
 
@@ -75,6 +105,17 @@ GNUNET_IDENTITY_EgoLookup* lookup_ego(const GNUNET_CONFIGURATION_Handle* cfg
 {
     return GNUNET_IDENTITY_ego_lookup(cfg, name.c_str(), &detail::ego_lookup_trampline
         , new std::function<void(GNUNET_IDENTITY_Ego*)>(std::move(fn)));
+}
+
+void get_identities(const GNUNET_CONFIGURATION_Handle* cfg, std::function<void(const std::string&, const GNUNET_IDENTITY_PublicKey&)> fn)
+{
+    auto pack = new IdentityCallbackPack{std::move(fn), nullptr};
+    auto handle = GNUNET_IDENTITY_connect(cfg, detail::identity_info_trampoline, pack);
+    pack->handle = handle;
+    if(handle == nullptr) {
+        delete pack;
+        throw std::runtime_error("GNUNET_IDENTITY_connect failed");
+    }
 }
 
 GNUNET_IDENTITY_Ego* anonymous_ego()
