@@ -8,9 +8,9 @@ using namespace gnunetpp;
 
 // Note this function returns a pointer as the closure of the connection
 static void *cadet_connection_trampoline (
-  void *cls,
-  GNUNET_CADET_Channel *channel,
-  const GNUNET_PeerIdentity *source)
+    void *cls,
+    GNUNET_CADET_Channel *channel,
+    const GNUNET_PeerIdentity *source)
 
 {
     auto cadet = static_cast<CADET*>(cls);
@@ -104,21 +104,25 @@ void CADET::closePort(GNUNET_CADET_Port* port)
     GNUNET_CADET_close_port(port);
 }
 
-CADETChannel* CADET::connect(const GNUNET_PeerIdentity& peer, const std::string_view port, std::optional<uint32_t> options)
+CADETChannel* CADET::connect(const GNUNET_PeerIdentity& peer, const std::string_view port
+    , const std::vector<uint16_t>& acceptable_reply_types
+    , std::optional<uint32_t> options)
 {
     auto channel_ptr = new CADETChannel();
     auto hash = crypto::hash(port);
-    const GNUNET_MQ_MessageHandler handlers[] = {
-        {
+    std::vector<GNUNET_MQ_MessageHandler> handlers;
+    handlers.reserve(acceptable_reply_types.size() + 1);
+    for(auto type : acceptable_reply_types) {
+        handlers.push_back({
             accept_all,
             cadet_message_client_trampoline,
             channel_ptr,
-            GNUNET_MESSAGE_TYPE_CADET_CLI,
+            type,
             0
-        },
-        GNUNET_MQ_handler_end()
-    };
-    auto channel = GNUNET_CADET_channel_create(cadet, channel_ptr, &peer, &hash, nullptr, cadet_disconnect_client_trampoline, handlers);
+        });
+    }
+    handlers.push_back(GNUNET_MQ_handler_end());
+    auto channel = GNUNET_CADET_channel_create(cadet, channel_ptr, &peer, &hash, nullptr, cadet_disconnect_client_trampoline, handlers.data());
     channel_ptr->channel = channel;
     channel_ptr->setConnectionOptions(options);
     return channel_ptr;

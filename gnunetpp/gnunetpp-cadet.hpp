@@ -48,7 +48,9 @@ struct CADET : public Service
     GNUNET_CADET_Port* openPort(const std::string_view port);
     void closePort(GNUNET_CADET_Port* port);
 
-    CADETChannel* connect(const GNUNET_PeerIdentity& peer, const std::string_view port, std::optional<uint32_t> options = std::nullopt);
+    CADETChannel* connect(const GNUNET_PeerIdentity& peer, const std::string_view port
+        , const std::vector<uint16_t>& acceptable_reply_types
+        , std::optional<uint32_t> options = std::nullopt);
 
     static void list_peers(const GNUNET_CONFIGURATION_Handle* cfg, std::function<void(const std::vector<GNUNET_CADET_PeerListEntry>&)>);
     static cppcoro::task<std::vector<GNUNET_CADET_PeerListEntry>> list_peers(const GNUNET_CONFIGURATION_Handle* cfg);
