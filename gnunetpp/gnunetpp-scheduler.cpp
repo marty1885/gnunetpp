@@ -122,18 +122,41 @@ void shutdown()
     running = false;
 }
 
+struct ReadLineCallbackPack
+{
+    std::function<void(const std::string&)> fn;
+    GNUNET_SCHEDULER_Task* task;
+    GNUNET_SCHEDULER_Task* shutdown_task;
+};
+
 void read_line(std::function<void(const std::string&)> fn)
 {
     auto rs = GNUNET_NETWORK_fdset_create();
     GNUNET_NETWORK_fdset_set_native(rs, 0);
+
+    auto pack = new ReadLineCallbackPack{std::move(fn), nullptr, nullptr};
+    pack->shutdown_task = GNUNET_SCHEDULER_add_shutdown([] (void* cls) {
+        auto pack = reinterpret_cast<ReadLineCallbackPack*>(cls);
+        GNUNET_SCHEDULER_cancel(pack->task);
+        delete pack;
+    }, pack);
+
     auto task = GNUNET_SCHEDULER_add_select(GNUNET_SCHEDULER_PRIORITY_DEFAULT, GNUNET_TIME_UNIT_FOREVER_REL, rs, nullptr
     , [] (void* cls) {
-        auto fn = reinterpret_cast<std::function<void(const std::string&)>*>(cls);
-        std::string line;
-        std::getline(std::cin, line);
-        (*fn)(line);
-        delete fn;
-    }, new std::function<void(const std::string&)>(std::move(fn)));
+        auto pack = reinterpret_cast<ReadLineCallbackPack*>(cls);
+        GNUNET_SCHEDULER_cancel(pack->shutdown_task);
+        char* line = nullptr;
+        size_t len = 0;
+        ssize_t read = getline(&line, &len, stdin);
+        if(read == -1) {
+            delete pack;
+            return;
+        }
+        std::string str(line, read);
+        pack->fn(str);
+        delete pack;
+    }, pack);
+    pack->task = task;
     GNUNET_NETWORK_fdset_destroy(rs);
 }
 

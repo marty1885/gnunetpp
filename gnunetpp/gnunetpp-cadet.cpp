@@ -35,6 +35,7 @@ static void cadet_disconnect_client_trampoline(void *cls, const GNUNET_CADET_Cha
     auto channel_ptr = static_cast<CADETChannel*>(cls);
     if(channel_ptr->disconnectCallback)
         channel_ptr->disconnectCallback();
+    channel_ptr->channel = nullptr;
     delete channel_ptr;
 }
 
@@ -92,13 +93,13 @@ void CADET::closePort(GNUNET_CADET_Port* port)
     GNUNET_CADET_close_port(port);
 }
 
-CADETChannel CADET::connect(const std::string_view port, const GNUNET_PeerIdentity& peer)
+CADETChannel* CADET::connect(const std::string_view port, const GNUNET_PeerIdentity& peer)
 {
     auto channel_ptr = new CADETChannel();
     auto hash = crypto::hash(port);
     auto channel = GNUNET_CADET_channel_create(cadet, channel_ptr, &peer, &hash, nullptr, cadet_disconnect_client_trampoline, nullptr);
     channel_ptr->channel = channel;
-    return CADETChannel(channel);
+    return channel_ptr;
 }
 
 struct ListPeersCallbackPack
@@ -139,6 +140,8 @@ cppcoro::task<std::vector<GNUNET_CADET_PeerListEntry>> CADET::list_peers(const G
 
 void CADETChannel::send(const void* data, size_t size, uint16_t type)
 {
+    if(!channel)
+        throw std::runtime_error("CADET channel is not open");
     const size_t total_size = size + sizeof(struct GNUNET_MessageHeader);
     struct GNUNET_MessageHeader *msg = nullptr;
     auto env = GNUNET_MQ_msg_extra(msg, total_size, type);

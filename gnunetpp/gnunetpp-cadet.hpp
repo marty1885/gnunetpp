@@ -15,7 +15,10 @@ struct CADETChannel
 {
     CADETChannel(GNUNET_CADET_Channel* channel) : channel(channel) {}
     CADETChannel() = default;
-    ~CADETChannel() { GNUNET_CADET_channel_destroy(channel); }
+    ~CADETChannel() {
+        if(channel)
+            GNUNET_CADET_channel_destroy(channel);
+    } 
     CADETChannel(const CADETChannel&) = delete;
     CADETChannel& operator=(const CADETChannel&) = delete;
     CADETChannel(CADETChannel&& other) : channel(other.channel) { other.channel = nullptr; }
@@ -39,7 +42,7 @@ struct CADET : public Service
     GNUNET_CADET_Port* openPort(const std::string_view port);
     void closePort(GNUNET_CADET_Port* port);
 
-    CADETChannel connect(const std::string_view port, const GNUNET_PeerIdentity& peer);
+    CADETChannel* connect(const std::string_view port, const GNUNET_PeerIdentity& peer);
 
     static void list_peers(const GNUNET_CONFIGURATION_Handle* cfg, std::function<void(const std::vector<GNUNET_CADET_PeerListEntry>&)>);
     static cppcoro::task<std::vector<GNUNET_CADET_PeerListEntry>> list_peers(const GNUNET_CONFIGURATION_Handle* cfg);
