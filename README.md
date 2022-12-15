@@ -27,12 +27,14 @@ dht->get("some_super_secret", [](const std::string_view data) {
 }, std::chrono::seconds(30)); // Max searching for 30 seconds
 ```
 
-Identity managment is also easily accessable
+Makes CADET much easier to use.
+
 
 ```cpp
-auto identity = std::make_shared<IdentityService>(cfg);
-co_await identity->create_identity("my_super_duper_name");
-auto ego = co_await identity::lookup_ego("my_super_duper_name");
+auto cadet = std::make_shared<CADET>(cfg);
+auto channel = cadet->connect("SOME_PEER_ID", "PORT_NAME");
+channel->send("Hello World!", GNUNET_MESSAGE_TYPE_CADET_CLI);
+co_await [buffer, msg_type] channel->receive();
 ```
 
 Search and download files from the GNUnet File Sharing service.

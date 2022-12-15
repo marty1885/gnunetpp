@@ -13,7 +13,6 @@ static void *cadet_connection_trampoline (
   const GNUNET_PeerIdentity *source)
 
 {
-    std::cout << "CADET connection trampoline" << std::endl;
     auto cadet = static_cast<CADET*>(cls);
     GNUNET_assert(cadet->openChannels.find(channel) == cadet->openChannels.end());
     cadet->openChannels[channel] = std::make_unique<CADETChannel>(channel);
@@ -22,7 +21,6 @@ static void *cadet_connection_trampoline (
 
 static void cadet_disconnect_trampoline(void *cls, const GNUNET_CADET_Channel *channel)
 {
-    std::cout << "CADET disconnect trampoline" << std::endl;
     auto cadet = static_cast<CADET*>(cls);
     auto channelPtr = const_cast<GNUNET_CADET_Channel*>(channel);
     GNUNET_assert(cadet->openChannels.find(channelPtr) != cadet->openChannels.end());
@@ -31,7 +29,6 @@ static void cadet_disconnect_trampoline(void *cls, const GNUNET_CADET_Channel *c
 
 static void cadet_disconnect_client_trampoline(void *cls, const GNUNET_CADET_Channel *channel)
 {
-    std::cout << "CADET disconnect client trampoline" << std::endl;
     auto channel_ptr = static_cast<CADETChannel*>(cls);
     if(channel_ptr->disconnectCallback)
         channel_ptr->disconnectCallback();
@@ -41,12 +38,26 @@ static void cadet_disconnect_client_trampoline(void *cls, const GNUNET_CADET_Cha
 
 static int accept_all(void *cls, const struct GNUNET_MessageHeader *msg)
 {
+    std::cout << "CADET accept all" << std::endl;
     return GNUNET_YES;
 }
 
-static void process_message(void *cls, const struct GNUNET_MessageHeader *msg)
+static void cadet_message_trampoline(void *cls, const struct GNUNET_MessageHeader *msg)
 {
     std::cout << "CADET process message" << std::endl;
+}
+
+static void cadet_message_client_trampoline(void *cls, const struct GNUNET_MessageHeader *msg)
+{
+    std::cout << "CADET process message client" << std::endl;
+    auto channel_ptr = static_cast<CADETChannel*>(cls);
+
+    auto size = ntohs(msg->size);
+    auto type = ntohs(msg->type);
+    auto message_begin = reinterpret_cast<const char*>(msg) + sizeof(GNUNET_MessageHeader);
+    auto message_end = message_begin + size - sizeof(GNUNET_MessageHeader);
+    if(channel_ptr->readCallback)
+        channel_ptr->readCallback(std::string_view(message_begin, message_end - message_begin), type);
 }
 
 CADET::CADET(const GNUNET_CONFIGURATION_Handle* cfg)
@@ -78,7 +89,7 @@ GNUNET_CADET_Port* CADET::openPort(const std::string_view port)
     const GNUNET_MQ_MessageHandler handlers[] = {
         {
             accept_all,
-            process_message,
+            cadet_message_trampoline,
             nullptr,
             GNUNET_MESSAGE_TYPE_ALL,
             0
@@ -93,12 +104,23 @@ void CADET::closePort(GNUNET_CADET_Port* port)
     GNUNET_CADET_close_port(port);
 }
 
-CADETChannel* CADET::connect(const std::string_view port, const GNUNET_PeerIdentity& peer)
+CADETChannel* CADET::connect(const GNUNET_PeerIdentity& peer, const std::string_view port, std::optional<uint32_t> options)
 {
     auto channel_ptr = new CADETChannel();
     auto hash = crypto::hash(port);
-    auto channel = GNUNET_CADET_channel_create(cadet, channel_ptr, &peer, &hash, nullptr, cadet_disconnect_client_trampoline, nullptr);
+    const GNUNET_MQ_MessageHandler handlers[] = {
+        {
+            accept_all,
+            cadet_message_client_trampoline,
+            channel_ptr,
+            GNUNET_MESSAGE_TYPE_CADET_CLI,
+            0
+        },
+        GNUNET_MQ_handler_end()
+    };
+    auto channel = GNUNET_CADET_channel_create(cadet, channel_ptr, &peer, &hash, nullptr, cadet_disconnect_client_trampoline, handlers);
     channel_ptr->channel = channel;
+    channel_ptr->setConnectionOptions(options);
     return channel_ptr;
 }
 
@@ -143,8 +165,32 @@ void CADETChannel::send(const void* data, size_t size, uint16_t type)
     if(!channel)
         throw std::runtime_error("CADET channel is not open");
     const size_t total_size = size + sizeof(struct GNUNET_MessageHeader);
+
+    if(total_size > std::numeric_limits<uint16_t>::max())
+        throw std::runtime_error("CADET message is too large");
+
     struct GNUNET_MessageHeader *msg = nullptr;
     auto env = GNUNET_MQ_msg_extra(msg, total_size, type);
+    if(options) {
+        // HACK: Check the incoming options value is valid in the API (GNUnet is very C..
+        // so it is using enums as defines)
+        constexpr size_t enum_size = sizeof(GNUNET_MQ_PriorityPreferences);
+        if constexpr(enum_size == 1)
+            GNUNET_assert(options <= std::numeric_limits<uint8_t>::max());
+        else if constexpr(enum_size == 2)
+            GNUNET_assert(options <= std::numeric_limits<uint16_t>::max());
+        else if constexpr(enum_size == 4)
+            GNUNET_assert(options <= std::numeric_limits<uint32_t>::max());
+        else if constexpr(enum_size == 8)
+            GNUNET_assert(options <= std::numeric_limits<uint64_t>::max());
+
+        GNUNET_MQ_env_set_options(env, (GNUNET_MQ_PriorityPreferences)*options);
+    }
     memcpy(&msg[1], data, size);
     GNUNET_MQ_send(getMQ(), env);
+}
+
+void CADETChannel::send(const std::string_view sv, uint16_t type)
+{
+    send(sv.data(), sv.size(), type);
 }

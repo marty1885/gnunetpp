@@ -36,7 +36,12 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
     }
     else if(run_client) {
         auto cadet = std::make_shared<CADET>(cfg);
-        auto* channel = cadet->connect(port, crypto::peer_identity(peer));
+        auto channel = cadet->connect(crypto::peer_identity(peer), port);
+        channel->setDisconnectCallback([] { gnunetpp::shutdown(); });
+        channel->setReceiveCallback([](const std::string_view data, uint16_t type) {
+            std::cout << data << std::flush;
+        });
+
         while(true) {
             auto line = co_await scheduler::read_line();
             channel->send(line.data(), line.size(), GNUNET_MESSAGE_TYPE_CADET_CLI);
