@@ -14,11 +14,20 @@ namespace gnunetpp
 struct CADETChannel
 {
     CADETChannel(GNUNET_CADET_Channel* channel) : channel(channel) {}
+    CADETChannel() = default;
     ~CADETChannel() { GNUNET_CADET_channel_destroy(channel); }
-    GNUNET_CADET_Channel* channel;
+    CADETChannel(const CADETChannel&) = delete;
+    CADETChannel& operator=(const CADETChannel&) = delete;
+    CADETChannel(CADETChannel&& other) : channel(other.channel) { other.channel = nullptr; }
+    CADETChannel& operator=(CADETChannel&& other) { channel = other.channel; other.channel = nullptr; return *this; }
+
+    void send(const void* data, size_t size, uint16_t type);
+
+    GNUNET_MQ_Handle* getMQ() { return GNUNET_CADET_get_mq(channel); }
     
-    std::function<void(const std::string_view)> readCallback;
+    // std::function<void(const std::string_view)> readCallback;
     std::function<void()> disconnectCallback;
+    GNUNET_CADET_Channel* channel = nullptr;
 };
 
 struct CADET : public Service
@@ -30,7 +39,7 @@ struct CADET : public Service
     GNUNET_CADET_Port* openPort(const std::string_view port);
     void closePort(GNUNET_CADET_Port* port);
 
-    void connect(const std::string_view port, const GNUNET_PeerIdentity& peer);
+    CADETChannel connect(const std::string_view port, const GNUNET_PeerIdentity& peer);
 
     static void list_peers(const GNUNET_CONFIGURATION_Handle* cfg, std::function<void(const std::vector<GNUNET_CADET_PeerListEntry>&)>);
     static cppcoro::task<std::vector<GNUNET_CADET_PeerListEntry>> list_peers(const GNUNET_CONFIGURATION_Handle* cfg);
