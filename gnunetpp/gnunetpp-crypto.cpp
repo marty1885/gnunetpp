@@ -121,4 +121,12 @@ std::string to_string(const GNUNET_PeerIdentity& id)
     return str;
 }
 
+GNUNET_PeerIdentity peer_identity(const std::string_view& str)
+{
+    GNUNET_PeerIdentity id;
+    if(GNUNET_OK != GNUNET_CRYPTO_eddsa_public_key_from_string(str.data(), str.size(), &id.public_key))
+        throw std::runtime_error("Failed to parse peer identity");
+    return id;
+}
+
 }

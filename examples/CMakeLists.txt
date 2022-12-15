@@ -19,3 +19,6 @@ target_link_libraries(gnunetpp-gns gnunetgns gnunetgnsrecord gnunetcore gnunetut
 
 add_executable(gnunetpp-nse nse/main.cpp)
 target_link_libraries(gnunetpp-nse gnunetnse gnunetcore gnunetutil gnunetpp example_pch)
+
+add_executable(gnunetpp-cadet cadet/main.cpp)
+target_link_libraries(gnunetpp-cadet gnunetcadet gnunetcore gnunetutil gnunetpp example_pch)

@@ -97,7 +97,7 @@ This project aims to create a easy to use wapper for the commonly used part of G
   - [x] ECDSA/EDDSA
   - [x] to_string
   - [ ] RSA
-- CADET
+- CADET (WIP, CADET is a complex beast)
   - [ ] Server
   - [ ] Client
 - GNS

@@ -24,7 +24,7 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
         << "-----------------------------------------\n"
         << "estimated network size     |  log2 stddev\n"
         << "-----------------------------------------\n"
-        << right_pad(std::to_string(network_size), 27) << "|  " << network_size << std::endl;
+        << right_pad(std::to_string(network_size), 27) << "|  " << log2_stddev << std::endl;
 }
 
 int main(int argc, char** argv)

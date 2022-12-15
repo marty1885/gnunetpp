@@ -40,4 +40,5 @@ GNUNET_CRYPTO_EcdsaPublicKey get_public_key(const GNUNET_CRYPTO_EcdsaPrivateKey&
 GNUNET_PeerIdentity my_peer_identity();
 
 std::string to_string(const GNUNET_PeerIdentity& peer);
+GNUNET_PeerIdentity peer_identity(const std::string_view& str);
 }
