@@ -122,4 +122,33 @@ void shutdown()
     running = false;
 }
 
+void read_line(std::function<void(const std::string&)> fn)
+{
+    auto rs = GNUNET_NETWORK_fdset_create();
+    GNUNET_NETWORK_fdset_set_native(rs, 0);
+    auto task = GNUNET_SCHEDULER_add_select(GNUNET_SCHEDULER_PRIORITY_DEFAULT, GNUNET_TIME_UNIT_FOREVER_REL, rs, nullptr
+    , [] (void* cls) {
+        auto fn = reinterpret_cast<std::function<void(const std::string&)>*>(cls);
+        std::string line;
+        std::getline(std::cin, line);
+        (*fn)(line);
+        delete fn;
+    }, new std::function<void(const std::string&)>(std::move(fn)));
+    GNUNET_NETWORK_fdset_destroy(rs);
+}
+
+cppcoro::task<std::string> read_line()
+{
+    struct ReadLineAwaiter : public CallbackAwaiter<std::string>
+    {
+        void await_suspend(std::coroutine_handle<> handle)
+        {
+            gnunetpp::scheduler::read_line([handle, this] (const std::string& line) {
+                setValue(line);
+                handle.resume();
+            });
+        }
+    };
+    co_return co_await ReadLineAwaiter();
+}
 }

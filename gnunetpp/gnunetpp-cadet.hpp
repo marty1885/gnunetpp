@@ -44,6 +44,8 @@ struct CADET : public Service
     static void list_peers(const GNUNET_CONFIGURATION_Handle* cfg, std::function<void(const std::vector<GNUNET_CADET_PeerListEntry>&)>);
     static cppcoro::task<std::vector<GNUNET_CADET_PeerListEntry>> list_peers(const GNUNET_CONFIGURATION_Handle* cfg);
 
+    GNUNET_CADET_Handle* nativeHandle() const { return cadet; }
+
     GNUNET_CADET_Handle* cadet = nullptr;
     std::map<GNUNET_CADET_Channel*, std::unique_ptr<CADETChannel>> openChannels;
 };

@@ -37,9 +37,10 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
     else if(run_client) {
         auto cadet = std::make_shared<CADET>(cfg);
         auto channel = cadet->connect(port, crypto::peer_identity(peer));
-        std::cout << "Connected to " << port << std::endl;
-        channel.send("Hello", 5, GNUNET_MESSAGE_TYPE_CADET_CLI);
-        co_await scheduler::sleep(1s);
+        while(true) {
+            auto line = co_await scheduler::read_line() + "\n";
+            channel.send(line.data(), line.size(), GNUNET_MESSAGE_TYPE_CADET_CLI);
+        }
     }
     else {
         std::cerr << "Not implemented yet" << std::endl;

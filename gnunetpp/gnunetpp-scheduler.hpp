@@ -71,4 +71,10 @@ void cancelAll();
  * @brief Shutdown the scheduler
  */
 void shutdown();
+
+/**
+ * @brief Asynchronously read a line from stdin
+ */
+void read_line(std::function<void(const std::string&)> fn);
+cppcoro::task<std::string> read_line();
 }
