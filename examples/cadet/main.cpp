@@ -128,7 +128,7 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
 
         while(true) {
             // Read stdin line by line asynchronously
-            auto line = co_await scheduler::read_line();
+            auto line = co_await scheduler::readStdin();
             // Send the line to the peer with the specified message type
             channel->send(line.data(), line.size(), GNUNET_MESSAGE_TYPE_CADET_CLI);
         }

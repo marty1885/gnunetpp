@@ -129,7 +129,7 @@ struct ReadLineCallbackPack
     GNUNET_SCHEDULER_Task* shutdown_task;
 };
 
-void read_line(std::function<void(const std::string&)> fn)
+void readStdin(std::function<void(const std::string&)> fn)
 {
     auto rs = GNUNET_NETWORK_fdset_create();
     GNUNET_NETWORK_fdset_set_native(rs, 0);
@@ -160,13 +160,13 @@ void read_line(std::function<void(const std::string&)> fn)
     GNUNET_NETWORK_fdset_destroy(rs);
 }
 
-cppcoro::task<std::string> read_line()
+cppcoro::task<std::string> readStdin()
 {
     struct ReadLineAwaiter : public CallbackAwaiter<std::string>
     {
         void await_suspend(std::coroutine_handle<> handle)
         {
-            gnunetpp::scheduler::read_line([handle, this] (const std::string& line) {
+            gnunetpp::scheduler::readStdin([handle, this] (const std::string& line) {
                 setValue(line);
                 handle.resume();
             });
