@@ -64,7 +64,8 @@ static void cadet_message_trampoline(void *cls, const struct GNUNET_MessageHeade
     auto message_end = message_begin + size - sizeof(GNUNET_MessageHeader);
     if(pack->channel->readCallback)
         pack->channel->readCallback(std::string_view(message_begin, message_end - message_begin), type);
-    GNUNET_CADET_receive_done(pack->channel->channel);
+    if(pack->channel->channel)
+        GNUNET_CADET_receive_done(pack->channel->channel);
 }
 
 static void cadet_message_client_trampoline(void *cls, const struct GNUNET_MessageHeader *msg)
@@ -78,7 +79,8 @@ static void cadet_message_client_trampoline(void *cls, const struct GNUNET_Messa
     auto message_end = message_begin + size - sizeof(GNUNET_MessageHeader);
     if(channel_ptr->readCallback)
         channel_ptr->readCallback(std::string_view(message_begin, message_end - message_begin), type);
-    GNUNET_CADET_receive_done(channel_ptr->channel);
+    if(channel_ptr->channel)
+        GNUNET_CADET_receive_done(channel_ptr->channel);
 }
 
 CADET::CADET(const GNUNET_CONFIGURATION_Handle* cfg)
