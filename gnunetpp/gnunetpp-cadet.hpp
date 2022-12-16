@@ -63,7 +63,6 @@ struct CADET : public Service
     GNUNET_CADET_Handle* nativeHandle() const { return cadet; }
 
     GNUNET_CADET_Handle* cadet = nullptr;
-    std::map<GNUNET_CADET_Channel*, std::shared_ptr<CADETChannel>> openChannels;
     std::function<void(CADETChannel*)> connectedCallback;
     std::function<void(CADETChannel*)> disconectedCallback;
 };

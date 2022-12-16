@@ -89,6 +89,9 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
             channel->setReceiveCallback([](const std::string_view data, uint16_t type) {
                 std::cout << data << std::flush;
             });
+            channel->setDisconnectCallback([channel] {
+                std::cout << "* Connection closed for " << crypto::to_string(channel->peer()) << std::endl;
+            });
         });
     }
 }

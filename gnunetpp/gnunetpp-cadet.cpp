@@ -8,8 +8,6 @@ using namespace gnunetpp;
 
 struct PortListenerPack
 {
-    GNUNET_HashCode port;
-    std::vector<GNUNET_MQ_MessageHandler> handlers;
     CADET* cadet;
     CADETChannel* channel;
 };
@@ -22,25 +20,24 @@ static void *cadet_connection_trampoline (
     const GNUNET_PeerIdentity *source)
 
 {
-    auto portListenerPack = static_cast<PortListenerPack*>(cls);
-    auto cadet = portListenerPack->cadet;
-    auto channelPtr = new CADETChannel(channel);
-    cadet->openChannels[channel] = std::shared_ptr<CADETChannel>(channelPtr);
-    portListenerPack->channel = cadet->openChannels[channel].get();
+    auto cadet = static_cast<CADET*>(cls);
+    auto pack = new PortListenerPack();
+    pack->cadet = cadet;
+    pack->channel = new CADETChannel(channel);
     if(cadet->connectedCallback)
-        cadet->connectedCallback(channelPtr);
-    return portListenerPack;
+        cadet->connectedCallback(pack->channel);
+    return pack;
 }
 
 static void cadet_disconnect_trampoline(void *cls, const GNUNET_CADET_Channel *channel)
 {
     auto portListenerPack = static_cast<PortListenerPack*>(cls);
     auto cadet = portListenerPack->cadet;
-    auto channelPtr = cadet->openChannels[(GNUNET_CADET_Channel*)channel];
-    if(channelPtr->disconnectCallback)
-        channelPtr->disconnectCallback();
-    portListenerPack->channel = nullptr;
-    cadet->openChannels.erase((GNUNET_CADET_Channel*)channel);
+    if(portListenerPack->channel->disconnectCallback)
+        portListenerPack->channel->disconnectCallback();
+    // HACK: GNUnet already destroyed the channel, so we don't want the destructor to try to destroy it again
+    portListenerPack->channel->channel = nullptr;
+    delete portListenerPack->channel;
     delete portListenerPack;
 }
 
@@ -108,12 +105,11 @@ void CADET::shutdown()
 
 GNUNET_CADET_Port* CADET::openPort(const std::string_view port)
 {
-    auto pack = new PortListenerPack();
     const GNUNET_MQ_MessageHandler handlers[] = {
         {
             accept_all,
             cadet_message_trampoline,
-            pack,
+            this,
             GNUNET_MESSAGE_TYPE_CADET_CLI,
             0
         },
@@ -121,10 +117,7 @@ GNUNET_CADET_Port* CADET::openPort(const std::string_view port)
     };
 
     auto hash = crypto::hash(port);
-    pack->cadet = this;
-    pack->port = hash;
-    pack->handlers = std::vector<GNUNET_MQ_MessageHandler>(handlers, handlers + sizeof(handlers) / sizeof(handlers[0]));
-    return GNUNET_CADET_open_port(cadet, &hash, cadet_connection_trampoline, pack, nullptr, cadet_disconnect_trampoline, handlers);
+    return GNUNET_CADET_open_port(cadet, &hash, cadet_connection_trampoline, this, nullptr, cadet_disconnect_trampoline, handlers);
 }
 
 void CADET::closePort(GNUNET_CADET_Port* port)
