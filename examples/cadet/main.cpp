@@ -29,6 +29,7 @@ static std::string bool_to_string(bool b)
     return b ? "true" : "false";
 }
 
+static std::shared_ptr<CADET> cadet;
 cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
 {
     if(run_peer_list) {
@@ -43,7 +44,7 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
     }
     else if(run_client) {
         // Create a CADET instance
-        auto cadet = std::make_shared<CADET>(cfg);
+        cadet = std::make_shared<CADET>(cfg);
 
         // CADET connections are called channels. We connect to a peer using the following information
         // - The peer identity of the peer we want to connect to
@@ -79,8 +80,16 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
         }
     }
     else {
-        std::cerr << "Not implemented yet" << std::endl;
-        abort();
+        // Create a CADET instance
+        cadet = std::make_shared<CADET>(cfg);
+        cadet->openPort(port);
+        std::cout << "Listening on " << crypto::to_string(crypto::my_peer_identity(cfg)) <<" port \'" << port << "\'" << std::endl;
+        cadet->setConnectedCallback([](CADETChannel* channel) {
+            std::cout << "* New connection from " << crypto::to_string(channel->peer()) << std::endl;
+            channel->setReceiveCallback([](const std::string_view data, uint16_t type) {
+                std::cout << data << std::flush;
+            });
+        });
     }
 }
 

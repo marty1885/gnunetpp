@@ -30,6 +30,8 @@ struct CADETChannel
     void setDisconnectCallback(std::function<void()> cb) { disconnectCallback = std::move(cb); }
     void setConnectionOptions(std::optional<uint32_t> options) { this->options = options; }
     void setReceiveCallback(std::function<void(const std::string_view, uint16_t)> cb) { readCallback = std::move(cb); }
+    void disconnect();
+    GNUNET_PeerIdentity peer() const;
 
     GNUNET_MQ_Handle* getMQ() const { return GNUNET_CADET_get_mq(channel); }
     
@@ -55,9 +57,14 @@ struct CADET : public Service
     static void list_peers(const GNUNET_CONFIGURATION_Handle* cfg, std::function<void(const std::vector<GNUNET_CADET_PeerListEntry>&)>);
     static cppcoro::task<std::vector<GNUNET_CADET_PeerListEntry>> list_peers(const GNUNET_CONFIGURATION_Handle* cfg);
 
+    void setConnectedCallback(std::function<void(CADETChannel*)> cb) { connectedCallback = std::move(cb); }
+    void setDisconnectedCallback(std::function<void(CADETChannel*)> cb) { disconectedCallback = std::move(cb); }
+
     GNUNET_CADET_Handle* nativeHandle() const { return cadet; }
 
     GNUNET_CADET_Handle* cadet = nullptr;
-    std::map<GNUNET_CADET_Channel*, std::unique_ptr<CADETChannel>> openChannels;
+    std::map<GNUNET_CADET_Channel*, std::shared_ptr<CADETChannel>> openChannels;
+    std::function<void(CADETChannel*)> connectedCallback;
+    std::function<void(CADETChannel*)> disconectedCallback;
 };
 }
