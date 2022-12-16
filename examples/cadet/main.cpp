@@ -13,7 +13,7 @@ using namespace std::chrono_literals;
 bool run_peer_list = false;
 bool run_server = false;
 bool run_client = false;
-bool verbose = false;
+bool run_tunnel = false;
 std::string peer;
 std::string port = "default";
 
@@ -29,6 +29,44 @@ static std::string bool_to_string(bool b)
     return b ? "true" : "false";
 }
 
+std::string encryption_status(uint16_t estate)
+{
+    switch(estate) {
+        case (int)CADET::EncryptionState::Uninitialized:
+            return "Uninitialized    ";
+        case (int)CADET::EncryptionState::AXSent:
+            return "AXSent           ";
+        case (int)CADET::EncryptionState::AXReceived:
+            return "AXReceived       ";
+        case (int)CADET::EncryptionState::AxAuxSent:
+            return "AxAuxSent        ";
+        case (int)CADET::EncryptionState::AXSentAndReceived:
+            return "AXSentAndReceived";
+        case (int)CADET::EncryptionState::Ok:
+            return "Ok               ";
+        default:
+            return "Unknown          "; // Should never happen
+    }
+}
+
+std::string connection_status(uint16_t cstate)
+{
+    switch(cstate) {
+        case (int)CADET::ConnectionState::New:
+            return "New     ";
+        case (int)CADET::ConnectionState::Search:
+            return "Search  ";
+        case (int)CADET::ConnectionState::Wait:
+            return "Wait    ";
+        case (int)CADET::ConnectionState::Ready:
+            return "Ready   ";
+        case (int)CADET::ConnectionState::Shutdown:
+            return "Shutdown";
+        default:
+            return "Unknown "; // Should never happen
+    }
+}
+
 static std::shared_ptr<CADET> cadet;
 cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
 {
@@ -36,10 +74,22 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
         // Get a list of all peers currently known over CADET (Different from the list of peers in the peer service)
         auto peers = co_await CADET::list_peers(cfg);
 
-        std::cout << "Host peer ID: " << crypto::to_string(crypto::my_peer_identity(cfg)) << std::endl << std::endl;
+        std::cout << "Host peer ID: " << crypto::to_string(crypto::my_peer_identity(cfg)) << std::endl;
+        std::cout << "Total peers: " << peers.size() << std::endl << std::endl;
         for (auto& peer : peers) {
             std::cout << "Peer: " << crypto::to_string(peer.peer) << " n_path: " << right_pad(std::to_string(peer.n_paths), 4)
                 << " have_tunnel: " << bool_to_string(peer.have_tunnel) << std::endl;
+            // Retrieve all paths to the peer. Note that sometimes GNUnet will report more paths in the last step than
+            // we will get here. Likely because TOCTOU, information not yet updated, or other reasons. Always assume
+            // path information not complete in a p2p network.
+            auto paths_to_peer = co_await CADET::get_path(cfg, peer.peer);
+            for(size_t i=0;i<paths_to_peer.size();i++) {
+                auto& path = paths_to_peer[i];
+                std::cout << "  Path " << i << " has size " << path.size() << ":\n";
+                for(auto& hop : path)
+                    std::cout << "    " << crypto::to_string(hop) << "\n";
+                std::cout << std::endl;
+            }
         }
     }
     else if(run_client) {
@@ -79,7 +129,7 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
             channel->send(line.data(), line.size(), GNUNET_MESSAGE_TYPE_CADET_CLI);
         }
     }
-    else {
+    else if (run_server) {
         // Create a CADET instance
         cadet = std::make_shared<CADET>(cfg);
         // Setup a callback for new connections
@@ -100,6 +150,14 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
         cadet->openPort(port, {GNUNET_MESSAGE_TYPE_CADET_CLI});
         std::cout << "Listening on " << crypto::to_string(crypto::my_peer_identity(cfg)) <<" port \'" << port << "\'" << std::endl;
     }
+    else if (run_tunnel) {
+        // Request list of all tunnels
+        auto tunnels = co_await CADET::list_tunnels(cfg);
+        for(auto& tunnel : tunnels) {
+            std::cout << "Tunnel: " << crypto::to_string(tunnel.peer) << " [ ENC: " << encryption_status(tunnel.estate) << ", CON: " << connection_status(tunnel.cstate)  << "] "
+                << tunnel.channels << " CHs, " << tunnel.connections << " CONNs" << std::endl;
+        }
+    }
 }
 
 int main(int argc, char** argv)
@@ -109,10 +167,10 @@ int main(int argc, char** argv)
     auto peer_list = app.add_subcommand("list", "List all peers")->callback([&] { run_peer_list = true; });
     auto server = app.add_subcommand("server", "Run an echo server (like nc -l")->callback([&] { run_server = true; });
     auto client = app.add_subcommand("client", "Run an echo client (like nc)")->callback([&] { run_client = true; });
+    auto tunnel = app.add_subcommand("tunnel", "List info about all existing CADET tunnels")->callback([&] { run_tunnel = true; });
     server->add_option("port", port, "Port to listen on")->default_val("default");
     client->add_option("peer", peer, "Peer to connect to")->required();
     client->add_option("port", port, "Port to connect to")->default_val("default");
-    client->add_flag("-v,--verbose", verbose, "Verbose output");
 
     app.require_subcommand(1);
     CLI11_PARSE(app, argc, argv);

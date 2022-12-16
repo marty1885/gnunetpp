@@ -74,6 +74,26 @@ struct CADETChannel
 
 struct CADET : public Service
 {
+    // these are part of gnunet-service-cadet_service.h not part of the public API as of 0.19.0
+    // The values are copied from the source code and should be kept in sync with the source code.
+    enum class EncryptionState
+    {
+        Uninitialized,
+        AXSent,
+        AXReceived,
+        AXSentAndReceived,
+        AxAuxSent,
+        Ok,
+    };
+
+    enum class ConnectionState
+    {
+        New,
+        Search, // Not sure, plain guess
+        Wait,
+        Ready,
+        Shutdown,
+    };
     CADET(const GNUNET_CONFIGURATION_Handle* cfg);
     ~CADET();
     void shutdown() override;
@@ -122,6 +142,9 @@ struct CADET : public Service
      */
     static void get_path(const GNUNET_CONFIGURATION_Handle* cfg, const GNUNET_PeerIdentity& peer, std::function<void(const std::vector<std::vector<GNUNET_PeerIdentity>>&)> callback);
     static cppcoro::task<std::vector<std::vector<GNUNET_PeerIdentity>>> get_path(const GNUNET_CONFIGURATION_Handle* cfg, const GNUNET_PeerIdentity& peer);
+
+    static void list_tunnels(const GNUNET_CONFIGURATION_Handle* cfg, std::function<void(const std::vector<GNUNET_CADET_TunnelDetails>&)> callback);
+    static cppcoro::task<std::vector<GNUNET_CADET_TunnelDetails>> list_tunnels(const GNUNET_CONFIGURATION_Handle* cfg);
 
     /**
      * @brief Set the callback to be called when a connection is established **to** this peer

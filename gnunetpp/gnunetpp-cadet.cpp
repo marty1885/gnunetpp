@@ -264,8 +264,13 @@ void list_paths_trampoline(void* cls, const GNUNET_CADET_PeerPathDetail* ppd)
     GNUNET_assert(pack != nullptr);
     if(ppd) {
         std::vector<GNUNET_PeerIdentity> path;
-        for(size_t i = 0; i < ppd->path_length; i++)
+        path.reserve(ppd->path_length);
+        for(size_t i = 0; i < ppd->path_length; i++) {
             path.push_back(ppd->path[i]);
+            // GNUnet specifically says then the target peer is the last entry in the path
+            if(memcmp(&ppd->peer, &ppd->path[i], sizeof(GNUNET_PeerIdentity)) == 0)
+                break;
+        }
         pack->paths.emplace_back(std::move(path));
         return;
     }
@@ -290,4 +295,41 @@ cppcoro::task<std::vector<std::vector<GNUNET_PeerIdentity>>> CADET::get_path(con
         }
     };
     co_return co_await PathAwaiter(cfg, peer);
+}
+
+struct ListTunnelsCallbackPack
+{
+    std::function<void(const std::vector<GNUNET_CADET_TunnelDetails>&)> callback;
+    std::vector<GNUNET_CADET_TunnelDetails> tunnels;
+};
+
+void list_tunnels_trampoline(void* cls, const GNUNET_CADET_TunnelDetails* td)
+{
+    auto pack = static_cast<ListTunnelsCallbackPack*>(cls);
+    GNUNET_assert(pack != nullptr);
+    if(td) {
+        pack->tunnels.push_back(*td);
+        return;
+    }
+
+    pack->callback(pack->tunnels);
+    delete pack;
+}
+
+void CADET::list_tunnels(const GNUNET_CONFIGURATION_Handle* cfg, std::function<void(const std::vector<GNUNET_CADET_TunnelDetails>&)> callback)
+{
+    auto cls = new ListTunnelsCallbackPack{std::move(callback), {}};
+    GNUNET_CADET_list_tunnels(cfg, list_tunnels_trampoline, cls);
+}
+
+cppcoro::task<std::vector<GNUNET_CADET_TunnelDetails>> CADET::list_tunnels(const GNUNET_CONFIGURATION_Handle* cfg)
+{
+    struct TunnelAwaiter : public EagerAwaiter<std::vector<GNUNET_CADET_TunnelDetails>> {
+        TunnelAwaiter(const GNUNET_CONFIGURATION_Handle* cfg) {
+            list_tunnels(cfg, [this](const std::vector<GNUNET_CADET_TunnelDetails>& tunnels) {
+                setValue(tunnels);
+            });
+        }
+    };
+    co_return co_await TunnelAwaiter(cfg);
 }
