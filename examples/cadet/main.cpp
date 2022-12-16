@@ -97,7 +97,7 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
         });
 
         // Listen on a port. Again, the port is a string, not a number.
-        cadet->openPort(port);
+        cadet->openPort(port, {GNUNET_MESSAGE_TYPE_CADET_CLI});
         std::cout << "Listening on " << crypto::to_string(crypto::my_peer_identity(cfg)) <<" port \'" << port << "\'" << std::endl;
     }
 }

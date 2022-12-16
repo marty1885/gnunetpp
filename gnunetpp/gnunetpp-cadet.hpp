@@ -47,7 +47,7 @@ struct CADET : public Service
     ~CADET();
     void shutdown() override;
 
-    GNUNET_CADET_Port* openPort(const std::string_view port);
+    GNUNET_CADET_Port* openPort(const std::string_view port, const std::vector<uint16_t>& acceptable_reply_types);
     void closePort(GNUNET_CADET_Port* port);
 
     CADETChannel* connect(const GNUNET_PeerIdentity& peer, const std::string_view port

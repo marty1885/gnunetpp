@@ -33,8 +33,10 @@ Makes CADET much easier to use.
 ```cpp
 auto cadet = std::make_shared<CADET>(cfg);
 auto channel = cadet->connect("SOME_PEER_ID", "PORT_NAME");
+channel->setReceiveCallback([](const std::string_view data, uint16_t type) {
+   std::cout << "Received: " << data << std::endl;
+});
 channel->send("Hello World!", GNUNET_MESSAGE_TYPE_CADET_CLI);
-co_await [buffer, msg_type] channel->receive();
 ```
 
 Search and download files from the GNUnet File Sharing service.

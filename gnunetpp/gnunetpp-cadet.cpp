@@ -70,7 +70,6 @@ static void cadet_message_trampoline(void *cls, const struct GNUNET_MessageHeade
 
 static void cadet_message_client_trampoline(void *cls, const struct GNUNET_MessageHeader *msg)
 {
-    std::cout << "CADET process message client" << std::endl;
     auto channel_ptr = static_cast<CADETChannel*>(cls);
 
     auto size = ntohs(msg->size);
@@ -107,21 +106,22 @@ void CADET::shutdown()
     }
 }
 
-GNUNET_CADET_Port* CADET::openPort(const std::string_view port)
+GNUNET_CADET_Port* CADET::openPort(const std::string_view port, const std::vector<uint16_t>& acceptable_reply_types)
 {
-    const GNUNET_MQ_MessageHandler handlers[] = {
-        {
+    std::vector<GNUNET_MQ_MessageHandler> handlers;
+    handlers.reserve(acceptable_reply_types.size() + 1);
+    for(auto type : acceptable_reply_types) {
+        handlers.push_back({
             accept_all,
             cadet_message_trampoline,
             this,
-            GNUNET_MESSAGE_TYPE_CADET_CLI,
+            type,
             0
-        },
-        GNUNET_MQ_handler_end()
-    };
-
+        });
+    }
+    handlers.push_back(GNUNET_MQ_handler_end());
     auto hash = crypto::hash(port);
-    auto cadet_port = GNUNET_CADET_open_port(cadet, &hash, cadet_connection_trampoline, this, nullptr, cadet_disconnect_trampoline, handlers);
+    auto cadet_port = GNUNET_CADET_open_port(cadet, &hash, cadet_connection_trampoline, this, nullptr, cadet_disconnect_trampoline, handlers.data());
     if(!cadet_port)
         throw std::runtime_error("Failed to open CADET port");
     GNUNET_assert(open_ports.find(cadet_port) == open_ports.end());
