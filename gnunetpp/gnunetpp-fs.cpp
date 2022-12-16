@@ -301,7 +301,7 @@ void publish(
     const std::vector<std::string>& keywords,
     PublishCallbackFunctor fn,
     std::chrono::seconds experation,
-    GNUNET_IDENTITY_Ego* ego,
+    std::optional<Ego> ego,
     const std::string& this_id,
     const std::string& next_id,
     GNUNET_FS_BlockOptions block_options)
@@ -376,8 +376,8 @@ void publish(
             delete insp_data;
 
             const struct GNUNET_CRYPTO_EcdsaPrivateKey *priv = NULL;
-            if(ego != NULL) {
-                auto sk = identity::getPrivateKey(ego);
+            if(ego.has_value()) {
+                auto sk = ego->privateKey();
                 if(ntohl(sk->type) != GNUNET_IDENTITY_TYPE_ECDSA)
                     throw std::runtime_error("Only ECDSA keys are supported");
                 priv = &sk->ecdsa_key;

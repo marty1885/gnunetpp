@@ -9,8 +9,21 @@
 
 struct GNUNET_CONFIGURATION_Handle;
 
-namespace gnunetpp::identity
+namespace gnunetpp
 {
+
+struct Ego
+{
+    Ego(GNUNET_IDENTITY_Ego* ego);
+    ~Ego() = default;
+
+    GNUNET_IDENTITY_PublicKey publicKey() const;
+    const GNUNET_IDENTITY_PrivateKey*  privateKey() const;
+    GNUNET_IDENTITY_KeyType keyType() const;
+
+    GNUNET_IDENTITY_Ego* native_handle() const { return ego; }
+    GNUNET_IDENTITY_Ego* ego = nullptr;
+};
 
 struct IdentityService : public Service
 {
@@ -75,8 +88,8 @@ GNUNET_IDENTITY_PublicKey getPublicKey(const GNUNET_IDENTITY_PrivateKey& key);
  * @return GNUNET_IDENTITY_EgoLookup* handle to the lookup operation
  */
 GNUNET_IDENTITY_EgoLookup* getEgo(const GNUNET_CONFIGURATION_Handle* cfg
-    , const std::string& name, std::function<void(GNUNET_IDENTITY_Ego*)> fn);
-cppcoro::task<GNUNET_IDENTITY_Ego*> getEgo(const GNUNET_CONFIGURATION_Handle* cfg
+    , const std::string& name, std::function<void(std::optional<Ego>)> fn);
+cppcoro::task<std::optional<Ego>> getEgo(const GNUNET_CONFIGURATION_Handle* cfg
     , const std::string& name);
 /**
  * @brief Get public key from ego
@@ -95,7 +108,7 @@ const GNUNET_IDENTITY_PrivateKey* getPrivateKey(const GNUNET_IDENTITY_Ego* ego);
 /**
  * @brief Get an anonymous ego
  */
-GNUNET_IDENTITY_Ego* anonymousEgo();
+Ego anonymousEgo();
 
 /**
  * @brief Get the key type of an ego. Could be ECDSA or EdDSA

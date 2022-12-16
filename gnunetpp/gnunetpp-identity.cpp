@@ -10,7 +10,7 @@ struct IdentityCallbackPack
     GNUNET_IDENTITY_Handle* handle;
 };
 
-namespace gnunetpp::identity
+namespace gnunetpp
 {
 namespace detail
 {
@@ -32,8 +32,11 @@ static void identity_delete_trampline(void* cls, GNUNET_ErrorCode ec)
 
 static void ego_lookup_trampline(void* cls, struct GNUNET_IDENTITY_Ego* ego)
 {
-    auto cb = reinterpret_cast<std::function<void(GNUNET_IDENTITY_Ego*)>*>(cls);
-    (*cb)(const_cast<GNUNET_IDENTITY_Ego*>(ego));
+    auto cb = reinterpret_cast<std::function<void(std::optional<Ego>)>*>(cls);
+    std::optional<Ego> opt_ego;
+    if(ego != nullptr)
+        opt_ego = Ego(ego);
+    (*cb)(std::move(opt_ego));
     delete cb;
 }
 
@@ -58,6 +61,21 @@ static void identity_info_trampoline(void *cls,
     pack->fn(identifier, ego);
 }
 
+}
+
+Ego::Ego(GNUNET_IDENTITY_Ego* ego)
+    : ego(ego)
+{
+}
+
+GNUNET_IDENTITY_PublicKey Ego::publicKey() const
+{
+    return getPublicKey(ego);
+}
+
+const GNUNET_IDENTITY_PrivateKey*  Ego::privateKey() const
+{
+    return getPrivateKey(ego);
 }
 
 
@@ -139,20 +157,20 @@ cppcoro::task<> IdentityService::deleteIdentity(const std::string& name)
 }
 
 GNUNET_IDENTITY_EgoLookup* getEgo(const GNUNET_CONFIGURATION_Handle* cfg
-    , const std::string& name, std::function<void(GNUNET_IDENTITY_Ego*)> fn)
+    , const std::string& name, std::function<void(std::optional<Ego>)> fn)
 {
     return GNUNET_IDENTITY_ego_lookup(cfg, name.c_str(), &detail::ego_lookup_trampline
-        , new std::function<void(GNUNET_IDENTITY_Ego*)>(std::move(fn)));
+        , new std::function<void(std::optional<Ego>)>(std::move(fn)));
 }
 
-cppcoro::task<GNUNET_IDENTITY_Ego*> getEgo(const GNUNET_CONFIGURATION_Handle* cfg
+cppcoro::task<std::optional<Ego>> getEgo(const GNUNET_CONFIGURATION_Handle* cfg
     , const std::string& name)
 {
-    struct EgoLookupAwaiter : public EagerAwaiter<GNUNET_IDENTITY_Ego*>
+    struct EgoLookupAwaiter : public EagerAwaiter<std::optional<Ego>>
     {
         EgoLookupAwaiter(const GNUNET_CONFIGURATION_Handle* cfg, const std::string& name)
         {
-            auto handle = getEgo(cfg, name, [this](GNUNET_IDENTITY_Ego* ego){
+            auto handle = getEgo(cfg, name, [this](std::optional<Ego> ego){
                 setValue(ego);
             });
             if(handle == nullptr) {
@@ -174,9 +192,9 @@ void getIdentities(const GNUNET_CONFIGURATION_Handle* cfg, std::function<void(co
     }
 }
 
-GNUNET_IDENTITY_Ego* anonymousEgo()
+Ego anonymousEgo()
 {
-    return GNUNET_IDENTITY_ego_get_anonymous();
+    return Ego(GNUNET_IDENTITY_ego_get_anonymous());
 }
 
 GNUNET_IDENTITY_PublicKey getPublicKey(GNUNET_IDENTITY_Ego* ego)
@@ -189,6 +207,11 @@ GNUNET_IDENTITY_PublicKey getPublicKey(GNUNET_IDENTITY_Ego* ego)
 const GNUNET_IDENTITY_PrivateKey* getPrivateKey(const GNUNET_IDENTITY_Ego* ego)
 {
     return GNUNET_IDENTITY_ego_get_private_key(ego);
+}
+
+GNUNET_IDENTITY_KeyType Ego::keyType() const
+{
+    return getKeyType(ego);
 }
 
 std::string to_string(const GNUNET_IDENTITY_PrivateKey& key)

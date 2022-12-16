@@ -118,7 +118,7 @@ void publish(
     const std::vector<std::string>& keywords,
     PublishCallbackFunctor fn,
     std::chrono::seconds experation = std::chrono::seconds(3600*24*365),
-    GNUNET_IDENTITY_Ego* ego = nullptr, 
+    std::optional<Ego> ego = std::nullopt, 
     const std::string& this_id = "",
     const std::string& next_id = "",
     GNUNET_FS_BlockOptions block_options = detail::default_block_options);

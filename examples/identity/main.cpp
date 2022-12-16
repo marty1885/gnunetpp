@@ -5,6 +5,8 @@
 #include <gnunetpp.hpp>
 #include <iostream>
 
+using namespace gnunetpp;
+
 bool run_create;
 bool run_delete;
 bool run_get;
@@ -15,8 +17,6 @@ std::string key_type;
 
 cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
 {
-    using namespace gnunetpp::identity;
-
     if(run_create) {
         // GNUnet supports 2 key types: ECDSA and EdDSA. EdDSA has limited support (ex. no FS) so
         // the default is ECDSA.
@@ -42,9 +42,9 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
         // Ego is GNUnet's name for identities. This function will lookup an identity by name and
         // calls the callback with the result.
         auto ego = co_await getEgo(cfg, identity_name);
-        if(ego != nullptr) {
-            auto pk = getPublicKey(ego);
-            auto key_type = getKeyType(ego);
+        if(ego) {
+            auto pk = ego.value().publicKey();
+            auto key_type = ego.value().keyType();
             std::cout << "Found ego: " << to_string(pk) << " - " << to_string(key_type) << std::endl;
         }
         else
@@ -60,7 +60,7 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
 
     else if(run_list) {
         // This function does not have a coro version yet
-        gnunetpp::identity::getIdentities(cfg, [](const std::string& name, GNUNET_IDENTITY_Ego* ego) {
+        gnunetpp::getIdentities(cfg, [](const std::string& name, GNUNET_IDENTITY_Ego* ego) {
             if(name != "")
                 std::cout << name << " - " << to_string(getPublicKey(ego)) << " " << to_string(getKeyType(ego)) << std::endl;
             else
