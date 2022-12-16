@@ -36,7 +36,7 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
         // Get a list of all peers currently known over CADET (Different from the list of peers in the peer service)
         auto peers = co_await CADET::list_peers(cfg);
 
-        std::cout << "Current peer ID: " << crypto::to_string(crypto::my_peer_identity(cfg)) << std::endl << std::endl;
+        std::cout << "Host peer ID: " << crypto::to_string(crypto::my_peer_identity(cfg)) << std::endl << std::endl;
         for (auto& peer : peers) {
             std::cout << "Peer: " << crypto::to_string(peer.peer) << " n_path: " << right_pad(std::to_string(peer.n_paths), 4)
                 << " have_tunnel: " << bool_to_string(peer.have_tunnel) << std::endl;

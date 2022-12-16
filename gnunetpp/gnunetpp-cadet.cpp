@@ -251,3 +251,43 @@ GNUNET_PeerIdentity CADETChannel::peer() const
         throw std::runtime_error("Failed to get peer info");
     return info->peer;
 }
+
+struct ListPathsCallbackPack
+{
+    std::function<void(const std::vector<std::vector<GNUNET_PeerIdentity>>&)> callback;
+    std::vector<std::vector<GNUNET_PeerIdentity>> paths;
+};
+
+void list_paths_trampoline(void* cls, const GNUNET_CADET_PeerPathDetail* ppd)
+{
+    auto pack = static_cast<ListPathsCallbackPack*>(cls);
+    GNUNET_assert(pack != nullptr);
+    if(ppd) {
+        std::vector<GNUNET_PeerIdentity> path;
+        for(size_t i = 0; i < ppd->path_length; i++)
+            path.push_back(ppd->path[i]);
+        pack->paths.emplace_back(std::move(path));
+        return;
+    }
+
+    pack->callback(pack->paths);
+    delete pack;
+}
+
+void CADET::get_path(const GNUNET_CONFIGURATION_Handle* cfg, const GNUNET_PeerIdentity& peer, std::function<void(const std::vector<std::vector<GNUNET_PeerIdentity>>&)> callback)
+{
+    auto cls = new ListPathsCallbackPack{std::move(callback), {}};
+    GNUNET_CADET_get_path(cfg, &peer, list_paths_trampoline, cls);
+}
+
+cppcoro::task<std::vector<std::vector<GNUNET_PeerIdentity>>> CADET::get_path(const GNUNET_CONFIGURATION_Handle* cfg, const GNUNET_PeerIdentity& peer)
+{
+    struct PathAwaiter : public EagerAwaiter<std::vector<std::vector<GNUNET_PeerIdentity>>> {
+        PathAwaiter(const GNUNET_CONFIGURATION_Handle* cfg, const GNUNET_PeerIdentity& peer) {
+            get_path(cfg, peer, [this](const std::vector<std::vector<GNUNET_PeerIdentity>>& paths) {
+                setValue(paths);
+            });
+        }
+    };
+    co_return co_await PathAwaiter(cfg, peer);
+}
