@@ -12,3 +12,14 @@ add_library(gnunetpp
 target_include_directories(gnunetpp PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_precompile_headers(gnunetpp PRIVATE pch.hpp)
 target_link_libraries(gnunetpp PRIVATE idn cppcoro)
+
+install(
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DESTINATION include
+    FILES_MATCHING PATTERN "*.hpp")
+install(
+    TARGETS gnunetpp
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION bin
+    INCLUDES DESTINATION include)
