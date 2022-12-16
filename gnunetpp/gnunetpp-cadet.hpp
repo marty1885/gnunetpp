@@ -4,7 +4,7 @@
 
 #include "inner/Infra.hpp"
 
-#include <map>
+#include <set>
 #include <memory>
 #include <functional>
 #include <string_view>
@@ -62,6 +62,7 @@ struct CADET : public Service
 
     GNUNET_CADET_Handle* nativeHandle() const { return cadet; }
 
+    std::set<GNUNET_CADET_Port*> open_ports;
     GNUNET_CADET_Handle* cadet = nullptr;
     std::function<void(CADETChannel*)> connectedCallback;
     std::function<void(CADETChannel*)> disconectedCallback;

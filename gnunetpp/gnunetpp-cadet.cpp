@@ -100,6 +100,8 @@ CADET::~CADET()
 void CADET::shutdown()
 {
     if(cadet) {
+        for(auto port : open_ports)
+            closePort(port);
         GNUNET_CADET_disconnect(cadet);
         cadet = nullptr;
     }
@@ -119,11 +121,19 @@ GNUNET_CADET_Port* CADET::openPort(const std::string_view port)
     };
 
     auto hash = crypto::hash(port);
-    return GNUNET_CADET_open_port(cadet, &hash, cadet_connection_trampoline, this, nullptr, cadet_disconnect_trampoline, handlers);
+    auto cadet_port = GNUNET_CADET_open_port(cadet, &hash, cadet_connection_trampoline, this, nullptr, cadet_disconnect_trampoline, handlers);
+    if(!cadet_port)
+        throw std::runtime_error("Failed to open CADET port");
+    GNUNET_assert(open_ports.find(cadet_port) == open_ports.end());
+    open_ports.insert(cadet_port);
+    return cadet_port;
 }
 
 void CADET::closePort(GNUNET_CADET_Port* port)
 {
+    auto it = open_ports.find(port);
+    GNUNET_assert(it != open_ports.end());
+    open_ports.erase(it);
     GNUNET_CADET_close_port(port);
 }
 
