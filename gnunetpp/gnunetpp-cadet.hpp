@@ -131,8 +131,8 @@ struct CADET : public Service
      * 
      * @param cfg Handle to GNUnet
      */
-    static void list_peers(const GNUNET_CONFIGURATION_Handle* cfg, std::function<void(const std::vector<GNUNET_CADET_PeerListEntry>&)>);
-    static cppcoro::task<std::vector<GNUNET_CADET_PeerListEntry>> list_peers(const GNUNET_CONFIGURATION_Handle* cfg);
+    static void listPeers(const GNUNET_CONFIGURATION_Handle* cfg, std::function<void(const std::vector<GNUNET_CADET_PeerListEntry>&)>);
+    static cppcoro::task<std::vector<GNUNET_CADET_PeerListEntry>> listPeers(const GNUNET_CONFIGURATION_Handle* cfg);
 
     /**
      * @brief Get list of paths to a peer
@@ -140,11 +140,11 @@ struct CADET : public Service
      * @param cfg Handle to GNUnet
      * @param peer Peer to get paths to
      */
-    static void get_path(const GNUNET_CONFIGURATION_Handle* cfg, const GNUNET_PeerIdentity& peer, std::function<void(const std::vector<std::vector<GNUNET_PeerIdentity>>&)> callback);
-    static cppcoro::task<std::vector<std::vector<GNUNET_PeerIdentity>>> get_path(const GNUNET_CONFIGURATION_Handle* cfg, const GNUNET_PeerIdentity& peer);
+    static void pathsToPeer(const GNUNET_CONFIGURATION_Handle* cfg, const GNUNET_PeerIdentity& peer, std::function<void(const std::vector<std::vector<GNUNET_PeerIdentity>>&)> callback);
+    static cppcoro::task<std::vector<std::vector<GNUNET_PeerIdentity>>> pathsToPeer(const GNUNET_CONFIGURATION_Handle* cfg, const GNUNET_PeerIdentity& peer);
 
-    static void list_tunnels(const GNUNET_CONFIGURATION_Handle* cfg, std::function<void(const std::vector<GNUNET_CADET_TunnelDetails>&)> callback);
-    static cppcoro::task<std::vector<GNUNET_CADET_TunnelDetails>> list_tunnels(const GNUNET_CONFIGURATION_Handle* cfg);
+    static void listTunnels(const GNUNET_CONFIGURATION_Handle* cfg, std::function<void(const std::vector<GNUNET_CADET_TunnelDetails>&)> callback);
+    static cppcoro::task<std::vector<GNUNET_CADET_TunnelDetails>> listTunnels(const GNUNET_CONFIGURATION_Handle* cfg);
 
     /**
      * @brief Set the callback to be called when a connection is established **to** this peer

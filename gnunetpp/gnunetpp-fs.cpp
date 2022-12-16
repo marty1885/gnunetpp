@@ -377,7 +377,7 @@ void publish(
 
             const struct GNUNET_CRYPTO_EcdsaPrivateKey *priv = NULL;
             if(ego != NULL) {
-                auto sk = identity::get_private_key(ego);
+                auto sk = identity::getPrivateKey(ego);
                 if(ntohl(sk->type) != GNUNET_IDENTITY_TYPE_ECDSA)
                     throw std::runtime_error("Only ECDSA keys are supported");
                 priv = &sk->ecdsa_key;

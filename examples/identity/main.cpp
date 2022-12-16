@@ -31,7 +31,7 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
         // IdentityService is our interface to the GNUnet identity system
         auto identity = std::make_shared<IdentityService>(cfg);
         // Create a new identity. The callback will be called when the identity is created or failed.
-        auto pk = co_await identity->create_identity(identity_name, type);
+        auto pk = co_await identity->createIdentity(identity_name, type);
         if(pk != nullptr)
             std::cout << "Created identity " << identity_name << " with key " << to_string(*pk) << std::endl;
         else
@@ -41,30 +41,28 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
     else if(run_get) {
         // Ego is GNUnet's name for identities. This function will lookup an identity by name and
         // calls the callback with the result.
-        lookup_ego(cfg, identity_name, [](GNUNET_IDENTITY_Ego* ego) {
-            if(ego != nullptr) {
-                auto pk = get_public_key(ego);
-                auto key_type = get_key_type(ego);
-                std::cout << "Found ego: " << to_string(pk) << " - " << to_string(key_type) << std::endl;
-            }
-            else
-                std::cout << "Ego not found" << std::endl;
-            gnunetpp::shutdown();
-        });
+        auto ego = co_await getEgo(cfg, identity_name);
+        if(ego != nullptr) {
+            auto pk = getPublicKey(ego);
+            auto key_type = getKeyType(ego);
+            std::cout << "Found ego: " << to_string(pk) << " - " << to_string(key_type) << std::endl;
+        }
+        else
+            std::cout << "Ego not found" << std::endl;
     }
 
     else if(run_delete) {
         // Delete an identity. The callback will be called when the identity is deleted (or failed).
         // Be careful with this function,
         auto identity = std::make_shared<IdentityService>(cfg);
-        co_await identity->delete_identity(identity_name);
+        co_await identity->deleteIdentity(identity_name);
     }
 
     else if(run_list) {
         // This function does not have a coro version yet
-        gnunetpp::identity::get_identities(cfg, [](const std::string& name, GNUNET_IDENTITY_Ego* ego) {
+        gnunetpp::identity::getIdentities(cfg, [](const std::string& name, GNUNET_IDENTITY_Ego* ego) {
             if(name != "")
-                std::cout << name << " - " << to_string(get_public_key(ego)) << " " << to_string(get_key_type(ego)) << std::endl;
+                std::cout << name << " - " << to_string(getPublicKey(ego)) << " " << to_string(getKeyType(ego)) << std::endl;
             else
                 gnunetpp::shutdown();
         });

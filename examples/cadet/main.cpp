@@ -73,9 +73,9 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
 {
     if(run_peer_list) {
         // Get a list of all peers currently known over CADET (Different from the list of peers in the peer service)
-        auto peers = co_await CADET::list_peers(cfg);
+        auto peers = co_await CADET::listPeers(cfg);
 
-        std::cout << "Host peer ID: " << crypto::to_string(crypto::my_peer_identity(cfg)) << std::endl;
+        std::cout << "Host peer ID: " << crypto::to_string(crypto::myPeerIdentity(cfg)) << std::endl;
         std::cout << "Total peers: " << peers.size() << std::endl << std::endl;
         for (auto& peer : peers) {
             std::cout << "Peer: " << crypto::to_string(peer.peer) << " n_path: " << right_pad(std::to_string(peer.n_paths), 4)
@@ -86,7 +86,7 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
             // Retrieve all paths to the peer. Note that sometimes GNUnet will report more paths in the last step than
             // we will get here. Likely because TOCTOU, information not yet updated, or other reasons. Always assume
             // path information not complete in a p2p network.
-            auto paths_to_peer = co_await CADET::get_path(cfg, peer.peer);
+            auto paths_to_peer = co_await CADET::pathsToPeer(cfg, peer.peer);
             for(size_t i=0;i<paths_to_peer.size();i++) {
                 auto& path = paths_to_peer[i];
                 std::cout << "  Path " << i << " has size " << path.size() << ":\n";
@@ -113,7 +113,7 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
         // By default a CADET channel ordered and reliable but low priority. This means other traffic will be prioritized
         // over this channel. Also "reliable" means "best effort" in this case. Just like TCP.
         // FIXME: GNUnet should support all messages using GNUNET_MESSAGE_TYPE_ALL. But it doesn't work as of 0.19.0
-        auto channel = cadet->connect(crypto::peer_identity(peer), port, {GNUNET_MESSAGE_TYPE_CADET_CLI});
+        auto channel = cadet->connect(crypto::peerIdentity(peer), port, {GNUNET_MESSAGE_TYPE_CADET_CLI});
         // If you want unreliable and unordered messages, you can use the following:
         // auto channel = cadet->connect(crypto::peer_identity(peer), port, {GNUNET_MESSAGE_TYPE_CADET_CLI}
         //  , GNUNET_MQ_PREF_UNRELIABLE | GNUNET_MQ_PREF_UNORDERED);
@@ -152,11 +152,11 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
 
         // Listen on a port. Again, the port is a string, not a number.
         cadet->openPort(port, {GNUNET_MESSAGE_TYPE_CADET_CLI});
-        std::cout << "Listening on " << crypto::to_string(crypto::my_peer_identity(cfg)) <<" port \'" << port << "\'" << std::endl;
+        std::cout << "Listening on " << crypto::to_string(crypto::myPeerIdentity(cfg)) <<" port \'" << port << "\'" << std::endl;
     }
     else if (run_tunnel) {
         // Request list of all tunnels
-        auto tunnels = co_await CADET::list_tunnels(cfg);
+        auto tunnels = co_await CADET::listTunnels(cfg);
         for(auto& tunnel : tunnels) {
             std::cout << "Tunnel: " << crypto::to_string(tunnel.peer) << " [ ENC: " << encryption_status(tunnel.estate) << ", CON: " << connection_status(tunnel.cstate)  << "] "
                 << tunnel.channels << " CHs, " << tunnel.connections << " CONNs" << std::endl;
