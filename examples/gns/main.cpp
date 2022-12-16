@@ -16,8 +16,8 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
     auto result = co_await gns->lookup(name, std::chrono::seconds(timeout), record_type);
     if(result.empty())
         std::cout << "No results found under domain name: " << name << std::endl;
-    for (const auto& r : result)
-        std::cout << r << std::endl;
+    for (const auto& [value, type] : result)
+        std::cout << value << " - " << type << std::endl;
 }
 
 int main(int argc, char** argv)

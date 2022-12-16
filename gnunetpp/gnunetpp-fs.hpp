@@ -2,7 +2,6 @@
 
 #include <gnunet/gnunet_fs_service.h>
 
-#include "inner/UniqueData.hpp"
 #include "inner/Infra.hpp"
 
 #include "gnunetpp-scheduler.hpp"
@@ -13,6 +12,7 @@
 #include <functional>
 #include <chrono>
 #include <memory>
+#include <map>
 
 namespace gnunetpp::FS
 {
