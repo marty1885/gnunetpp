@@ -14,6 +14,7 @@ bool run_peer_list = false;
 bool run_server = false;
 bool run_client = false;
 bool run_tunnel = false;
+bool list_show_path = false;
 std::string peer;
 std::string port = "default";
 
@@ -79,6 +80,9 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
         for (auto& peer : peers) {
             std::cout << "Peer: " << crypto::to_string(peer.peer) << " n_path: " << right_pad(std::to_string(peer.n_paths), 4)
                 << " have_tunnel: " << bool_to_string(peer.have_tunnel) << std::endl;
+            
+            if(!list_show_path)
+                continue;
             // Retrieve all paths to the peer. Note that sometimes GNUnet will report more paths in the last step than
             // we will get here. Likely because TOCTOU, information not yet updated, or other reasons. Always assume
             // path information not complete in a p2p network.
@@ -167,7 +171,8 @@ int main(int argc, char** argv)
     auto peer_list = app.add_subcommand("list", "List all peers")->callback([&] { run_peer_list = true; });
     auto server = app.add_subcommand("server", "Run an echo server (like nc -l")->callback([&] { run_server = true; });
     auto client = app.add_subcommand("client", "Run an echo client (like nc)")->callback([&] { run_client = true; });
-    auto tunnel = app.add_subcommand("tunnel", "List info about all existing CADET tunnels")->callback([&] { run_tunnel = true; });
+    auto tunnel = app.add_subcommand("list-tunnel", "List info about all existing CADET tunnels")->callback([&] { run_tunnel = true; });
+    peer_list->add_flag("-p,--path", list_show_path, "Show paths to peers");
     server->add_option("port", port, "Port to listen on")->default_val("default");
     client->add_option("peer", peer, "Peer to connect to")->required();
     client->add_option("port", port, "Port to connect to")->default_val("default");
