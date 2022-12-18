@@ -12,7 +12,7 @@
 namespace gnunetpp
 {
 
-struct CADETChannel
+struct CADETChannel : public NonCopyable
 {
     CADETChannel(GNUNET_CADET_Channel* channel) : channel(channel) {}
     CADETChannel() = default;
@@ -20,8 +20,6 @@ struct CADETChannel
         if(channel)
             GNUNET_CADET_channel_destroy(channel);
     } 
-    CADETChannel(const CADETChannel&) = delete;
-    CADETChannel& operator=(const CADETChannel&) = delete;
     CADETChannel(CADETChannel&& other) : channel(other.channel) { other.channel = nullptr; }
     CADETChannel& operator=(CADETChannel&& other) { channel = other.channel; other.channel = nullptr; return *this; }
 

@@ -4,11 +4,12 @@
 
 #include <gnunet/gnunet_core_service.h>
 #include "coroutine.hpp"
+#include "NonCopyable.hpp"
 
 namespace gnunetpp
 {
 
-struct Service
+struct Service : public NonCopyable
 {
     virtual ~Service() = default;
     Service(const Service&) = delete;
