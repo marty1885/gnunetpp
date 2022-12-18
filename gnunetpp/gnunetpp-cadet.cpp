@@ -12,7 +12,12 @@ using namespace gnunetpp;
 struct PortListenerPack
 {
     CADET* cadet;
-    CADETChannel* channel;
+    CADETChannelPtr channel;
+};
+
+struct ConnectPack
+{
+    CADETChannelPtr channel;
 };
 
 
@@ -26,7 +31,7 @@ static void *cadet_connection_trampoline (
     auto cadet = static_cast<CADET*>(cls);
     auto pack = new PortListenerPack();
     pack->cadet = cadet;
-    pack->channel = new CADETChannel(channel);
+    pack->channel = std::make_shared<CADETChannel>(channel);
     if(cadet->connectedCallback)
         cadet->connectedCallback(pack->channel);
     return pack;
@@ -45,17 +50,16 @@ static void cadet_disconnect_trampoline(void *cls, const GNUNET_CADET_Channel *c
     }
     // HACK: GNUnet already destroyed the channel, so we don't want the destructor to try to destroy it again
     portListenerPack->channel->channel = nullptr;
-    delete portListenerPack->channel;
     delete portListenerPack;
 }
 
 static void cadet_disconnect_client_trampoline(void *cls, const GNUNET_CADET_Channel *channel)
 {
-    auto channel_ptr = static_cast<CADETChannel*>(cls);
+    auto pack = static_cast<ConnectPack*>(cls);
+    auto& channel_ptr = pack->channel;
     if(channel_ptr->disconnectCallback)
         channel_ptr->disconnectCallback();
-    channel_ptr->channel = nullptr;
-    delete channel_ptr;
+    delete pack;
 }
 
 static int accept_all(void *cls, const struct GNUNET_MessageHeader *msg)
@@ -84,7 +88,8 @@ static void cadet_message_trampoline(void *cls, const struct GNUNET_MessageHeade
 
 static void cadet_message_client_trampoline(void *cls, const struct GNUNET_MessageHeader *msg)
 {
-    auto channel_ptr = static_cast<CADETChannel*>(cls);
+    auto pack = static_cast<ConnectPack*>(cls);
+    auto& channel_ptr = pack->channel;
 
     auto size = ntohs(msg->size);
     auto type = ntohs(msg->type);
@@ -152,11 +157,13 @@ void CADET::closePort(GNUNET_CADET_Port* port)
     GNUNET_CADET_close_port(port);
 }
 
-CADETChannel* CADET::connect(const GNUNET_PeerIdentity& peer, const std::string_view port
+CADETChannelPtr CADET::connect(const GNUNET_PeerIdentity& peer, const std::string_view port
     , const std::vector<uint16_t>& acceptable_reply_types
     , std::optional<uint32_t> options)
 {
-    auto channel_ptr = new CADETChannel();
+    auto channel_ptr = std::make_shared<CADETChannel>();
+    auto pack = new ConnectPack;
+    pack->channel = channel_ptr;
     auto hash = crypto::hash(port);
     std::vector<GNUNET_MQ_MessageHandler> handlers;
     handlers.reserve(acceptable_reply_types.size() + 1);
@@ -164,13 +171,13 @@ CADETChannel* CADET::connect(const GNUNET_PeerIdentity& peer, const std::string_
         handlers.push_back({
             accept_all,
             cadet_message_client_trampoline,
-            channel_ptr,
+            pack,
             type,
             0
         });
     }
     handlers.push_back(GNUNET_MQ_handler_end());
-    auto channel = GNUNET_CADET_channel_create(cadet, channel_ptr, &peer, &hash, nullptr, cadet_disconnect_client_trampoline, handlers.data());
+    auto channel = GNUNET_CADET_channel_create(cadet, pack, &peer, &hash, nullptr, cadet_disconnect_client_trampoline, handlers.data());
     channel_ptr->channel = channel;
     channel_ptr->setConnectionOptions(options);
     return channel_ptr;

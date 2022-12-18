@@ -137,15 +137,15 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
         // Create a CADET instance
         cadet = std::make_shared<CADET>(cfg);
         // Setup a callback for new connections
-        cadet->setConnectedCallback([](CADETChannel* channel) {
+        cadet->setConnectedCallback([](const CADETChannelPtr& channel) {
             std::cout << "* New connection from " << crypto::to_string(channel->peer()) << std::endl;
         });
         // This function is called when a new message is received
-        cadet->setReceiveCallback([](CADETChannel* channel, const std::string_view data, uint16_t type) {
+        cadet->setReceiveCallback([](const CADETChannelPtr& channel, const std::string_view data, uint16_t type) {
             std::cout << data << std::flush;
         });
         // This function is called when the connection is closed (either by us or the peer)
-        cadet->setDisconnectedCallback([](CADETChannel* channel) {
+        cadet->setDisconnectedCallback([](const CADETChannelPtr& channel) {
             std::cout << "* Connection closed for " << crypto::to_string(channel->peer()) << std::endl;
         });
 

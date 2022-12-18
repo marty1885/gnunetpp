@@ -69,6 +69,7 @@ struct CADETChannel : public NonCopyable
     GNUNET_CADET_Channel* channel = nullptr;
     std::optional<uint32_t> options = 0;
 };
+using CADETChannelPtr = std::shared_ptr<CADETChannel>;
 
 struct CADET : public Service
 {
@@ -118,9 +119,9 @@ struct CADET : public Service
      * @param port Port to connect to
      * @param acceptable_reply_types Message types that we can receive from the peer
      * @param options Connection options that controls priority, reliability, etc.
-     * @return CADETChannel* A communication channel to the peer
+     * @return ChannelPtr A communication channel to the peer
      */
-    CADETChannel* connect(const GNUNET_PeerIdentity& peer, const std::string_view port
+    CADETChannelPtr connect(const GNUNET_PeerIdentity& peer, const std::string_view port
         , const std::vector<uint16_t>& acceptable_reply_types
         , std::optional<uint32_t> options = std::nullopt);
 
@@ -149,27 +150,27 @@ struct CADET : public Service
      * 
      * @param cb callback to be called
      */
-    void setConnectedCallback(std::function<void(CADETChannel*)> cb) { connectedCallback = std::move(cb); }
+    void setConnectedCallback(std::function<void(const CADETChannelPtr&)> cb) { connectedCallback = std::move(cb); }
     /**
      * @brief Set the callback to be called when a connection is disconnected and that connection was **inbound** to this peer
      * 
      * @param cb callback to be called
      */
-    void setDisconnectedCallback(std::function<void(CADETChannel*)> cb) { disconnectedCallback = std::move(cb); }
+    void setDisconnectedCallback(std::function<void(const CADETChannelPtr&)> cb) { disconnectedCallback = std::move(cb); }
 
     /**
      * @brief Set the callback to be called when a message is received
      * 
      * @param cb callback to be called
      */
-    void setReceiveCallback(std::function<void(CADETChannel*, const std::string_view, uint16_t)> cb) { readCallback = std::move(cb); }
+    void setReceiveCallback(std::function<void(const CADETChannelPtr&, const std::string_view, uint16_t)> cb) { readCallback = std::move(cb); }
 
     GNUNET_CADET_Handle* nativeHandle() const { return cadet; }
 
     std::set<GNUNET_CADET_Port*> open_ports;
     GNUNET_CADET_Handle* cadet = nullptr;
-    std::function<void(CADETChannel*)> connectedCallback;
-    std::function<void(CADETChannel*, const std::string_view, uint16_t)> readCallback; 
-    std::function<void(CADETChannel*)> disconnectedCallback;
+    std::function<void(const CADETChannelPtr&)> connectedCallback;
+    std::function<void(const CADETChannelPtr&, const std::string_view, uint16_t)> readCallback; 
+    std::function<void(const CADETChannelPtr&)> disconnectedCallback;
 };
 }
