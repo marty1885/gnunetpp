@@ -70,14 +70,16 @@ static void cadet_message_trampoline(void *cls, const struct GNUNET_MessageHeade
     auto type = ntohs(msg->type);
     auto message_begin = reinterpret_cast<const char*>(msg) + sizeof(GNUNET_MessageHeader);
     auto message_end = message_begin + size - sizeof(GNUNET_MessageHeader);
+    GNUNET_assert(message_end >= message_begin);
+    GNUNET_assert(pack->channel->channel != nullptr);
 
+    auto channel = pack->channel;
     std::string_view message(message_begin, message_end - message_begin);
-    if(pack->channel->readCallback)
-        pack->channel->readCallback(message, type);
+    if(channel->readCallback)
+        channel->readCallback(message, type);
     else if(pack->cadet->readCallback)
-        pack->cadet->readCallback(pack->channel, message, type);
-    if(pack->channel->channel)
-        GNUNET_CADET_receive_done(pack->channel->channel);
+        pack->cadet->readCallback(channel, message, type);
+    GNUNET_CADET_receive_done(channel->channel);
 }
 
 static void cadet_message_client_trampoline(void *cls, const struct GNUNET_MessageHeader *msg)
@@ -90,8 +92,9 @@ static void cadet_message_client_trampoline(void *cls, const struct GNUNET_Messa
     auto message_end = message_begin + size - sizeof(GNUNET_MessageHeader);
     if(channel_ptr->readCallback)
         channel_ptr->readCallback(std::string_view(message_begin, message_end - message_begin), type);
-    if(channel_ptr->channel)
-        GNUNET_CADET_receive_done(channel_ptr->channel);
+    
+    GNUNET_assert(channel_ptr->channel != nullptr);
+    GNUNET_CADET_receive_done(channel_ptr->channel);
 }
 
 CADET::CADET(const GNUNET_CONFIGURATION_Handle* cfg)
