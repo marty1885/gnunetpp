@@ -139,15 +139,14 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
         // Setup a callback for new connections
         cadet->setConnectedCallback([](CADETChannel* channel) {
             std::cout << "* New connection from " << crypto::to_string(channel->peer()) << std::endl;
-            // This function is called when a new message is received
-            channel->setReceiveCallback([channel](const std::string_view data, uint16_t type) {
-                std::cout << data << std::flush;
-            });
-
-            // This function is called when the connection is closed (either by us or the peer)
-            channel->setDisconnectCallback([channel] {
-                std::cout << "* Connection closed for " << crypto::to_string(channel->peer()) << std::endl;
-            });
+        });
+        // This function is called when a new message is received
+        cadet->setReceiveCallback([](CADETChannel* channel, const std::string_view data, uint16_t type) {
+            std::cout << data << std::flush;
+        });
+        // This function is called when the connection is closed (either by us or the peer)
+        cadet->setDisconnectedCallback([](CADETChannel* channel) {
+            std::cout << "* Connection closed for " << crypto::to_string(channel->peer()) << std::endl;
         });
 
         // Listen on a port. Again, the port is a string, not a number.

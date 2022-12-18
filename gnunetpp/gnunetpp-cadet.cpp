@@ -1,8 +1,11 @@
 #include "gnunetpp-cadet.hpp"
 #include "gnunetpp-crypto.hpp"
 #include <gnunet/gnunet_protocols.h>
+#include <gnunet/gnunet_util_lib.h>
 
 #include <iostream>
+#include <stdexcept>
+#include <numeric>
 
 using namespace gnunetpp;
 
@@ -33,8 +36,13 @@ static void cadet_disconnect_trampoline(void *cls, const GNUNET_CADET_Channel *c
 {
     auto portListenerPack = static_cast<PortListenerPack*>(cls);
     auto cadet = portListenerPack->cadet;
+
     if(portListenerPack->channel->disconnectCallback)
         portListenerPack->channel->disconnectCallback();
+    else {
+        if(cadet->disconnectedCallback)
+            cadet->disconnectedCallback(portListenerPack->channel);
+    }
     // HACK: GNUnet already destroyed the channel, so we don't want the destructor to try to destroy it again
     portListenerPack->channel->channel = nullptr;
     delete portListenerPack->channel;
@@ -62,8 +70,12 @@ static void cadet_message_trampoline(void *cls, const struct GNUNET_MessageHeade
     auto type = ntohs(msg->type);
     auto message_begin = reinterpret_cast<const char*>(msg) + sizeof(GNUNET_MessageHeader);
     auto message_end = message_begin + size - sizeof(GNUNET_MessageHeader);
+
+    std::string_view message(message_begin, message_end - message_begin);
     if(pack->channel->readCallback)
-        pack->channel->readCallback(std::string_view(message_begin, message_end - message_begin), type);
+        pack->channel->readCallback(message, type);
+    else if(pack->cadet->readCallback)
+        pack->cadet->readCallback(pack->channel, message, type);
     if(pack->channel->channel)
         GNUNET_CADET_receive_done(pack->channel->channel);
 }

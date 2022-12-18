@@ -157,13 +157,21 @@ struct CADET : public Service
      * 
      * @param cb callback to be called
      */
-    void setDisconnectedCallback(std::function<void(CADETChannel*)> cb) { disconectedCallback = std::move(cb); }
+    void setDisconnectedCallback(std::function<void(CADETChannel*)> cb) { disconnectedCallback = std::move(cb); }
+
+    /**
+     * @brief Set the callback to be called when a message is received
+     * 
+     * @param cb callback to be called
+     */
+    void setReceiveCallback(std::function<void(CADETChannel*, const std::string_view, uint16_t)> cb) { readCallback = std::move(cb); }
 
     GNUNET_CADET_Handle* nativeHandle() const { return cadet; }
 
     std::set<GNUNET_CADET_Port*> open_ports;
     GNUNET_CADET_Handle* cadet = nullptr;
     std::function<void(CADETChannel*)> connectedCallback;
-    std::function<void(CADETChannel*)> disconectedCallback;
+    std::function<void(CADETChannel*, const std::string_view, uint16_t)> readCallback; 
+    std::function<void(CADETChannel*)> disconnectedCallback;
 };
 }
