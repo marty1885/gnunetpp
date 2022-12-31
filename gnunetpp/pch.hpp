@@ -6,10 +6,12 @@
 #include <string>
 #include <functional>
 #include <utility>
+#include <memory>
+#include <vector>
 #include <stdexcept>
 #include <chrono>
-#include <mutex>
 
 // Fundamental features of the library
 #include "gnunetpp-scheduler.hpp"
 #include "inner/coroutine.hpp"
+#include "inner/NonCopyable.hpp"
