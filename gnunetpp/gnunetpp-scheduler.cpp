@@ -174,4 +174,20 @@ cppcoro::task<std::string> readStdin()
     };
     co_return co_await ReadLineAwaiter();
 }
+
+cppcoro::task<> waitUntilShutdown()
+{
+    struct ShutdownAwaiter : public CallbackAwaiter<>
+    {
+        void await_suspend(std::coroutine_handle<> handle)
+        {
+            GNUNET_SCHEDULER_add_shutdown([] (void* cls) {
+                auto handle = reinterpret_cast<std::coroutine_handle<>*>(cls);
+                (*handle).resume();
+            }, new std::coroutine_handle<>(handle));
+        }
+    };
+    co_await ShutdownAwaiter();
+}
+
 }

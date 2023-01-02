@@ -77,4 +77,10 @@ void shutdown();
  */
 void readStdin(std::function<void(const std::string&)> fn);
 cppcoro::task<std::string> readStdin();
+
+/**
+ * @brief Asynchronously wait until shutdown
+ * 
+ */
+cppcoro::task<> waitUntilShutdown();
 }
