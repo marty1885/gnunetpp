@@ -8,6 +8,7 @@
 #include <memory>
 #include <functional>
 #include <string_view>
+#include <any>
 
 namespace gnunetpp
 {
@@ -62,12 +63,25 @@ struct CADETChannel : public NonCopyable
      */
     GNUNET_PeerIdentity peer() const;
 
+    /**
+     * @brief Set context data
+     */
+    void setContext(std::any context) { this->context_ = std::move(context); }
+    /**
+     * @brief Get context data
+     */
+    template <typename T>
+    T& context() { return std::any_cast<T&>(context_); }
+    template <typename T>
+    const T& context() const { return std::any_cast<const T&>(context_); }
+
 
     GNUNET_MQ_Handle* getMQ() const { return GNUNET_CADET_get_mq(channel); }    
     std::function<void(const std::string_view, uint16_t)> readCallback;
     std::function<void()> disconnectCallback;
     GNUNET_CADET_Channel* channel = nullptr;
     std::optional<uint32_t> options = 0;
+    std::any context_;
 };
 using CADETChannelPtr = std::shared_ptr<CADETChannel>;
 
