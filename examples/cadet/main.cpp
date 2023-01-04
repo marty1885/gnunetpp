@@ -125,6 +125,11 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
         channel->setReceiveCallback([](const std::string_view data, uint16_t type) {
             std::cout << data << std::flush;
         });
+        
+        // A channel we created is "outgoing". This means we are the initiator of the connection. We can check
+        // this using the isOutgoing() function. Also isIncoming() shall return false.
+        GNUNET_assert(channel->isOutgoing() == true);
+        GNUNET_assert(channel->isIncoming() == false);
 
         while(true) {
             // Read stdin line by line asynchronously
@@ -139,6 +144,11 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
         // Setup a callback for new connections
         cadet->setConnectedCallback([](const CADETChannelPtr& channel) {
             std::cout << "* New connection from " << crypto::to_string(channel->peer()) << std::endl;
+
+            // A channel we received is "incoming". This means we are the receiver of the connection. We can check
+            // this using the isIncoming() function. Also isOutgoing() shall return false.
+            GNUNET_assert(channel->isIncoming() == true);
+            GNUNET_assert(channel->isOutgoing() == false);
         });
         // This function is called when a new message is received
         cadet->setReceiveCallback([](const CADETChannelPtr& channel, const std::string_view data, uint16_t type) {

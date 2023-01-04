@@ -4,7 +4,7 @@
 
 #include "inner/Infra.hpp"
 
-#include <set>
+#include <map>
 #include <memory>
 #include <functional>
 #include <string_view>
@@ -12,11 +12,21 @@
 
 namespace gnunetpp
 {
+namespace internal
+{
+struct OpenPortCallbackPack;
+}
 
 struct CADETChannel : public NonCopyable
 {
-    CADETChannel(GNUNET_CADET_Channel* channel) : channel(channel) {}
-    CADETChannel() = default;
+    CADETChannel(GNUNET_CADET_Channel* channel) : channel(channel) {
+        memset(&local_port, 0, sizeof(local_port));
+        memset(&remote_port, 0, sizeof(remote_port));
+    }
+    CADETChannel() {
+        memset(&local_port, 0, sizeof(local_port));
+        memset(&remote_port, 0, sizeof(remote_port));
+    }
     ~CADETChannel() {
         if(channel)
             GNUNET_CADET_channel_destroy(channel);
@@ -75,12 +85,31 @@ struct CADETChannel : public NonCopyable
     template <typename T>
     const T& context() const { return std::any_cast<const T&>(context_); }
 
+    /**
+     * @brief Set the Local and remote port information
+     * 
+     * @param port the hash of the port name
+     */
+    void setLocalPort(const GNUNET_HashCode& port);
+    void setRemotePort(const GNUNET_HashCode& port);
+    const GNUNET_HashCode& getLocalPort() const { return local_port; }
+    const GNUNET_HashCode& getRemotePort() const { return remote_port;}
+    const GNUNET_HashCode& remotePort() const { return getRemotePort(); }
+    const GNUNET_HashCode& localPort() const { return getLocalPort(); }
+
+    /**
+     * @brief Is the channel incoming or outgoing (i.e. was it created by us or by the peer)
+     */
+    bool isIncoming() const;
+    bool isOutgoing() const;
 
     GNUNET_MQ_Handle* getMQ() const { return GNUNET_CADET_get_mq(channel); }    
     std::function<void(const std::string_view, uint16_t)> readCallback;
     std::function<void()> disconnectCallback;
     GNUNET_CADET_Channel* channel = nullptr;
     std::optional<uint32_t> options = 0;
+    GNUNET_HashCode local_port;
+    GNUNET_HashCode remote_port;
     std::any context_;
 };
 using CADETChannelPtr = std::shared_ptr<CADETChannel>;
@@ -181,7 +210,7 @@ struct CADET : public Service
 
     GNUNET_CADET_Handle* nativeHandle() const { return cadet; }
 
-    std::set<GNUNET_CADET_Port*> open_ports;
+    std::map<GNUNET_CADET_Port*, internal::OpenPortCallbackPack*> open_ports;
     GNUNET_CADET_Handle* cadet = nullptr;
     std::function<void(const CADETChannelPtr&)> connectedCallback;
     std::function<void(const CADETChannelPtr&, const std::string_view, uint16_t)> readCallback; 

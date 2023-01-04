@@ -20,6 +20,15 @@ struct ConnectPack
     CADETChannelPtr channel;
 };
 
+namespace gnunetpp::internal
+{
+struct OpenPortCallbackPack
+{
+    GNUNET_HashCode port;
+    CADET* self;
+};
+}
+
 
 // Note this function returns a pointer as the closure of the connection
 static void *cadet_connection_trampoline (
@@ -28,10 +37,14 @@ static void *cadet_connection_trampoline (
     const GNUNET_PeerIdentity *source)
 
 {
-    auto cadet = static_cast<CADET*>(cls);
+    auto callback_pack = reinterpret_cast<internal::OpenPortCallbackPack*>(cls);
+    auto cadet = callback_pack->self;
+    const auto& port_hash = callback_pack->port;
+
     auto pack = new PortListenerPack();
     pack->cadet = cadet;
     pack->channel = std::make_shared<CADETChannel>(channel);
+    pack->channel->setLocalPort(port_hash);
     if(cadet->connectedCallback)
         cadet->connectedCallback(pack->channel);
     return pack;
@@ -119,7 +132,7 @@ CADET::~CADET()
 void CADET::shutdown()
 {
     if(cadet) {
-        for(auto port : open_ports)
+        for(auto [port, _] : open_ports)
             closePort(port);
         GNUNET_CADET_disconnect(cadet);
         cadet = nullptr;
@@ -141,11 +154,14 @@ GNUNET_CADET_Port* CADET::openPort(const std::string_view port, const std::vecto
     }
     handlers.push_back(GNUNET_MQ_handler_end());
     auto hash = crypto::hash(port);
-    auto cadet_port = GNUNET_CADET_open_port(cadet, &hash, cadet_connection_trampoline, this, nullptr, cadet_disconnect_trampoline, handlers.data());
+    auto pack = new internal::OpenPortCallbackPack{};
+    pack->self = this;
+    pack->port = hash;
+    auto cadet_port = GNUNET_CADET_open_port(cadet, &hash, cadet_connection_trampoline, pack, nullptr, cadet_disconnect_trampoline, handlers.data());
     if(!cadet_port)
         throw std::runtime_error("Failed to open CADET port");
     GNUNET_assert(open_ports.find(cadet_port) == open_ports.end());
-    open_ports.insert(cadet_port);
+    open_ports.insert({cadet_port, pack});
     return cadet_port;
 }
 
@@ -153,6 +169,7 @@ void CADET::closePort(GNUNET_CADET_Port* port)
 {
     auto it = open_ports.find(port);
     GNUNET_assert(it != open_ports.end());
+    delete it->second;
     open_ports.erase(it);
     GNUNET_CADET_close_port(port);
 }
@@ -162,9 +179,10 @@ CADETChannelPtr CADET::connect(const GNUNET_PeerIdentity& peer, const std::strin
     , std::optional<uint32_t> options)
 {
     auto channel_ptr = std::make_shared<CADETChannel>();
+    auto hash = crypto::hash(port);
     auto pack = new ConnectPack;
     pack->channel = channel_ptr;
-    auto hash = crypto::hash(port);
+    channel_ptr->setRemotePort(hash);
     std::vector<GNUNET_MQ_MessageHandler> handlers;
     handlers.reserve(acceptable_reply_types.size() + 1);
     for(auto type : acceptable_reply_types) {
@@ -272,6 +290,30 @@ GNUNET_PeerIdentity CADETChannel::peer() const
     if(!info)
         throw std::runtime_error("Failed to get peer info");
     return info->peer;
+}
+
+void CADETChannel::setLocalPort(const GNUNET_HashCode& port)
+{
+    local_port = port;
+}
+
+void CADETChannel::setRemotePort(const GNUNET_HashCode& port)
+{
+    remote_port = port;
+}
+
+bool CADETChannel::isIncoming() const
+{
+    GNUNET_HashCode hash;
+    memset(&hash, 0, sizeof(hash));
+    return memcmp(&hash, &local_port, sizeof(hash)) != 0;
+}
+
+bool CADETChannel::isOutgoing() const
+{
+    GNUNET_HashCode hash;
+    memset(&hash, 0, sizeof(hash));
+    return memcmp(&hash, &remote_port, sizeof(hash)) != 0;
 }
 
 struct ListPathsCallbackPack
