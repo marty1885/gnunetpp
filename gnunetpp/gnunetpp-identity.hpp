@@ -4,6 +4,7 @@
 
 #include "inner/Infra.hpp"
 #include "inner/coroutine.hpp"
+#include "inner/RawOperator.hpp"
 
 #include <functional>
 
@@ -118,3 +119,5 @@ Ego anonymousEgo();
 GNUNET_IDENTITY_KeyType getKeyType(GNUNET_IDENTITY_Ego* ego);
 
 }
+
+GNUNETPP_OPERATOR_COMPOARE_RAW_DATA(GNUNET_IDENTITY_PublicKey)

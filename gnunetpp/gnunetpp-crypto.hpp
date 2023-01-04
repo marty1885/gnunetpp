@@ -1,9 +1,11 @@
 #pragma once
 
+#include <compare>
 #include <gnunet/gnunet_util_lib.h>
 
 #include <string>
 #include <vector>
+#include "inner/RawOperator.hpp"
 
 namespace gnunetpp::crypto
 {
@@ -42,3 +44,17 @@ GNUNET_PeerIdentity myPeerIdentity(const GNUNET_CONFIGURATION_Handle *cfg);
 std::string to_string(const GNUNET_PeerIdentity& peer);
 GNUNET_PeerIdentity peerIdentity(const std::string_view& str);
 }
+
+GNUNETPP_OPERATOR_COMPOARE_RAW_DATA(GNUNET_HashCode)
+GNUNETPP_OPERATOR_COMPOARE_RAW_DATA(GNUNET_CRYPTO_EcdsaPrivateKey)
+GNUNETPP_OPERATOR_COMPOARE_RAW_DATA(GNUNET_CRYPTO_EcdsaPublicKey)
+GNUNETPP_OPERATOR_COMPOARE_RAW_DATA(GNUNET_PeerIdentity)
+GNUNETPP_OPERATOR_COMPOARE_RAW_DATA(GNUNET_CRYPTO_EddsaPrivateKey)
+GNUNETPP_OPERATOR_COMPOARE_RAW_DATA(GNUNET_CRYPTO_EddsaPublicKey)
+
+GNUNETPP_RAW_DATA_HASH(GNUNET_HashCode)
+GNUNETPP_RAW_DATA_HASH(GNUNET_CRYPTO_EcdsaPrivateKey)
+GNUNETPP_RAW_DATA_HASH(GNUNET_CRYPTO_EcdsaPublicKey)
+GNUNETPP_RAW_DATA_HASH(GNUNET_PeerIdentity)
+GNUNETPP_RAW_DATA_HASH(GNUNET_CRYPTO_EddsaPrivateKey)
+GNUNETPP_RAW_DATA_HASH(GNUNET_CRYPTO_EddsaPublicKey)

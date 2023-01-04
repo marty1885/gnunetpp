@@ -17,6 +17,10 @@ std::string key_type;
 
 cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
 {
+    GNUNET_HashCode k1;
+    GNUNET_HashCode k2;
+    bool n = k1 == k2;
+
     if(run_create) {
         // GNUnet supports 2 key types: ECDSA and EdDSA. EdDSA has limited support (ex. no FS) so
         // the default is ECDSA.
