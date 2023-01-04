@@ -304,16 +304,12 @@ void CADETChannel::setRemotePort(const GNUNET_HashCode& port)
 
 bool CADETChannel::isIncoming() const
 {
-    GNUNET_HashCode hash;
-    memset(&hash, 0, sizeof(hash));
-    return memcmp(&hash, &local_port, sizeof(hash)) != 0;
+    return local_port != crypto::zeroHash();
 }
 
 bool CADETChannel::isOutgoing() const
 {
-    GNUNET_HashCode hash;
-    memset(&hash, 0, sizeof(hash));
-    return memcmp(&hash, &remote_port, sizeof(hash)) != 0;
+    return remote_port != crypto::zeroHash();
 }
 
 struct ListPathsCallbackPack

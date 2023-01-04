@@ -129,4 +129,10 @@ GNUNET_PeerIdentity peerIdentity(const std::string_view& str)
     return id;
 }
 
+GNUNET_HashCode zeroHash()
+{
+    GNUNET_HashCode hash;
+    memset(&hash, 0, sizeof(hash));
+    return hash;
+}
 }

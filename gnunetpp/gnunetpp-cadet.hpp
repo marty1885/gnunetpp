@@ -3,6 +3,7 @@
 #include <gnunet/gnunet_cadet_service.h>
 
 #include "inner/Infra.hpp"
+#include "gnunetpp-crypto.hpp"
 
 #include <map>
 #include <memory>
@@ -20,13 +21,8 @@ struct OpenPortCallbackPack;
 struct CADETChannel : public NonCopyable
 {
     CADETChannel(GNUNET_CADET_Channel* channel) : channel(channel) {
-        memset(&local_port, 0, sizeof(local_port));
-        memset(&remote_port, 0, sizeof(remote_port));
     }
-    CADETChannel() {
-        memset(&local_port, 0, sizeof(local_port));
-        memset(&remote_port, 0, sizeof(remote_port));
-    }
+    CADETChannel() = default;
     ~CADETChannel() {
         if(channel)
             GNUNET_CADET_channel_destroy(channel);
@@ -108,8 +104,8 @@ struct CADETChannel : public NonCopyable
     std::function<void()> disconnectCallback;
     GNUNET_CADET_Channel* channel = nullptr;
     std::optional<uint32_t> options = 0;
-    GNUNET_HashCode local_port;
-    GNUNET_HashCode remote_port;
+    GNUNET_HashCode local_port = crypto::zeroHash();
+    GNUNET_HashCode remote_port = crypto::zeroHash();
     std::any context_;
 };
 using CADETChannelPtr = std::shared_ptr<CADETChannel>;
