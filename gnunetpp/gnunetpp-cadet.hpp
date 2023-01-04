@@ -88,6 +88,13 @@ struct CADETChannel : public NonCopyable
      */
     void setLocalPort(const GNUNET_HashCode& port);
     void setRemotePort(const GNUNET_HashCode& port);
+
+    /**
+     * @brief Get the local and remote port information
+     * @note There's no ephemeral ports in CADET. Only either the local or the remote port is set.
+     * 
+     * @return const GNUNET_HashCode& 
+     */
     const GNUNET_HashCode& getLocalPort() const { return local_port; }
     const GNUNET_HashCode& getRemotePort() const { return remote_port;}
     const GNUNET_HashCode& remotePort() const { return getRemotePort(); }
@@ -95,9 +102,19 @@ struct CADETChannel : public NonCopyable
 
     /**
      * @brief Is the channel incoming or outgoing (i.e. was it created by us or by the peer)
+     * @note There's no ephemeral ports in CADET. isIncoming() and isOutgoing() are mutually exclusive.
      */
     bool isIncoming() const;
     bool isOutgoing() const;
+
+    /**
+     * @brief Get the port that is used for this channel
+     * @note In CADET ther's no ephemeral ports. There's only the port on the sending side.
+     *      This function returns that port no matter if the channel is incoming or outgoing.
+     * 
+     * @return const GNUNET_HashCode& 
+     */
+    const GNUNET_HashCode& port() const { return isIncoming() ? getRemotePort() : getLocalPort(); }
 
     GNUNET_MQ_Handle* getMQ() const { return GNUNET_CADET_get_mq(channel); }    
     std::function<void(const std::string_view, uint16_t)> readCallback;
