@@ -69,7 +69,7 @@ void GNS::shutdown()
     if(gns == nullptr)
         return;
     // In case we destruct while handling a lookup result
-    scheduler::run([gns=this->gns]() {
+    scheduler::queue([gns=this->gns]() {
         GNUNET_GNS_disconnect(gns);
     });
     gns = nullptr;

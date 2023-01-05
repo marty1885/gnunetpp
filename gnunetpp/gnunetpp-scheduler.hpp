@@ -8,6 +8,9 @@
 namespace gnunetpp
 {
 using TaskID = size_t;
+
+// HACK: I don't want to include inner/Infa.hpp here, for better compile times
+bool inMainThread();
 }
 
 namespace gnunetpp::scheduler
@@ -43,7 +46,21 @@ void runOnShutdown(std::function<void()> fn);
  * 
  * @param fn function to run
  */
-void run(std::function<void()> fn);
+void queue(std::function<void()> fn);
+
+/**
+ * @brief Run a function immediately if the current thread is the scheduler thread, otherwise queue it
+ * 
+ * @param fn function to run
+ */
+template<typename Fn>
+void run(Fn&& fn)
+{
+    if (inMainThread())
+        fn();
+    else
+        queue(std::forward<Fn>(fn));
+}
 
 /**
  * @brief Resumes execution after a delay

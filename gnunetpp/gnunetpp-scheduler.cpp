@@ -78,7 +78,7 @@ void runOnShutdown(std::function<void()> fn)
     }, new std::function<void()>(std::move(fn)));
 }
 
-void run(std::function<void()> fn)
+void queue(std::function<void()> fn)
 {
     std::lock_guard lock{g_scheduler_mutex};
     GNUNET_SCHEDULER_add_now([] (void *cls) {

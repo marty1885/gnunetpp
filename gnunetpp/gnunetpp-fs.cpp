@@ -154,7 +154,7 @@ GNUNET_FS_SearchContext* search(
 {
     auto fs_handle = detail::makeHandle(cfg, [fn=std::move(fn)](const GNUNET_FS_ProgressInfo * info){
         if(info->status == GNUNET_FS_STATUS_SEARCH_STOPPED) {
-            scheduler::run([fsh=info->fsh](){
+            scheduler::queue([fsh=info->fsh](){
                 auto it = detail::g_fs_handlers.find(fsh);
                 assert(it != detail::g_fs_handlers.end());
                 assert(it->second->fs = fsh);
@@ -173,7 +173,7 @@ GNUNET_FS_SearchContext* search(
             auto it = detail::g_fs_handlers.find(info->fsh);
             assert(it != detail::g_fs_handlers.end());
             assert(it->second->fs = info->fsh);
-            scheduler::run([sc = it->second->sc](){
+            scheduler::queue([sc = it->second->sc](){
                 GNUNET_FS_search_stop(sc);
             });
         }
@@ -190,7 +190,7 @@ GNUNET_FS_SearchContext* search(
             auto it = detail::g_fs_handlers.find(info->fsh);
             assert(it != detail::g_fs_handlers.end());
             assert(it->second->fs = info->fsh);
-            scheduler::run([sc = it->second->sc](){
+            scheduler::queue([sc = it->second->sc](){
                 GNUNET_FS_search_stop(sc);
             });
         }
@@ -225,7 +225,7 @@ GNUNET_FS_SearchContext* search(
 
 void cancel(GNUNET_FS_SearchContext* search)
 {
-    scheduler::run([search](){
+    scheduler::queue([search](){
         GNUNET_FS_search_stop(search);
     });
 }
@@ -264,12 +264,12 @@ GNUNET_FS_DownloadContext* download(
             };
         if(info->status == GNUNET_FS_STATUS_DOWNLOAD_STOPPED) {
             fn(DownloadStatus::Cancelled, "Download cancelled", 0, 0);
-            scheduler::run(safe_cleanup);
+            scheduler::queue(safe_cleanup);
             return;
         }
         else if(info->status == GNUNET_FS_STATUS_DOWNLOAD_ERROR) {
             fn(DownloadStatus::Error, "Download error: " + std::string(info->value.download.specifics.error.message), 0, 0);
-            scheduler::run(safe_cleanup);
+            scheduler::queue(safe_cleanup);
         }
         else if(info->status == GNUNET_FS_STATUS_DOWNLOAD_PROGRESS) {
             auto total_size = info->value.download.size;
@@ -279,7 +279,7 @@ GNUNET_FS_DownloadContext* download(
         }
         else if(info->status == GNUNET_FS_STATUS_DOWNLOAD_COMPLETED) {
             fn(DownloadStatus::Completed, "Download completed", 0, 0);
-            scheduler::run(safe_cleanup);
+            scheduler::queue(safe_cleanup);
         }
         else if(info->status == GNUNET_FS_STATUS_DOWNLOAD_START) {
             fn(DownloadStatus::Started, "Download started", 0, 0);
@@ -333,7 +333,7 @@ void publish(
             assert(it != detail::g_fs_handlers.end());
             assert(it->second->fs = info->fsh);
             auto pack = it->second;
-            scheduler::run([fsh=info->fsh, pack](){
+            scheduler::queue([fsh=info->fsh, pack](){
                 GNUNET_FS_stop(fsh);
                 delete pack;
             });
@@ -350,7 +350,7 @@ void publish(
             if(cb)
                 cb(PublishResult::Error, "", "");
             detail::g_fs_handlers.erase(it);
-            scheduler::run([fsh=info->fsh, pack](){
+            scheduler::queue([fsh=info->fsh, pack](){
                 GNUNET_FS_stop(fsh);
                 delete pack;
             });
@@ -431,7 +431,7 @@ GNUNET_FS_UnindexContext* unindex(
             assert(it->second->fs = info->fsh);
             auto pack = it->second;
             detail::g_fs_handlers.erase(it);
-            scheduler::run([fsh=info->fsh, pack](){
+            scheduler::queue([fsh=info->fsh, pack](){
                 GNUNET_FS_stop(fsh);
                 delete pack;
             });

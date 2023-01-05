@@ -48,7 +48,7 @@ static void identity_info_trampoline(void *cls,
     auto pack = reinterpret_cast<IdentityCallbackPack*>(cls);
     if(ego == nullptr) {
         // iteration finished
-        gnunetpp::scheduler::run([pack](){
+        gnunetpp::scheduler::queue([pack](){
             GNUNET_IDENTITY_disconnect(pack->handle);
             delete pack;
         });
@@ -96,7 +96,7 @@ IdentityService::~IdentityService()
 void IdentityService::shutdown()
 {
     if(handle != nullptr) {
-        scheduler::run([handle=this->handle](){
+        scheduler::queue([handle=this->handle](){
             GNUNET_IDENTITY_disconnect(handle);
         });
         handle = nullptr;
