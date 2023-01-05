@@ -11,6 +11,8 @@
 
 #include <iostream>
 
+static std::mutex g_scheduler_mutex;
+
 namespace gnunetpp::scheduler
 {
 
@@ -48,7 +50,9 @@ static TaskID runDelay(std::chrono::duration<double> delay, std::function<void()
 
     auto [id, data] = g_tasks.add({nullptr, std::move(fn), repeat, run_on_shutdown});
     static_assert(sizeof(TaskID) == sizeof(void*));
+    g_scheduler_mutex.lock();
     auto handle = GNUNET_SCHEDULER_add_delayed(time,timer_callback_trampoline , reinterpret_cast<void*>(id));
+    g_scheduler_mutex.unlock();
     data.handle = handle;
     wakeUp();
     return id;
@@ -66,6 +70,7 @@ TaskID runEvery(std::chrono::duration<double> delay, std::function<void()> fn)
 
 void runOnShutdown(std::function<void()> fn)
 {
+    std::lock_guard lock{g_scheduler_mutex};
     GNUNET_SCHEDULER_add_shutdown([] (void *cls) {
         auto fn = reinterpret_cast<std::function<void()>*>(cls);
         (*fn)();
@@ -75,6 +80,7 @@ void runOnShutdown(std::function<void()> fn)
 
 void run(std::function<void()> fn)
 {
+    std::lock_guard lock{g_scheduler_mutex};
     GNUNET_SCHEDULER_add_now([] (void *cls) {
         auto fn = reinterpret_cast<std::function<void()>*>(cls);
         (*fn)();
@@ -103,6 +109,7 @@ cppcoro::task<> sleep(std::chrono::duration<double> delay)
 void cancel(TaskID id)
 {
     auto& data = g_tasks[id];
+    std::lock_guard lock{g_scheduler_mutex};
     GNUNET_SCHEDULER_cancel(data.handle);
     g_tasks.remove(id);
 }
@@ -112,6 +119,7 @@ void cancelAll()
     for(auto& [id, data] : g_tasks) {
         if(data.run_on_shutdown)
             data.fn();
+        std::lock_guard lock{g_scheduler_mutex};
         GNUNET_SCHEDULER_cancel(data.handle);
     }
     g_tasks.clear();
@@ -134,6 +142,7 @@ struct ReadLineCallbackPack
 
 void readStdin(std::function<void(const std::string&)> fn)
 {
+    std::lock_guard lock{g_scheduler_mutex};
     auto rs = GNUNET_NETWORK_fdset_create();
     GNUNET_NETWORK_fdset_set_native(rs, 0);
 
@@ -185,6 +194,7 @@ cppcoro::task<> waitUntilShutdown()
     {
         void await_suspend(std::coroutine_handle<> handle)
         {
+            std::lock_guard lock{g_scheduler_mutex};
             GNUNET_SCHEDULER_add_shutdown([] (void* cls) {
                 auto handle = reinterpret_cast<std::coroutine_handle<>*>(cls);
                 (*handle).resume();

@@ -87,6 +87,8 @@ This project aims to create a easy to use wapper for the commonly used part of G
 
 - General
   - [x] Move applicable APIs to C++ coroutines
+  - [x] Primitives to support multithreading
+    - [x] Allow other threads to wake GNUnet scheduler
 - DHT
   - [x] Basic operations (put/get)
   - [ ] Monitor
