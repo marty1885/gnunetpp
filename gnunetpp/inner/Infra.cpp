@@ -36,9 +36,8 @@ static void installNotifyFds()
         read(g_notify_fds[0], buf, sizeof(buf));
     }, nullptr);
     GNUNET_SCHEDULER_add_shutdown([] (void* cls) {
-        // apprarently, this is not needed and will cause a crash?
-        // auto task = reinterpret_cast<GNUNET_SCHEDULER_Task*>(cls);
-        // GNUNET_SCHEDULER_cancel(task);
+        auto task = reinterpret_cast<GNUNET_SCHEDULER_Task*>(cls);
+        GNUNET_SCHEDULER_cancel(task);
         close(g_notify_fds[0]);
         close(g_notify_fds[1]);
         g_notify_fds[0] = -1;

@@ -9,6 +9,8 @@
 #include <mutex>
 #include <random>
 
+#include <sys/ioctl.h>
+
 #include <iostream>
 
 static std::mutex g_scheduler_mutex;
@@ -157,15 +159,12 @@ void readStdin(std::function<void(const std::string&)> fn)
     , [] (void* cls) {
         auto pack = reinterpret_cast<ReadLineCallbackPack*>(cls);
         GNUNET_SCHEDULER_cancel(pack->shutdown_task);
-        char* line = nullptr;
-        size_t len = 0;
-        ssize_t read = getline(&line, &len, stdin);
-        if(read == -1) {
-            delete pack;
-            return;
-        }
-        std::string str(line, read);
-        pack->fn(str);
+        char buf[1024];
+        auto len = read(0, buf, sizeof(buf));
+        if(len < 0)
+            GNUNET_assert(0 && "failed to read from stdin");
+        std::string line{buf, static_cast<size_t>(len)};
+        pack->fn(line);
         delete pack;
     }, pack);
     pack->task = task;
