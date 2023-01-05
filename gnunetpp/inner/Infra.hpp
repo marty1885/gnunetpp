@@ -8,6 +8,14 @@
 
 namespace gnunetpp
 {
+namespace detail
+{
+/**
+ * @brief Wakes the GNUnet scheduler up if it is sleeping
+ * 
+ */
+void notifyWakeup();
+}
 
 struct Service : public NonCopyable
 {
@@ -45,4 +53,8 @@ void start(std::function<cppcoro::task<>(const GNUNET_CONFIGURATION_Handle*)> f)
  */
 void shutdown();
 
+/**
+ * @brief Returns true the current execting thread is the same thread running GNUnet
+ */
+bool inMainThread();
 }

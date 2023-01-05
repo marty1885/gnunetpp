@@ -5,14 +5,48 @@
 #include <cassert>
 #include <memory>
 #include <random>
+#include <thread>
 
 #include <gnunetpp-scheduler.hpp>
+
+static int g_notify_fds[2] = {-1, -1};
 
 namespace gnunetpp
 {
 namespace detail
 {
 thread_local std::mt19937_64 g_rng(std::random_device{}());
+static std::thread::id g_scheduler_thread_id;
+void notifyWakeup()
+{
+    if(g_notify_fds[1] != -1)
+        write(g_notify_fds[1], "1", 1);
+}
+
+static void installNotifyFds()
+{
+    GNUNET_assert(g_notify_fds[0] == -1 && g_notify_fds[1] == -1);
+    GNUNET_assert(pipe(g_notify_fds) == 0);
+
+    auto rs = GNUNET_NETWORK_fdset_create();
+    GNUNET_NETWORK_fdset_set_native(rs, g_notify_fds[0]);
+    auto task = GNUNET_SCHEDULER_add_select(GNUNET_SCHEDULER_PRIORITY_URGENT, GNUNET_TIME_UNIT_FOREVER_REL, rs, nullptr
+    , [] (void* cls) {
+        char buf[1024];
+        read(g_notify_fds[0], buf, sizeof(buf));
+    }, nullptr);
+    GNUNET_SCHEDULER_add_shutdown([] (void* cls) {
+        // apprarently, this is not needed and will cause a crash?
+        // auto task = reinterpret_cast<GNUNET_SCHEDULER_Task*>(cls);
+        // GNUNET_SCHEDULER_cancel(task);
+        close(g_notify_fds[0]);
+        close(g_notify_fds[1]);
+        g_notify_fds[0] = -1;
+        g_notify_fds[1] = -1;
+    }, reinterpret_cast<void*>(task));
+    GNUNET_NETWORK_fdset_destroy(rs);
+}
+
 }
 static std::mutex g_mtx_services;
 static std::set<Service*> g_services;
@@ -51,6 +85,8 @@ void run(std::function<void(const GNUNET_CONFIGURATION_Handle*)> f)
     auto r = GNUNET_PROGRAM_run(1, const_cast<char**>(&args_dummy), "gnunetpp", "no help", options
         , [](void *cls, char *const *args, const char *cfgfile
             , const GNUNET_CONFIGURATION_Handle* c) {
+                detail::installNotifyFds();
+                detail::g_scheduler_thread_id = std::this_thread::get_id();
                 std::unique_ptr<CallbackType> functor{static_cast<CallbackType*>(cls)};
                 assert(functor != nullptr);
 
@@ -82,5 +118,10 @@ void shutdown()
         removeAllServices();
         scheduler::shutdown();
     }, NULL);
+}
+
+bool inMainThread()
+{
+    return detail::g_scheduler_thread_id == std::this_thread::get_id();
 }
 }

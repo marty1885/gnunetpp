@@ -1,6 +1,7 @@
 #include "gnunetpp-scheduler.hpp"
 #include <gnunet/gnunet_core_service.h>
 
+#include "inner/Infra.hpp"
 #include "inner/UniqueData.hpp"
 
 #include <map>
@@ -49,6 +50,7 @@ static TaskID runDelay(std::chrono::duration<double> delay, std::function<void()
     static_assert(sizeof(TaskID) == sizeof(void*));
     auto handle = GNUNET_SCHEDULER_add_delayed(time,timer_callback_trampoline , reinterpret_cast<void*>(id));
     data.handle = handle;
+    wakeUp();
     return id;
 }
 
@@ -78,6 +80,7 @@ void run(std::function<void()> fn)
         (*fn)();
         delete fn;
     }, new std::function<void()>(std::move(fn)));
+    wakeUp();
 }
 
 cppcoro::task<> sleep(std::chrono::duration<double> delay)
@@ -158,6 +161,7 @@ void readStdin(std::function<void(const std::string&)> fn)
     }, pack);
     pack->task = task;
     GNUNET_NETWORK_fdset_destroy(rs);
+    wakeUp();
 }
 
 cppcoro::task<std::string> readStdin()
@@ -188,6 +192,12 @@ cppcoro::task<> waitUntilShutdown()
         }
     };
     co_await ShutdownAwaiter();
+}
+
+void wakeUp()
+{
+    if(!inMainThread())
+        detail::notifyWakeup();
 }
 
 }

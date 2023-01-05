@@ -83,4 +83,10 @@ cppcoro::task<std::string> readStdin();
  * 
  */
 cppcoro::task<> waitUntilShutdown();
+
+/**
+ * @brief Force the GNUnet scheduler to run
+ * 
+ */
+void wakeUp();
 }
