@@ -241,13 +241,12 @@ void CADETChannel::send(const void* data, size_t size, uint16_t type)
 {
     if(!channel)
         throw std::runtime_error("CADET channel is not open");
-    const size_t total_size = size + sizeof(struct GNUNET_MessageHeader);
 
-    if(total_size > std::numeric_limits<uint16_t>::max())
+    if(size > std::numeric_limits<uint16_t>::max())
         throw std::runtime_error("CADET message is too large");
 
     struct GNUNET_MessageHeader *msg = nullptr;
-    auto env = GNUNET_MQ_msg_extra(msg, total_size, type);
+    auto env = GNUNET_MQ_msg_extra(msg, size, type);
     if(options) {
         // HACK: Check the incoming options value is valid in the API (GNUnet is very C..
         // so it is using enums as defines)

@@ -114,7 +114,7 @@ struct CADETChannel : public NonCopyable
      * 
      * @return const GNUNET_HashCode& 
      */
-    const GNUNET_HashCode& port() const { return isIncoming() ? getRemotePort() : getLocalPort(); }
+    const GNUNET_HashCode& port() const { return isIncoming() ? localPort() : remotePort(); }
 
     GNUNET_MQ_Handle* getMQ() const { return GNUNET_CADET_get_mq(channel); }    
     std::function<void(const std::string_view, uint16_t)> readCallback;
