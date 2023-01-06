@@ -24,6 +24,14 @@ struct Ego
 
     GNUNET_IDENTITY_Ego* native_handle() const { return ego; }
     GNUNET_IDENTITY_Ego* ego = nullptr;
+
+    std::strong_ordering operator<=>(const Ego&) const;
+    bool operator==(const Ego&) const = default;
+    bool operator!=(const Ego&) const = default;
+    bool operator<(const Ego&) const = default;
+    bool operator>(const Ego&) const = default;
+    bool operator<=(const Ego&) const = default;
+    bool operator>=(const Ego&) const = default;
 };
 
 struct IdentityService : public Service

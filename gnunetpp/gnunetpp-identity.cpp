@@ -255,4 +255,9 @@ GNUNET_IDENTITY_KeyType getKeyType(GNUNET_IDENTITY_Ego* ego)
     return (GNUNET_IDENTITY_KeyType)ntohl(pk.type);
 }
 
+std::strong_ordering Ego::operator<=>(const Ego& other) const
+{
+    return privateKey() <=> other.privateKey();
+}
+
 }
