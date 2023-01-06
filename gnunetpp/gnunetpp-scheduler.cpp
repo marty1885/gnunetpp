@@ -137,12 +137,12 @@ void shutdown()
 
 struct ReadLineCallbackPack
 {
-    std::function<void(const std::string&)> fn;
+    std::function<void(const std::string&, bool)> fn;
     GNUNET_SCHEDULER_Task* task;
     GNUNET_SCHEDULER_Task* shutdown_task;
 };
 
-void readStdin(std::function<void(const std::string&)> fn)
+void readStdin(std::function<void(const std::string&, bool)> fn)
 {
     std::lock_guard lock{g_scheduler_mutex};
     auto rs = GNUNET_NETWORK_fdset_create();
@@ -163,8 +163,13 @@ void readStdin(std::function<void(const std::string&)> fn)
         auto len = read(0, buf, sizeof(buf));
         if(len < 0)
             GNUNET_assert(0 && "failed to read from stdin");
+        if(len == 0) {
+            pack->fn("", false);
+            delete pack;
+            return;
+        }
         std::string line{buf, static_cast<size_t>(len)};
-        pack->fn(line);
+        pack->fn(line, true);
         delete pack;
     }, pack);
     pack->task = task;
@@ -178,8 +183,11 @@ cppcoro::task<std::string> readStdin()
     {
         void await_suspend(std::coroutine_handle<> handle)
         {
-            gnunetpp::scheduler::readStdin([handle, this] (const std::string& line) {
-                setValue(line);
+            gnunetpp::scheduler::readStdin([handle, this] (const std::string& line, bool success) {
+                if(!success)
+                    setException(std::make_exception_ptr(std::runtime_error("failed to read from stdin")));
+                else
+                    setValue(line);
                 handle.resume();
             });
         }

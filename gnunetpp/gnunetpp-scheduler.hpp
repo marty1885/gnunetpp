@@ -92,7 +92,7 @@ void shutdown();
 /**
  * @brief Asynchronously read a line from stdin
  */
-void readStdin(std::function<void(const std::string&)> fn);
+void readStdin(std::function<void(const std::string&, bool)> fn);
 cppcoro::task<std::string> readStdin();
 
 /**

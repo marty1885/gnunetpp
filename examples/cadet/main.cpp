@@ -133,9 +133,17 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
 
         while(true) {
             // Read stdin line by line asynchronously
-            auto line = co_await scheduler::readStdin();
+            std::string data;
+            try {
+                data = co_await scheduler::readStdin();
+            }
+            catch(const std::exception& e) {
+                // If we get an exception, it means the user pressed Ctrl+D. This means we should disconnect
+                // channel->disconnect();
+                break;
+            }
             // Send the line to the peer with the specified message type
-            channel->send(line.data(), line.size(), GNUNET_MESSAGE_TYPE_CADET_CLI);
+            channel->send(data.data(), data.size(), GNUNET_MESSAGE_TYPE_CADET_CLI);
         }
     }
     else if (run_server) {
