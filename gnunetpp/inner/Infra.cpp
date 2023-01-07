@@ -33,7 +33,12 @@ static void installNotifyFds()
     auto task = GNUNET_SCHEDULER_add_select(GNUNET_SCHEDULER_PRIORITY_URGENT, GNUNET_TIME_UNIT_FOREVER_REL, rs, nullptr
     , [] (void* cls) {
         char buf[1024];
-        read(g_notify_fds[0], buf, sizeof(buf));
+        while(true) {
+            ssize_t len = read(g_notify_fds[0], buf, sizeof(buf));
+            GNUNET_assert(len >= 0);
+            if(len == 0)
+                break;
+        }
     }, nullptr);
     GNUNET_SCHEDULER_add_shutdown([] (void* cls) {
         auto task = reinterpret_cast<GNUNET_SCHEDULER_Task*>(cls);
