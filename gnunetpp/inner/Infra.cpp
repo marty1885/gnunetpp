@@ -36,7 +36,8 @@ static void installNotifyFds()
         while(true) {
             ssize_t len = read(g_notify_fds[0], buf, sizeof(buf));
             GNUNET_assert(len >= 0);
-            if(len == 0)
+            // if there's less data in the pipe then our buffer, we're done reading everything
+            if(len != sizeof(buf))
                 break;
         }
     }, nullptr);
