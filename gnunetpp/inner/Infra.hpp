@@ -20,14 +20,9 @@ void notifyWakeup();
 struct Service : public NonCopyable
 {
     virtual ~Service() = default;
-    Service(const Service&) = delete;
-    Service& operator=(const Service&) = delete;
-    Service(Service&&) = delete;
-    Service& operator=(Service&&) = delete;
 
     virtual void shutdown() = 0;
 protected:
-    Service() = default;
 };
 
 void registerService(Service* service);
