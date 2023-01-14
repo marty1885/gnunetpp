@@ -81,6 +81,9 @@ First you need the dependencies
 (For examples)
 * CLI11
 
+(For tests)
+* Drogon (for the async test framework)
+
 ## Roadmap
 
 This project aims to create a easy to use wapper for the commonly used part of GNUnet.
