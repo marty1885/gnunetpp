@@ -123,6 +123,8 @@ void shutdown()
         removeAllServices();
         scheduler::shutdown();
     }, NULL);
+    if(!inMainThread() && g_running)
+        detail::notifyWakeup();
 }
 
 bool inMainThread()
