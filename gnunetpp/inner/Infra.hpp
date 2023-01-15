@@ -34,14 +34,14 @@ void removeAllServices();
  * 
  * @param f Callback to call when GNUnet is started
  */
-void run(std::function<void(const GNUNET_CONFIGURATION_Handle*)> f);
+void run(std::function<void(const GNUNET_CONFIGURATION_Handle*)> f, const std::string& service_name = "gnunetpp");
 
 /**
  * @brief run but the coroutine version
  * 
  * @param f Callback to call when GNUnet is started
  */
-void start(std::function<cppcoro::task<>(const GNUNET_CONFIGURATION_Handle*)> f);
+void start(std::function<cppcoro::task<>(const GNUNET_CONFIGURATION_Handle*)> f, const std::string& service_name = "gnunetpp");
 
 /**
  * @brief Shutdown all services and timer. Stop the event loop

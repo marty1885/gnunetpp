@@ -78,7 +78,7 @@ void removeAllServices()
 }
 
 static bool g_running = false;
-void run(std::function<void(const GNUNET_CONFIGURATION_Handle*)> f)
+void run(std::function<void(const GNUNET_CONFIGURATION_Handle*)> f, const std::string& service_name)
 {
     using CallbackType = std::function<void(const GNUNET_CONFIGURATION_Handle* c)>;
 
@@ -87,7 +87,7 @@ void run(std::function<void(const GNUNET_CONFIGURATION_Handle*)> f)
     struct GNUNET_GETOPT_CommandLineOption options[] = {
         GNUNET_GETOPT_OPTION_END
     };
-    auto r = GNUNET_PROGRAM_run(1, const_cast<char**>(&args_dummy), "gnunetpp", "no help", options
+    auto r = GNUNET_PROGRAM_run(1, const_cast<char**>(&args_dummy), service_name.c_str(), "no help", options
         , [](void *cls, char *const *args, const char *cfgfile
             , const GNUNET_CONFIGURATION_Handle* c) {
                 detail::installNotifyFds();
@@ -107,7 +107,7 @@ void run(std::function<void(const GNUNET_CONFIGURATION_Handle*)> f)
         throw std::runtime_error("GNUNet program run failed");
 }
 
-void start(std::function<cppcoro::task<void>(const GNUNET_CONFIGURATION_Handle*)> f)
+void start(std::function<cppcoro::task<void>(const GNUNET_CONFIGURATION_Handle*)> f, const std::string& service_name)
 {
     run([f = std::move(f)](const GNUNET_CONFIGURATION_Handle* c) {
         async_run([f = std::move(f), c]() -> cppcoro::task<> {
