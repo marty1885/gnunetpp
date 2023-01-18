@@ -21,7 +21,7 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
 
 int main(int argc, char** argv)
 {
-    CLI::App app("Estimates GNUnet netwrok size using the Network Size Estimator", "gnunetpp-nse");
+    CLI::App app("List about known peers in the network", "gnunetpp-peerinfo");
     CLI11_PARSE(app, argc, argv);
 
     gnunetpp::start(service);
