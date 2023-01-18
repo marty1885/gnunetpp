@@ -22,3 +22,6 @@ target_link_libraries(gnunetpp-nse gnunetnse gnunetcore gnunetutil gnunetpp exam
 
 add_executable(gnunetpp-cadet cadet/main.cpp)
 target_link_libraries(gnunetpp-cadet gnunetcadet gnunetcore gnunetutil gnunetpp example_pch)
+
+add_executable(gnunetpp-peerinfo peerinfo/main.cpp)
+target_link_libraries(gnunetpp-peerinfo gnunetpeerinfo gnunetcore gnunetutil gnunetpp example_pch)

@@ -24,14 +24,15 @@ PeerInfo::~PeerInfo()
 
 struct PeerInfoCallbackPack
 {
-    std::function<void(const GNUNET_HELLO_Address* addr)> callback;
+    std::function<void(const std::set<GNUNET_PeerIdentity> addr)> callback;
     std::function<void(const std::string_view)> errorCallback;
+    std::set<GNUNET_PeerIdentity> peers;
 };
 
-void PeerInfo::getPeerInfo(const GNUNET_PeerIdentity& peer, std::function<void(const GNUNET_HELLO_Address* addr)> callback, std::function<void(const std::string_view)> errorCallback)
+void PeerInfo::peers(std::function<void(const std::set<GNUNET_PeerIdentity> peer_ids)> callback, std::function<void(const std::string_view)> errorCallback)
 {
     auto pack = new PeerInfoCallbackPack{std::move(callback), std::move(errorCallback)};
-    auto ic = GNUNET_PEERINFO_iterate(handle, GNUNET_NO, &peer
+    auto ic = GNUNET_PEERINFO_iterate(handle, GNUNET_NO, nullptr
         , [](void *cls,
             const struct GNUNET_PeerIdentity *peer,
             const struct GNUNET_HELLO_Message *hello,
@@ -42,17 +43,33 @@ void PeerInfo::getPeerInfo(const GNUNET_PeerIdentity& peer, std::function<void(c
             delete pack;
         }
         else if(peer == nullptr) {
+            pack->callback(std::move(pack->peers));
             delete pack;
         }
         else {
-            // auto addr = GNUNET_HELLO_iterate_addresses(hello, nullptr);
-            // if(addr) {
-            //     pack->callback(addr);
-            // }
+            pack->peers.insert(*peer);
         }
-        delete pack;
     }, pack);
     if(!ic) {
         errorCallback("Failed to iterate peer info");
     }
+}
+
+cppcoro::task<std::set<GNUNET_PeerIdentity>> PeerInfo::peers()
+{
+    struct PeerInfoAwaiter : public EagerAwaiter<std::set<GNUNET_PeerIdentity>>
+    {
+        PeerInfoAwaiter(PeerInfo& pi)
+            : pi(pi)
+        {
+            pi.peers([this](const std::set<GNUNET_PeerIdentity> peers) {
+                setValue(peers);
+            }, [this](const std::string_view err) {
+                setException(std::make_exception_ptr(std::runtime_error(err.data())));
+            });
+        }
+
+        PeerInfo& pi;
+    };
+    co_return co_await PeerInfoAwaiter(*this);
 }
