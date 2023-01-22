@@ -106,6 +106,7 @@ This project aims to create a easy to use wapper for the commonly used part of G
   - [x] ECDSA/EDDSA
   - [x] to_string
   - [ ] RSA
+  - [ ] Signatures
 - CADET
   - [x] Server
   - [x] Client
@@ -121,6 +122,9 @@ This project aims to create a easy to use wapper for the commonly used part of G
 - NSE (Network Size Estimatior)
   - [x] Get value
   - [x] Watch value
+* PeerInfo
+  - [x] List peers
+  - [ ] Add peer
 - Scheduler
   - [x] Delayed run
   - [x] Run on exit
