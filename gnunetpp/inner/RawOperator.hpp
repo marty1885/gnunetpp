@@ -47,8 +47,10 @@ struct hash<type> \
         static_assert(sizeof(type) % sizeof(size_t) == 0); \
         size_t result = 0; \
         const size_t* ptr = reinterpret_cast<const size_t*>(&data); \
+        GNUNET_assert((intptr_t)ptr % alignof(decltype(ptr)) == 0); \
         for (size_t i = 0; i < sizeof(type) / sizeof(size_t); ++i) \
-            result ^= ptr[i]; \
+            /*Multiply with a large prime*/ \
+            result = result * 3167011069 + ptr[i]; \
         return result; \
     } \
 }; \
