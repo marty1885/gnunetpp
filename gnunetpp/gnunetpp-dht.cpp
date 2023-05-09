@@ -98,22 +98,22 @@ cppcoro::async_generator<std::string> DHT::get(const std::string_view key
         , GNUNET_DHT_RouteOption routing_options)
 
 {
-    EagerAwaiter<std::pair<std::string, bool>> awaiter;
+    QueuedAwaiter<std::pair<std::string, bool>> awaiter;
     auto handle = get(key, [&awaiter] (std::string_view data) {
-        std::cout << "Got data: " << data << std::endl;
-        awaiter.setValue({std::string(data), true});
+        awaiter.addValue({std::string(data), true});
         return true;
     }, search_timeout, data_type, replication, routing_options
     , [&awaiter](){
-        awaiter.setValue({std::string(), false});
+        awaiter.addValue({std::string(), false});
     });
+    if(handle == NULL)
+        throw std::runtime_error("Failed to get data from GNUNet DHT");
 
     while(true) {
         auto [result, have_data] = co_await awaiter;
         if(!have_data)
             break;
         co_yield result;
-        awaiter = EagerAwaiter<std::pair<std::string, bool>>();
     }
 }
 

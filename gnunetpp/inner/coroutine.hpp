@@ -4,6 +4,8 @@
 #include <cppcoro/async_generator.hpp>
 
 #include <optional>
+#include <variant>
+#include <queue>
 
 namespace gnunetpp
 {
@@ -243,6 +245,79 @@ struct EagerAwaiter<void> : public CallbackAwaiter<>
     bool hasResult() const noexcept
     {
         return value_set;
+    }
+};
+
+template <typename T>
+struct QueuedAwaiter
+{
+    using ElementType = std::variant<T, std::exception_ptr>;
+    std::queue<ElementType> queue_;
+    std::coroutine_handle<> handle_;
+    mutable std::mutex mtx_;
+
+    void addValue(T&& value)
+    {
+        {
+            std::lock_guard<std::mutex> lock(mtx_);
+            queue_.emplace(std::move(value));
+        }
+        if(handle_)
+        {
+            auto handle = handle_;
+            handle_ = nullptr;
+            handle.resume();
+        }
+    }
+
+    void addException(std::exception_ptr&& exception)
+    {
+        {
+            std::lock_guard<std::mutex> lock(mtx_);
+            queue_.emplace(std::move(exception));
+        }
+        if(handle_)
+        {
+            auto handle = handle_;
+            handle_ = nullptr;
+            handle.resume();
+        }
+    }
+
+    bool await_ready() const noexcept
+    {
+        std::lock_guard<std::mutex> lock(mtx_);
+        return !queue_.empty();
+    }
+
+    T await_resume() noexcept(false)
+    {
+        auto try_front = [this]() ->std::optional<ElementType> {
+            std::lock_guard<std::mutex> lock(mtx_);
+            if(queue_.empty())
+                return std::nullopt;
+            return std::move(queue_.front());
+        };
+        auto front = try_front();
+        assert(front.has_value());
+
+
+        if(front->index() == 1)
+            std::rethrow_exception(std::get<1>(*front));
+        else {
+            auto item = std::move(std::get<0>(*front));
+            queue_.pop();
+            return item;
+        }
+    }
+
+    void await_suspend(std::coroutine_handle<> handle) noexcept
+    {
+        handle_ = handle;
+        if (queue_.size() != 0) {
+            handle_.resume();
+            handle_ = nullptr;
+        }
     }
 };
 
