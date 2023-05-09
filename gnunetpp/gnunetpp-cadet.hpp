@@ -39,6 +39,8 @@ struct CADETChannel : public NonCopyable
      */
     void send(const void* data, size_t size, uint16_t type);
     void send(const std::string_view sv, uint16_t type);
+    void send(const std::vector<uint8_t>& data, uint16_t type) { send(data.data(), data.size(), type);}
+    void send(const std::vector<char>& data, uint16_t type) { send(data.data(), data.size(), type);}
 
     /**
      * @brief Set the callback to be called when the channel is disconnected

@@ -207,6 +207,11 @@ struct EagerAwaiter : public CallbackAwaiter<T>
         if(handle_ != std::noop_coroutine())
             handle_.resume();
     }
+
+    bool hasResult() const noexcept
+    {
+        return CallbackAwaiter<T>::result_.has_value();
+    }
 };
 
 template <>
@@ -233,6 +238,11 @@ struct EagerAwaiter<void> : public CallbackAwaiter<>
         value_set = true;
         if(handle_ != std::noop_coroutine())
             handle_.resume();
+    }
+    
+    bool hasResult() const noexcept
+    {
+        return value_set;
     }
 };
 

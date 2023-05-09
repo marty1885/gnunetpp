@@ -3,9 +3,8 @@
 #include <gnunet/gnunet_core_service.h>
 #include <gnunet/gnunet_dht_service.h>
 
-#include <gnunetpp-dht.hpp>
-#include <gnunetpp-scheduler.hpp>
-#include <gnunetpp-crypto.hpp>
+#include <gnunetpp/gnunetpp-scheduler.hpp>
+#include <gnunetpp/gnunetpp-crypto.hpp>
 #include "inner/Infra.hpp"
 #include "inner/coroutine.hpp"
 
