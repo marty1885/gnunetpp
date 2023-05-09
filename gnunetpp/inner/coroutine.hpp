@@ -258,42 +258,40 @@ struct QueuedAwaiter
 
     void addValue(T&& value)
     {
+        std::coroutine_handle<> handle = nullptr;
         {
-            std::lock_guard<std::mutex> lock(mtx_);
+            std::lock_guard lock(mtx_);
             queue_.emplace(std::move(value));
-        }
-        if(handle_)
-        {
-            auto handle = handle_;
+            handle = handle_;
             handle_ = nullptr;
-            handle.resume();
         }
+        if(handle)
+            handle.resume();
     }
 
     void addException(std::exception_ptr&& exception)
     {
+        std::coroutine_handle<> handle = nullptr;
         {
-            std::lock_guard<std::mutex> lock(mtx_);
+            std::lock_guard lock(mtx_);
             queue_.emplace(std::move(exception));
-        }
-        if(handle_)
-        {
-            auto handle = handle_;
+            handle = handle_;
             handle_ = nullptr;
-            handle.resume();
         }
+        if(handle)
+            handle.resume();
     }
 
     bool await_ready() const noexcept
     {
-        std::lock_guard<std::mutex> lock(mtx_);
+        std::lock_guard lock(mtx_);
         return !queue_.empty();
     }
 
     T await_resume() noexcept(false)
     {
         auto try_front = [this]() ->std::optional<ElementType> {
-            std::lock_guard<std::mutex> lock(mtx_);
+            std::lock_guard lock(mtx_);
             if(queue_.empty())
                 return std::nullopt;
             return std::move(queue_.front());
@@ -313,11 +311,15 @@ struct QueuedAwaiter
 
     void await_suspend(std::coroutine_handle<> handle) noexcept
     {
-        handle_ = handle;
-        if (queue_.size() != 0) {
-            handle_.resume();
-            handle_ = nullptr;
+        bool has_data = false;
+        {
+            std::lock_guard lock(mtx_);
+            has_data = queue_.size() != 0;
+            if (!has_data)
+                handle_ = handle;
         }
+        if (has_data)
+            handle.resume();
     }
 };
 
