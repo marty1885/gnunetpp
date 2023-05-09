@@ -65,7 +65,8 @@ GNUNET_DHT_GetHandle* DHT::get(const std::string_view key, GetCallbackFunctor co
     , std::chrono::duration<double> search_timeout
     , GNUNET_BLOCK_Type data_type
     , unsigned int replication
-    , GNUNET_DHT_RouteOption routing_options)
+    , GNUNET_DHT_RouteOption routing_options
+    , std::function<void()> finished_callback)
 {
     if(dht_handle == NULL)
         throw std::runtime_error("DHT not connected");
@@ -81,10 +82,39 @@ GNUNET_DHT_GetHandle* DHT::get(const std::string_view key, GetCallbackFunctor co
     data->callback = std::move(completedCallback);
     data->handle = handle;
     data->timer_task = scheduler::runLater(search_timeout, [data, this] () {
+        if(data->finished_callback)
+            data->finished_callback();
         GNUNET_DHT_get_stop(data->handle);
         delete data;
     }, true);
+    data->finished_callback = std::move(finished_callback);
     return handle;
+}
+
+cppcoro::async_generator<std::string> DHT::get(const std::string_view key
+        , std::chrono::duration<double> search_timeout
+        , GNUNET_BLOCK_Type data_type
+        , unsigned int replication
+        , GNUNET_DHT_RouteOption routing_options)
+
+{
+    EagerAwaiter<std::pair<std::string, bool>> awaiter;
+    auto handle = get(key, [&awaiter] (std::string_view data) {
+        std::cout << "Got data: " << data << std::endl;
+        awaiter.setValue({std::string(data), true});
+        return true;
+    }, search_timeout, data_type, replication, routing_options
+    , [&awaiter](){
+        awaiter.setValue({std::string(), false});
+    });
+
+    while(true) {
+        auto [result, have_data] = co_await awaiter;
+        if(!have_data)
+            break;
+        co_yield result;
+        awaiter = EagerAwaiter<std::pair<std::string, bool>>();
+    }
 }
 
 void DHT::cancle(GNUNET_DHT_PutHandle* handle)
@@ -115,6 +145,8 @@ void DHT::getCallback(void *cls,
     std::string_view data_view{reinterpret_cast<const char*>(data), size};
     bool keep_running = pack->callback(data_view);
     if(keep_running == false) {
+        if(pack->finished_callback)
+            pack->finished_callback();
         GNUNET_DHT_get_stop(pack->handle);
         scheduler::cancel(pack->timer_task);
         delete pack;

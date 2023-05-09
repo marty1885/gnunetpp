@@ -27,6 +27,7 @@ struct DHT : public Service
         GNUNET_DHT_GetHandle* handle;
         TaskID timer_task;
         GetCallbackFunctor callback;
+        std::function<void()> finished_callback;
     };
 
     DHT(const GNUNET_CONFIGURATION_Handle* cfg, unsigned int ht_len = 32)
@@ -76,6 +77,12 @@ struct DHT : public Service
      * @return GNUNET_DHT_GetHandle* 
      */
     GNUNET_DHT_GetHandle* get(const std::string_view key, GetCallbackFunctor completedCallback
+        , std::chrono::duration<double> search_timeout = std::chrono::seconds(10)
+        , GNUNET_BLOCK_Type data_type = GNUNET_BLOCK_TYPE_TEST
+        , unsigned int replication = 5
+        , GNUNET_DHT_RouteOption routing_options = GNUNET_DHT_RO_NONE
+        , std::function<void()> finishedCallback = nullptr);
+    cppcoro::async_generator<std::string> get(const std::string_view key
         , std::chrono::duration<double> search_timeout = std::chrono::seconds(10)
         , GNUNET_BLOCK_Type data_type = GNUNET_BLOCK_TYPE_TEST
         , unsigned int replication = 5
