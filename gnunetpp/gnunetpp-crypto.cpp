@@ -135,4 +135,59 @@ GNUNET_HashCode zeroHash()
     memset(&hash, 0, sizeof(hash));
     return hash;
 }
+
+GNUNET_CRYPTO_EcdsaPrivateKey anonymousKey()
+{
+    return *GNUNET_CRYPTO_ecdsa_key_get_anonymous();
+}
+
+std::optional<GNUNET_CRYPTO_EcdsaSignature> sign(const GNUNET_CRYPTO_EcdsaPrivateKey& key, const std::string_view& data, uint32_t purpose)
+{
+    GNUNET_CRYPTO_EcdsaSignature sig;
+    std::vector<uint8_t> chunk(data.size() + sizeof(GNUNET_CRYPTO_EccSignaturePurpose));
+    GNUNET_CRYPTO_EccSignaturePurpose header;
+    header.purpose = htonl(purpose);
+    header.size = htonl(data.size());
+    memcpy(chunk.data(), &header, sizeof(header));
+    memcpy(chunk.data() + sizeof(header), data.data(), data.size());
+    if(GNUNET_OK != GNUNET_CRYPTO_ecdsa_sign_(&key, (GNUNET_CRYPTO_EccSignaturePurpose*)chunk.data(), &sig))
+        return std::nullopt;
+    return sig;
+}
+
+std::optional<GNUNET_CRYPTO_EddsaSignature> sign(const GNUNET_CRYPTO_EddsaPrivateKey& key, const std::string_view& data, uint32_t purpose)
+{
+    GNUNET_CRYPTO_EddsaSignature sig;
+    std::vector<uint8_t> chunk(data.size() + sizeof(GNUNET_CRYPTO_EccSignaturePurpose));
+    GNUNET_CRYPTO_EccSignaturePurpose header;
+    header.purpose = htonl(purpose);
+    header.size = htonl(data.size());
+    memcpy(chunk.data(), &header, sizeof(header));
+    memcpy(chunk.data() + sizeof(header), data.data(), data.size());
+    if(GNUNET_OK != GNUNET_CRYPTO_eddsa_sign_(&key, (GNUNET_CRYPTO_EccSignaturePurpose*)chunk.data(), &sig))
+        return std::nullopt;
+    return sig;
+}
+
+bool verify(const GNUNET_CRYPTO_EcdsaPublicKey& key, const std::string_view& data, const GNUNET_CRYPTO_EcdsaSignature& signature, uint32_t purpose)
+{
+    std::vector<uint8_t> chunk(data.size() + sizeof(GNUNET_CRYPTO_EccSignaturePurpose));
+    GNUNET_CRYPTO_EccSignaturePurpose header;
+    header.purpose = htonl(purpose);
+    header.size = htonl(data.size());
+    memcpy(chunk.data(), &header, sizeof(header));
+    memcpy(chunk.data() + sizeof(header), data.data(), data.size());
+    return GNUNET_OK == GNUNET_CRYPTO_ecdsa_verify_(purpose, (GNUNET_CRYPTO_EccSignaturePurpose*)chunk.data(), &signature, &key);
+}
+
+bool verify(const GNUNET_CRYPTO_EddsaPublicKey& key, const std::string_view& data, const GNUNET_CRYPTO_EddsaSignature& signature, uint32_t purpose)
+{
+    std::vector<uint8_t> chunk(data.size() + sizeof(GNUNET_CRYPTO_EccSignaturePurpose));
+    GNUNET_CRYPTO_EccSignaturePurpose header;
+    header.purpose = htonl(purpose);
+    header.size = htonl(data.size());
+    memcpy(chunk.data(), &header, sizeof(header));
+    memcpy(chunk.data() + sizeof(header), data.data(), data.size());
+    return GNUNET_OK == GNUNET_CRYPTO_eddsa_verify_(purpose, (GNUNET_CRYPTO_EccSignaturePurpose*)chunk.data(), &signature, &key);
+}
 }

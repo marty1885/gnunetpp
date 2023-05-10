@@ -2,6 +2,7 @@
 
 #include <compare>
 #include <gnunet/gnunet_util_lib.h>
+#include <gnunet/gnunet_signatures.h>
 
 #include <string>
 #include <vector>
@@ -44,6 +45,13 @@ GNUNET_PeerIdentity myPeerIdentity(const GNUNET_CONFIGURATION_Handle *cfg);
 
 std::string to_string(const GNUNET_PeerIdentity& peer);
 GNUNET_PeerIdentity peerIdentity(const std::string_view& str);
+
+GNUNET_CRYPTO_EcdsaPrivateKey anonymousKey();
+
+std::optional<GNUNET_CRYPTO_EcdsaSignature> sign(const GNUNET_CRYPTO_EcdsaPrivateKey& key, const std::string_view& data, uint32_t purpose = GNUNET_SIGNATURE_PURPOSE_TEST);
+std::optional<GNUNET_CRYPTO_EddsaSignature> sign(const GNUNET_CRYPTO_EddsaPrivateKey& key, const std::string_view& data, uint32_t purpose = GNUNET_SIGNATURE_PURPOSE_TEST);
+bool verify(const GNUNET_CRYPTO_EcdsaPublicKey& key, const std::string_view& data, const GNUNET_CRYPTO_EcdsaSignature& signature, uint32_t purpose = GNUNET_SIGNATURE_PURPOSE_TEST);
+bool verify(const GNUNET_CRYPTO_EddsaPublicKey& key, const std::string_view& data, const GNUNET_CRYPTO_EddsaSignature& signature, uint32_t purpose = GNUNET_SIGNATURE_PURPOSE_TEST);
 }
 
 GNUNETPP_OPERATOR_COMPOARE_RAW_DATA(GNUNET_HashCode)
