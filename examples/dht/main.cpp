@@ -27,16 +27,17 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
     else {
         // Retrieve value associated with key from the DHT. Be aware that there might be multiple values
         // on the same key. The callback will be called for each value.
+        auto iter = dht->get(key, std::chrono::seconds(timeout), GNUNET_BLOCK_TYPE_TEST, replication);
+        for(auto it = co_await iter.begin(); it != iter.end(); co_await ++it) {
+            std::cout << "Got " << key << " = " << *it << std::endl;
+        }
+        // Same thing. But using hte callback interface
         // dht->get(key, [](std::string_view payload) -> bool {
         //     std::cout << "Got " << key << " = " << payload << std::endl;
 
         //     // true here tells GNUNet to keep looking for more values
         //     return true; // return false here to stop looking
         // }, std::chrono::seconds(timeout), GNUNET_BLOCK_TYPE_TEST, replication);
-        auto iter = dht->get(key, std::chrono::seconds(timeout), GNUNET_BLOCK_TYPE_TEST, replication);
-        for(auto it = co_await iter.begin(); it != iter.end(); co_await ++it) {
-            std::cout << "Got " << key << " = " << *it << std::endl;
-        }
         std::cout << "Get completed" << std::endl;
 
         // stop looking for values after timeout. This ends the program
