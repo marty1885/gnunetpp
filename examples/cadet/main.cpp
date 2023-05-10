@@ -145,6 +145,7 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
             // Send the line to the peer with the specified message type
             channel->send(data.data(), data.size(), GNUNET_MESSAGE_TYPE_CADET_CLI);
         }
+        gnunetpp::shutdown();
     }
     else if (run_server) {
         // Create a CADET instance

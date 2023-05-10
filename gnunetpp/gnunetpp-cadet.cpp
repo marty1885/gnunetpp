@@ -17,7 +17,7 @@ struct PortListenerPack
 
 struct ConnectPack
 {
-    CADETChannelPtr channel;
+    std::weak_ptr<CADETChannel> channel;
 };
 
 namespace gnunetpp::internal
@@ -69,7 +69,8 @@ static void cadet_disconnect_trampoline(void *cls, const GNUNET_CADET_Channel *c
 static void cadet_disconnect_client_trampoline(void *cls, const GNUNET_CADET_Channel *channel)
 {
     auto pack = static_cast<ConnectPack*>(cls);
-    auto& channel_ptr = pack->channel;
+    auto channel_ptr = pack->channel.lock();
+    GNUNET_assert(channel_ptr);
     if(channel_ptr->disconnectCallback)
         channel_ptr->disconnectCallback();
     delete pack;
@@ -102,7 +103,8 @@ static void cadet_message_trampoline(void *cls, const struct GNUNET_MessageHeade
 static void cadet_message_client_trampoline(void *cls, const struct GNUNET_MessageHeader *msg)
 {
     auto pack = static_cast<ConnectPack*>(cls);
-    auto& channel_ptr = pack->channel;
+    auto channel_ptr = pack->channel.lock();
+    GNUNET_assert(channel_ptr);
 
     auto size = ntohs(msg->size);
     auto type = ntohs(msg->type);
