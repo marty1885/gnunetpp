@@ -21,9 +21,19 @@ GNUNET_DHT_PutHandle* DHT::put(const std::string_view key, const std::string_vie
     , GNUNET_BLOCK_Type data_type
     , GNUNET_DHT_RouteOption routing_options)
 {
+    auto key_hash = crypto::hash(key);
+    return put(key_hash, data, std::move(completedCallback), expiration, replication, data_type, routing_options);
+}
+
+GNUNET_DHT_PutHandle* DHT::put(const GNUNET_HashCode& key_hash, const std::string_view data
+    , PutCallbackFunctor completedCallback
+    , std::chrono::duration<double> expiration
+    , unsigned int replication
+    , GNUNET_BLOCK_Type data_type
+    , GNUNET_DHT_RouteOption routing_options)
+{
     if(dht_handle == NULL)
         throw std::runtime_error("DHT not connected");
-    GNUNET_HashCode key_hash = crypto::hash(key);
 
     // XXX: This only works because internally GNUNet uses msec. If they ever change this, this will break.
     const size_t num_usecs = std::chrono::duration_cast<std::chrono::microseconds>(expiration).count();
@@ -45,20 +55,29 @@ cppcoro::task<> DHT::put(const std::string_view key, const std::string_view data
         , GNUNET_BLOCK_Type data_type
         , GNUNET_DHT_RouteOption routing_options)
 {
+    return put(crypto::hash(key), data, expiration, replication, data_type, routing_options);
+}
+
+cppcoro::task<> DHT::put(const GNUNET_HashCode& key_hash, const std::string_view data
+        , std::chrono::duration<double> expiration
+        , unsigned int replication
+        , GNUNET_BLOCK_Type data_type
+        , GNUNET_DHT_RouteOption routing_options)
+{
     struct PutAwaiter : public EagerAwaiter<>
     {
-        PutAwaiter(DHT* dht, const std::string_view key, const std::string_view data
+        PutAwaiter(DHT* dht, const GNUNET_HashCode& key_hash, const std::string_view data
             , std::chrono::duration<double> expiration
             , unsigned int replication
             , GNUNET_BLOCK_Type data_type
             , GNUNET_DHT_RouteOption routing_options)
         {
-            dht->put(key, data, [this] () {
+            dht->put(key_hash, data, [this] () {
                 setValue();
             }, expiration, replication, data_type, routing_options);
         }
     };
-    co_await PutAwaiter(this, key, data, expiration, replication, data_type, routing_options);
+    co_await PutAwaiter(this, key_hash, data, expiration, replication, data_type, routing_options);
 }
 
 GNUNET_DHT_GetHandle* DHT::get(const std::string_view key, GetCallbackFunctor completedCallback
@@ -68,9 +87,19 @@ GNUNET_DHT_GetHandle* DHT::get(const std::string_view key, GetCallbackFunctor co
     , GNUNET_DHT_RouteOption routing_options
     , std::function<void()> finished_callback)
 {
+    return get(crypto::hash(key), std::move(completedCallback), search_timeout
+        , data_type, replication, routing_options, std::move(finished_callback));
+}
+
+GNUNET_DHT_GetHandle* DHT::get(const GNUNET_HashCode& key_hash, GetCallbackFunctor completedCallback
+    , std::chrono::duration<double> search_timeout
+    , GNUNET_BLOCK_Type data_type
+    , unsigned int replication
+    , GNUNET_DHT_RouteOption routing_options
+    , std::function<void()> finished_callback)
+{
     if(dht_handle == NULL)
         throw std::runtime_error("DHT not connected");
-    GNUNET_HashCode key_hash = crypto::hash(key);
     auto data = new GetCallbackPack;
 
     GNUNET_DHT_GetHandle* handle = GNUNET_DHT_get_start(dht_handle, data_type, &key_hash, replication, routing_options
@@ -96,10 +125,19 @@ cppcoro::async_generator<std::string> DHT::get(const std::string_view key
         , GNUNET_BLOCK_Type data_type
         , unsigned int replication
         , GNUNET_DHT_RouteOption routing_options)
+{
+    return get(crypto::hash(key), search_timeout, data_type, replication, routing_options);
+}
+
+cppcoro::async_generator<std::string> DHT::get(const GNUNET_HashCode& key_hash
+        , std::chrono::duration<double> search_timeout
+        , GNUNET_BLOCK_Type data_type
+        , unsigned int replication
+        , GNUNET_DHT_RouteOption routing_options)
 
 {
     QueuedAwaiter<std::pair<std::string, bool>> awaiter;
-    auto handle = get(key, [&awaiter] (std::string_view data) {
+    auto handle = get(key_hash, [&awaiter] (std::string_view data) {
         awaiter.addValue({std::string(data), true});
         return true;
     }, search_timeout, data_type, replication, routing_options
