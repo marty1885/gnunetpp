@@ -28,7 +28,9 @@ inline GNUNET_HashCode hmac(const GNUNET_CRYPTO_AuthKey& key, const std::string_
 }
 
 GNUNET_HashCode randomHash(GNUNET_CRYPTO_Quality quality = GNUNET_CRYPTO_QUALITY_STRONG);
+GNUNET_ShortHashCode randomShortHash(GNUNET_CRYPTO_Quality quality = GNUNET_CRYPTO_QUALITY_STRONG);
 GNUNET_HashCode zeroHash();
+GNUNET_ShortHashCode zeroShortHash();
 std::vector<uint8_t> randomBytes(size_t size, GNUNET_CRYPTO_Quality quality = GNUNET_CRYPTO_QUALITY_STRONG);
 uint64_t randomU64(GNUNET_CRYPTO_Quality quality = GNUNET_CRYPTO_QUALITY_STRONG);
 

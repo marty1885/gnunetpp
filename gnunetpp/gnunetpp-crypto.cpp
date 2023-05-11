@@ -37,6 +37,14 @@ GNUNET_HashCode randomHash(GNUNET_CRYPTO_Quality quality)
     return hash;
 }
 
+GNUNET_ShortHashCode randomShortHash(GNUNET_CRYPTO_Quality quality)
+{
+    auto hash = randomHash(quality);
+    GNUNET_ShortHashCode shortHash;
+    memcpy(&shortHash, &hash, sizeof(shortHash));
+    return shortHash;
+}
+
 std::vector<uint8_t> randomBytes(size_t size, GNUNET_CRYPTO_Quality quality)
 {
     std::vector<uint8_t> bytes(size);
@@ -132,6 +140,13 @@ GNUNET_PeerIdentity peerIdentity(const std::string_view& str)
 GNUNET_HashCode zeroHash()
 {
     GNUNET_HashCode hash;
+    memset(&hash, 0, sizeof(hash));
+    return hash;
+}
+
+GNUNET_ShortHashCode zeroShortHash()
+{
+    GNUNET_ShortHashCode hash;
     memset(&hash, 0, sizeof(hash));
     return hash;
 }
