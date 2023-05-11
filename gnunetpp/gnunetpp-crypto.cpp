@@ -205,4 +205,64 @@ bool verify(const GNUNET_CRYPTO_EddsaPublicKey& key, const std::string_view& dat
     memcpy(chunk.data() + sizeof(header), data.data(), data.size());
     return GNUNET_OK == GNUNET_CRYPTO_eddsa_verify_(purpose, (GNUNET_CRYPTO_EccSignaturePurpose*)chunk.data(), &signature, &key);
 }
+
+std::string base64Encode(const void* data, size_t size)
+{
+    std::string_view alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    std::string res;
+    res.reserve((size + 2) / 3 * 4);
+    for(size_t i = 0; i < size; i += 3)
+    {
+        uint32_t chunk = 0;
+        for(size_t j = 0; j < 3; ++j)
+        {
+            chunk <<= 8;
+            if(i + j < size)
+                chunk |= ((uint8_t*)data)[i + j];
+        }
+        for(size_t j = 0; j < 4; ++j)
+        {
+            if(i + j <= size)
+                res.push_back(alphabet[(chunk >> (18 - j * 6)) & 0x3F]);
+            else
+                res.push_back('=');
+        }
+    }
+    return res;
+}
+void base64Decode(const void* data, size_t size, void* out)
+{
+    std::string_view alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    for(size_t i = 0; i < size; i += 4)
+    {
+        uint32_t chunk = 0;
+        for(size_t j = 0; j < 4; ++j)
+        {
+            chunk <<= 6;
+            if(i + j < size)
+            {
+                char c = ((char*)data)[i + j];
+                if(c >= 'A' && c <= 'Z')
+                    chunk |= c - 'A';
+                else if(c >= 'a' && c <= 'z')
+                    chunk |= c - 'a' + 26;
+                else if(c >= '0' && c <= '9')
+                    chunk |= c - '0' + 52;
+                else if(c == '+')
+                    chunk |= 62;
+                else if(c == '/')
+                    chunk |= 63;
+                else if(c == '=')
+                    chunk |= 0;
+                else
+                    throw std::runtime_error("Invalid base64 character");
+            }
+        }
+        for(size_t j = 0; j < 3; ++j)
+        {
+            if(i * 3 + j < size)
+                ((uint8_t*)out)[i * 3 + j] = (chunk >> (16 - j * 8)) & 0xFF;
+        }
+    }
+}
 }
