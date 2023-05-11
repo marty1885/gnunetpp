@@ -206,6 +206,15 @@ bool verify(const GNUNET_CRYPTO_EddsaPublicKey& key, const std::string_view& dat
     return GNUNET_OK == GNUNET_CRYPTO_eddsa_verify_(purpose, (GNUNET_CRYPTO_EccSignaturePurpose*)chunk.data(), &signature, &key);
 }
 
+GNUNET_HashCode hashCode(const std::string_view& data)
+{
+    GNUNET_HashCode hash;
+    auto rc = GNUNET_STRINGS_string_to_data(data.data(), data.size(), &hash, sizeof(hash));
+    if(rc != GNUNET_OK)
+        throw std::runtime_error("Failed to parse hash");
+    return hash;
+}
+
 std::string base64Encode(const void* data, size_t size)
 {
     std::string_view alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
