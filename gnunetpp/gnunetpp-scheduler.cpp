@@ -118,13 +118,21 @@ void cancel(TaskID id)
 
 void cancelAll()
 {
+    std::vector<TaskID> ids;
     for(auto& [id, data] : g_tasks) {
         if(data.run_on_shutdown)
             data.fn();
-        std::lock_guard lock{g_scheduler_mutex};
         GNUNET_SCHEDULER_cancel(data.handle);
+        ids.push_back(id);
     }
-    g_tasks.clear();
+
+    std::lock_guard lock{g_scheduler_mutex};
+        for(auto id : ids)
+            g_tasks.remove(id);
+    
+    // some tasks may add new tasks, so we need to cancel them too
+    for(auto& [id, data] : g_tasks)
+        GNUNET_SCHEDULER_cancel(data.handle);
 }
 
 static bool running = true;
