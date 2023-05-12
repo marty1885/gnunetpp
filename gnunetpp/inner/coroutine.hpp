@@ -3,9 +3,11 @@
 #include <cppcoro/task.hpp>
 #include <cppcoro/async_generator.hpp>
 
+#include <memory>
 #include <optional>
 #include <variant>
 #include <queue>
+#include <limits>
 
 namespace gnunetpp
 {

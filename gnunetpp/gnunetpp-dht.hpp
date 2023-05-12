@@ -28,6 +28,8 @@ struct DHT : public Service
         TaskID timer_task;
         GetCallbackFunctor callback;
         std::function<void()> finished_callback;
+
+        void cancel();
     };
 
     DHT(const GNUNET_CONFIGURATION_Handle* cfg, unsigned int ht_len = 32)
@@ -80,15 +82,15 @@ struct DHT : public Service
      * @param data_type The type of the data block. `GNUNET_BLOCK_TYPE_TEST` is generic but does not support error checking.
      * @param replication How many copies of the get command should be sent (to avoid evil nodes)
      * @param routing_options The routing options to use for the get command
-     * @return GNUNET_DHT_GetHandle* 
+     * @return GetCallbackPack* 
      */
-    GNUNET_DHT_GetHandle* get(const std::string_view key, GetCallbackFunctor completedCallback
+    GetCallbackPack* get(const std::string_view key, GetCallbackFunctor completedCallback
         , std::chrono::duration<double> search_timeout = std::chrono::seconds(10)
         , GNUNET_BLOCK_Type data_type = GNUNET_BLOCK_TYPE_TEST
         , unsigned int replication = 5
         , GNUNET_DHT_RouteOption routing_options = GNUNET_DHT_RO_NONE
         , std::function<void()> finishedCallback = nullptr);
-    GNUNET_DHT_GetHandle* get(const GNUNET_HashCode& key_hash, GetCallbackFunctor completedCallback
+    GetCallbackPack* get(const GNUNET_HashCode& key_hash, GetCallbackFunctor completedCallback
         , std::chrono::duration<double> search_timeout = std::chrono::seconds(10)
         , GNUNET_BLOCK_Type data_type = GNUNET_BLOCK_TYPE_TEST
         , unsigned int replication = 5
@@ -124,7 +126,7 @@ struct DHT : public Service
      * @param handle 
      */
     void cancle(GNUNET_DHT_PutHandle* handle);
-    void cancle(GNUNET_DHT_GetHandle* handle);
+    void cancle(GetCallbackPack* handle);
 
     /**
      * @brief Returns the native handle to the DHT service.

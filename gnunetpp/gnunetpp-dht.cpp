@@ -80,7 +80,7 @@ cppcoro::task<> DHT::put(GNUNET_HashCode key_hash, const std::string_view data
     co_await PutAwaiter(this, key_hash, data, expiration, replication, data_type, routing_options);
 }
 
-GNUNET_DHT_GetHandle* DHT::get(const std::string_view key, GetCallbackFunctor completedCallback
+DHT::GetCallbackPack* DHT::get(const std::string_view key, GetCallbackFunctor completedCallback
     , std::chrono::duration<double> search_timeout
     , GNUNET_BLOCK_Type data_type
     , unsigned int replication
@@ -91,7 +91,7 @@ GNUNET_DHT_GetHandle* DHT::get(const std::string_view key, GetCallbackFunctor co
         , data_type, replication, routing_options, std::move(finished_callback));
 }
 
-GNUNET_DHT_GetHandle* DHT::get(const GNUNET_HashCode& key_hash, GetCallbackFunctor completedCallback
+DHT::GetCallbackPack* DHT::get(const GNUNET_HashCode& key_hash, GetCallbackFunctor completedCallback
     , std::chrono::duration<double> search_timeout
     , GNUNET_BLOCK_Type data_type
     , unsigned int replication
@@ -117,7 +117,7 @@ GNUNET_DHT_GetHandle* DHT::get(const GNUNET_HashCode& key_hash, GetCallbackFunct
         delete data;
     }, true);
     data->finished_callback = std::move(finished_callback);
-    return handle;
+    return data;
 }
 
 GeneratorWrapper<std::string> DHT::get(const std::string_view key
@@ -148,8 +148,17 @@ GeneratorWrapper<std::string> DHT::get(GNUNET_HashCode key_hash
         throw std::runtime_error("Failed to get data from GNUNet DHT");
 
     return GeneratorWrapper<std::string>(std::move(awaiter), [this, awaiter=awaiter.get(), handle] {
-        cancle(handle);
+        handle->cancel();
     });
+}
+
+void DHT::GetCallbackPack::cancel()
+{
+    scheduler::cancel(timer_task);
+    if(finished_callback)
+        finished_callback();
+    GNUNET_DHT_get_stop(handle);
+    delete this;
 }
 
 void DHT::cancle(GNUNET_DHT_PutHandle* handle)
@@ -157,10 +166,9 @@ void DHT::cancle(GNUNET_DHT_PutHandle* handle)
     GNUNET_DHT_put_cancel(handle);
 }
 
-void DHT::cancle(GNUNET_DHT_GetHandle* handle)
+void DHT::cancle(GetCallbackPack* handle)
 {
-    //TODO: Fix leak caused by not deleting GetCallbackPack
-    GNUNET_DHT_get_stop(handle);
+    handle->cancel();
 }
 
 void DHT::getCallback(void *cls,
