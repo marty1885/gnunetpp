@@ -120,7 +120,7 @@ GNUNET_DHT_GetHandle* DHT::get(const GNUNET_HashCode& key_hash, GetCallbackFunct
     return handle;
 }
 
-cppcoro::async_generator<std::string> DHT::get(const std::string_view key
+GeneratorWrapper<std::string> DHT::get(const std::string_view key
         , std::chrono::duration<double> search_timeout
         , GNUNET_BLOCK_Type data_type
         , unsigned int replication
@@ -129,30 +129,27 @@ cppcoro::async_generator<std::string> DHT::get(const std::string_view key
     return get(crypto::hash(key), search_timeout, data_type, replication, routing_options);
 }
 
-cppcoro::async_generator<std::string> DHT::get(GNUNET_HashCode key_hash
+GeneratorWrapper<std::string> DHT::get(GNUNET_HashCode key_hash
         , std::chrono::duration<double> search_timeout
         , GNUNET_BLOCK_Type data_type
         , unsigned int replication
         , GNUNET_DHT_RouteOption routing_options)
 
 {
-    QueuedAwaiter<std::string> awaiter;
-    auto handle = get(key_hash, [&awaiter] (std::string_view data) {
-        awaiter.addValue(std::string(data));
+    auto awaiter = std::make_unique<QueuedAwaiter<std::string>>();
+    auto handle = get(key_hash, [awaiter=awaiter.get()] (std::string_view data) {
+        awaiter->addValue(std::string(data));
         return true;
     }, search_timeout, data_type, replication, routing_options
-    , [&awaiter](){
-        awaiter.finish();
+    , [awaiter=awaiter.get()](){
+        awaiter->finish();
     });
     if(handle == NULL)
         throw std::runtime_error("Failed to get data from GNUNet DHT");
 
-    while(true) {
-        auto result = co_await awaiter;
-        if(!result.has_value())
-            break;
-        co_yield *result;
-    }
+    return GeneratorWrapper<std::string>(std::move(awaiter), [this, awaiter=awaiter.get(), handle] {
+        cancle(handle);
+    });
 }
 
 void DHT::cancle(GNUNET_DHT_PutHandle* handle)

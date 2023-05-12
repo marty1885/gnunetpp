@@ -96,12 +96,12 @@ struct DHT : public Service
         , std::function<void()> finishedCallback = nullptr);
 
 
-    cppcoro::async_generator<std::string> get(const std::string_view key
+    GeneratorWrapper<std::string> get(const std::string_view key
         , std::chrono::duration<double> search_timeout = std::chrono::seconds(10)
         , GNUNET_BLOCK_Type data_type = GNUNET_BLOCK_TYPE_TEST
         , unsigned int replication = 5
         , GNUNET_DHT_RouteOption routing_options = GNUNET_DHT_RO_NONE);
-    cppcoro::async_generator<std::string> get(GNUNET_HashCode key_hash
+    GeneratorWrapper<std::string> get(GNUNET_HashCode key_hash
         , std::chrono::duration<double> search_timeout = std::chrono::seconds(10)
         , GNUNET_BLOCK_Type data_type = GNUNET_BLOCK_TYPE_TEST
         , unsigned int replication = 5

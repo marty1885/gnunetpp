@@ -340,6 +340,82 @@ struct QueuedAwaiter
     }
 };
 
+template <typename T>
+struct GeneratorWrapper
+{
+    GeneratorWrapper(std::unique_ptr<QueuedAwaiter<T>> awaiter, std::function<void()> cleanup)
+        : awaiter(std::move(awaiter)), cleanup(std::move(cleanup))
+    {
+    }
+
+    ~GeneratorWrapper()
+    {
+        if(!awaiter->finished_)
+            cleanup();
+    }
+
+    struct iterator_type
+    {
+        using value_type = T;
+        using pointer = T*;
+        using reference = T&;
+        using difference_type = std::ptrdiff_t;
+
+        T& operator*()
+        {
+            return *value;
+        }
+        cppcoro::task<iterator_type> operator++ ()
+        {
+            *this = co_await parent->next();
+            co_return *this;
+        }
+        bool operator==(const iterator_type& other) const
+        {
+            return idx == other.idx && parent == other.parent && value.has_value() == other.value.has_value();
+        }
+        bool operator!=(const iterator_type& other) const
+        {
+            return !(*this == other);
+        }
+        bool operator<(const iterator_type& other) const
+        {
+            return idx < other.idx;
+        }
+        bool operator>(const iterator_type& other) const
+        {
+            return idx > other.idx;
+        }
+
+        std::optional<T> value;
+        GeneratorWrapper<T>* parent;
+        size_t idx = 0;
+    };
+
+    cppcoro::task<iterator_type> begin()
+    {
+        return next();
+    }
+
+    cppcoro::task<iterator_type> next()
+    {
+        auto& ref = *awaiter;
+        auto value = co_await ref;
+        if(!value.has_value())
+            co_return end();
+        co_return iterator_type{std::move(value), this, idx++};
+    }
+
+    iterator_type end()
+    {
+        return iterator_type{std::nullopt, this, std::numeric_limits<size_t>::max()};
+    }
+
+    size_t idx = 0;
+    std::unique_ptr<QueuedAwaiter<T>> awaiter;
+    std::function<void()> cleanup;
+};
+
 /**
  * @brief Runs a coroutine from a regular function
  * @param coro A coroutine that is awaitable
