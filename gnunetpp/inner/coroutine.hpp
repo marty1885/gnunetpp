@@ -251,9 +251,10 @@ struct EagerAwaiter<void> : public CallbackAwaiter<>
 template <typename T>
 struct QueuedAwaiter
 {
-    using ElementType = std::variant<T, std::exception_ptr>;
+    using ElementType = std::variant<std::optional<T>, std::exception_ptr>;
     std::queue<ElementType> queue_;
     std::coroutine_handle<> handle_;
+    bool finished_ = false;
     mutable std::mutex mtx_;
 
     void addValue(T&& value)
@@ -282,13 +283,29 @@ struct QueuedAwaiter
             handle.resume();
     }
 
+    void finish()
+    {
+        if(finished_)
+            throw std::runtime_error("finish() called twice");
+        finished_ = true;
+        queue_.push(std::nullopt);
+        std::coroutine_handle<> handle = nullptr;
+        {
+            std::lock_guard lock(mtx_);
+            handle = handle_;
+            handle_ = nullptr;
+        }
+        if(handle)
+            handle.resume();
+    }
+
     bool await_ready() const noexcept
     {
         std::lock_guard lock(mtx_);
         return !queue_.empty();
     }
 
-    T await_resume() noexcept(false)
+    std::optional<T> await_resume() noexcept(false)
     {
         auto try_front = [this]() ->std::optional<ElementType> {
             std::lock_guard lock(mtx_);
