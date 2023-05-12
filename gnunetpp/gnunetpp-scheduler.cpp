@@ -127,8 +127,8 @@ void cancelAll()
     }
 
     std::lock_guard lock{g_scheduler_mutex};
-        for(auto id : ids)
-            g_tasks.remove(id);
+    for(auto id : ids)
+        g_tasks.remove(id);
     
     // some tasks may add new tasks, so we need to cancel them too
     for(auto& [id, data] : g_tasks)
