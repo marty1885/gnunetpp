@@ -58,6 +58,28 @@ cppcoro::task<> DHT::put(const std::string_view key, const std::string_view data
     return put(crypto::hash(key), data, expiration, replication, data_type, routing_options);
 }
 
+cppcoro::task<> DHT::put(const std::string_view key, const std::vector<uint8_t> data
+        , std::chrono::duration<double> expiration
+        , unsigned int replication
+        , GNUNET_BLOCK_Type data_type
+        , GNUNET_DHT_RouteOption routing_options)
+{
+    auto begin = (char*)data.data();
+    auto end = (char*)data.data()+data.size();
+    return put(crypto::hash(key), std::string_view(begin, end), expiration, replication, data_type, routing_options);
+}
+
+cppcoro::task<> DHT::put(GNUNET_HashCode key, const std::vector<uint8_t> data
+        , std::chrono::duration<double> expiration
+        , unsigned int replication
+        , GNUNET_BLOCK_Type data_type
+        , GNUNET_DHT_RouteOption routing_options)
+{
+    auto begin = (char*)data.data();
+    auto end = (char*)data.data()+data.size();
+    return put(key, std::string_view(begin, end), expiration, replication, data_type, routing_options);
+}
+
 cppcoro::task<> DHT::put(GNUNET_HashCode key_hash, const std::string_view data
         , std::chrono::duration<double> expiration
         , unsigned int replication
