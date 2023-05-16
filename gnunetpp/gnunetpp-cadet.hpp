@@ -162,7 +162,11 @@ struct CADET : public Service
      * @param acceptable_reply_types Types of messages that can be sent to this port 
      * @return GNUNET_CADET_Port* handle that can be used to close the port
      */
-    GNUNET_CADET_Port* openPort(const std::string_view port, const std::vector<uint16_t>& acceptable_reply_types);
+    GNUNET_CADET_Port* openPort(const GNUNET_HashCode& port, const std::vector<uint16_t>& acceptable_reply_types);
+    GNUNET_CADET_Port* openPort(const std::string_view port, const std::vector<uint16_t>& acceptable_reply_types)
+    {
+        return openPort(crypto::hash(port), acceptable_reply_types);
+    }
     /**
      * @brief Close a port
      * 

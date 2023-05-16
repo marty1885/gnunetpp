@@ -141,7 +141,7 @@ void CADET::shutdown()
     }
 }
 
-GNUNET_CADET_Port* CADET::openPort(const std::string_view port, const std::vector<uint16_t>& acceptable_reply_types)
+GNUNET_CADET_Port* CADET::openPort(const GNUNET_HashCode& port, const std::vector<uint16_t>& acceptable_reply_types)
 {
     std::vector<GNUNET_MQ_MessageHandler> handlers;
     handlers.reserve(acceptable_reply_types.size() + 1);
@@ -155,11 +155,10 @@ GNUNET_CADET_Port* CADET::openPort(const std::string_view port, const std::vecto
         });
     }
     handlers.push_back(GNUNET_MQ_handler_end());
-    auto hash = crypto::hash(port);
     auto pack = new internal::OpenPortCallbackPack{};
     pack->self = this;
-    pack->port = hash;
-    auto cadet_port = GNUNET_CADET_open_port(cadet, &hash, cadet_connection_trampoline, pack, nullptr, cadet_disconnect_trampoline, handlers.data());
+    pack->port = port;
+    auto cadet_port = GNUNET_CADET_open_port(cadet, &port, cadet_connection_trampoline, pack, nullptr, cadet_disconnect_trampoline, handlers.data());
     if(!cadet_port)
         throw std::runtime_error("Failed to open CADET port");
     GNUNET_assert(open_ports.find(cadet_port) == open_ports.end());
