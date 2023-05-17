@@ -179,11 +179,16 @@ CADETChannelPtr CADET::connect(const GNUNET_PeerIdentity& peer, const std::strin
     , const std::vector<uint16_t>& acceptable_reply_types
     , std::optional<uint32_t> options)
 {
+    return connect(peer, crypto::hash(port), acceptable_reply_types, options);
+}
+CADETChannelPtr CADET::connect(const GNUNET_PeerIdentity& peer, const GNUNET_HashCode& port
+    , const std::vector<uint16_t>& acceptable_reply_types
+    , std::optional<uint32_t> options)
+{
     auto channel_ptr = std::make_shared<CADETChannel>();
-    auto hash = crypto::hash(port);
     auto pack = new ConnectPack;
     pack->channel = channel_ptr;
-    channel_ptr->setRemotePort(hash);
+    channel_ptr->setRemotePort(port);
     std::vector<GNUNET_MQ_MessageHandler> handlers;
     handlers.reserve(acceptable_reply_types.size() + 1);
     for(auto type : acceptable_reply_types) {
@@ -196,7 +201,7 @@ CADETChannelPtr CADET::connect(const GNUNET_PeerIdentity& peer, const std::strin
         });
     }
     handlers.push_back(GNUNET_MQ_handler_end());
-    auto channel = GNUNET_CADET_channel_create(cadet, pack, &peer, &hash, nullptr, cadet_disconnect_client_trampoline, handlers.data());
+    auto channel = GNUNET_CADET_channel_create(cadet, pack, &peer, &port, nullptr, cadet_disconnect_client_trampoline, handlers.data());
     channel_ptr->channel = channel;
     channel_ptr->setConnectionOptions(options);
     return channel_ptr;

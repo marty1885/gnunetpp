@@ -186,6 +186,9 @@ struct CADET : public Service
     CADETChannelPtr connect(const GNUNET_PeerIdentity& peer, const std::string_view port
         , const std::vector<uint16_t>& acceptable_reply_types
         , std::optional<uint32_t> options = std::nullopt);
+    CADETChannelPtr connect(const GNUNET_PeerIdentity& peer, const GNUNET_HashCode& port
+        , const std::vector<uint16_t>& acceptable_reply_types
+        , std::optional<uint32_t> options = std::nullopt);
 
     /**
      * @brief Get a list of peers that we know about
