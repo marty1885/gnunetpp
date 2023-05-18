@@ -84,6 +84,20 @@ DROGON_TEST(ECDSA)
     CHECK(gnunetpp::crypto::verify(pk, "hello world", sig.value()) == false);
 }
 
+DROGON_TEST(EdDSA)
+{
+    auto sk = gnunetpp::crypto::generateEdDSAPrivateKey();
+    auto pk = gnunetpp::crypto::getPublicKey(sk);
+
+    auto sig = gnunetpp::crypto::sign(sk, "hello world");
+    REQUIRE(sig.has_value());
+    CHECK(gnunetpp::crypto::verify(pk, "hello world", sig.value()));
+
+    sig = gnunetpp::crypto::sign(sk, "hello world2");
+    REQUIRE(sig.has_value());
+    CHECK(gnunetpp::crypto::verify(pk, "hello world", sig.value()) == false);
+}
+
 int main(int argc, char** argv)
 {
     gnunetpp::run([=](const GNUNET_CONFIGURATION_Handle* cfg_) {

@@ -45,6 +45,7 @@ std::string to_string(const GNUNET_CRYPTO_EddsaPublicKey& key);
 GNUNET_HashCode hashCode(const std::string_view& data);
 
 GNUNET_CRYPTO_EcdsaPublicKey getPublicKey(const GNUNET_CRYPTO_EcdsaPrivateKey& key);
+GNUNET_CRYPTO_EddsaPublicKey getPublicKey(const GNUNET_CRYPTO_EddsaPrivateKey& key);
 GNUNET_PeerIdentity myPeerIdentity(const GNUNET_CONFIGURATION_Handle *cfg);
 
 std::string to_string(const GNUNET_PeerIdentity& peer);
@@ -59,6 +60,9 @@ bool verify(const GNUNET_CRYPTO_EddsaPublicKey& key, const std::string_view& dat
 
 std::string base64Encode(const void* data, size_t size);
 void base64Decode(const void* data, size_t size, void* out);
+
+GNUNET_CRYPTO_EddsaPrivateKey generateEdDSAPrivateKey();
+GNUNET_CRYPTO_EcdsaPrivateKey generateECDSAPrivateKey();
 }
 
 #define GNUNETPP_BASE64_CODEC(type) \

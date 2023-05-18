@@ -114,6 +114,13 @@ GNUNET_CRYPTO_EcdsaPublicKey getPublicKey(const GNUNET_CRYPTO_EcdsaPrivateKey& k
     return pub;
 }
 
+GNUNET_CRYPTO_EddsaPublicKey getPublicKey(const GNUNET_CRYPTO_EddsaPrivateKey& key)
+{
+    GNUNET_CRYPTO_EddsaPublicKey pub;
+    GNUNET_CRYPTO_eddsa_key_get_public(&key, &pub);
+    return pub;
+}
+
 GNUNET_PeerIdentity myPeerIdentity(const GNUNET_CONFIGURATION_Handle *cfg)
 {
     GNUNET_PeerIdentity id;
@@ -273,5 +280,19 @@ void base64Decode(const void* data, size_t size, void* out)
                 ((uint8_t*)out)[i * 3 + j] = (chunk >> (16 - j * 8)) & 0xFF;
         }
     }
+}
+
+GNUNET_CRYPTO_EddsaPrivateKey generateEdDSAPrivateKey()
+{
+    GNUNET_CRYPTO_EddsaPrivateKey key;
+    GNUNET_CRYPTO_eddsa_key_create(&key);
+    return key;
+}
+
+GNUNET_CRYPTO_EcdsaPrivateKey generateECDSAPrivateKey()
+{
+    GNUNET_CRYPTO_EcdsaPrivateKey key;
+    GNUNET_CRYPTO_ecdsa_key_create(&key);
+    return key;
 }
 }
