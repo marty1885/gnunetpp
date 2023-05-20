@@ -180,6 +180,7 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
             std::cout << "Tunnel: " << crypto::to_string(tunnel.peer) << " [ ENC: " << encryption_status(tunnel.estate) << ", CON: " << connection_status(tunnel.cstate)  << "] "
                 << tunnel.channels << " CHs, " << tunnel.connections << " CONNs" << std::endl;
         }
+        gnunetpp::shutdown();
     }
 }
 
