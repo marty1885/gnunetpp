@@ -118,12 +118,14 @@ void start(std::function<cppcoro::task<void>(const GNUNET_CONFIGURATION_Handle*)
 
 void shutdown()
 {
+    if(!g_running)
+        return;
     GNUNET_SCHEDULER_add_now([] (void* d) {
         scheduler::cancelAll();
         removeAllServices();
         scheduler::shutdown();
     }, NULL);
-    if(!inMainThread() && g_running)
+    if(!inMainThread())
         detail::notifyWakeup();
 }
 
