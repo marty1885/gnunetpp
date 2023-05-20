@@ -95,6 +95,7 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
                 std::cout << std::endl;
             }
         }
+        gnunetpp::shutdown();
     }
     else if(run_client) {
         // Create a CADET instance
