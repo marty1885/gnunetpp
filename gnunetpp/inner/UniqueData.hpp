@@ -48,6 +48,9 @@ struct UniqueData
         return data.find(id) != data.end();
     }
 
+    // IMPORTANT! You REALLY DON'T want to use these APIs. They are dangerous
+    // under multithreaded environment. Make damn sure you know what you are
+    // doing else suffer the consequences.
     auto begin()
     {
         return data.begin();

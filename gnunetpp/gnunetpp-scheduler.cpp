@@ -30,11 +30,11 @@ static detail::UniqueData<TaskData> g_tasks;
 static void timer_callback_trampoline(void* cls)
 {
     auto start = std::chrono::steady_clock::now();
-    size_t id = reinterpret_cast<size_t>(cls);
+    TaskID id = reinterpret_cast<TaskID>(cls);
     auto& data = g_tasks[id];
     data.fn();
-    auto end = std::chrono::steady_clock::now();
     if(data.repeat) {
+        auto end = std::chrono::steady_clock::now();
         auto diff = end - start;
         auto next_trigger_time = std::chrono::duration_cast<std::chrono::milliseconds>(diff);
         GNUNET_TIME_Relative delay{(uint64_t)next_trigger_time.count()};

@@ -37,12 +37,14 @@ struct GNS : public Service
                 , GnsCallback cb
                 , GnsErrorCallback err_cb
                 , uint32_t record_type = GNUNET_GNSRECORD_TYPE_ANY
-                , bool dns_compatability = true);
+                , bool dns_compatability = true
+                , GNUNET_GNS_LocalOptions options = GNUNET_GNS_LO_DEFAULT);
     void lookup(const std::string &name, std::chrono::milliseconds timeout
                 , GnsCallback cb
                 , GnsErrorCallback err_cb
                 , const std::string_view record_type
-                , bool dns_compatability = true);
+                , bool dns_compatability = true
+                , GNUNET_GNS_LocalOptions options = GNUNET_GNS_LO_DEFAULT);
     
     /**
      * @brief Lookup a name in the GNS. The coroutine version.
@@ -56,12 +58,14 @@ struct GNS : public Service
     cppcoro::task<std::vector<std::pair<std::string, std::string>>> lookup(const std::string &name
         , std::chrono::milliseconds timeout
         , uint32_t record_type = GNUNET_GNSRECORD_TYPE_ANY
-        , bool dns_compatability = true);
+        , bool dns_compatability = true
+        , GNUNET_GNS_LocalOptions options = GNUNET_GNS_LO_DEFAULT);
     [[nodiscard]]
     cppcoro::task<std::vector<std::pair<std::string, std::string>>> lookup(const std::string &name
         , std::chrono::milliseconds timeout
         , const std::string_view record_type
-        , bool dns_compatability = true);
+        , bool dns_compatability = true
+        , GNUNET_GNS_LocalOptions options = GNUNET_GNS_LO_DEFAULT);
 
     GNUNET_GNS_Handle *gns = nullptr;
 };

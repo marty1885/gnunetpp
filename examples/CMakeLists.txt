@@ -25,3 +25,6 @@ target_link_libraries(gnunetpp-cadet gnunetcadet gnunetcore gnunetutil gnunetpp 
 
 add_executable(gnunetpp-peerinfo peerinfo/main.cpp)
 target_link_libraries(gnunetpp-peerinfo gnunetpeerinfo gnunetcore gnunetutil gnunetpp example_pch)
+
+add_executable(gnunetpp-datastore datastore/main.cpp)
+target_link_libraries(gnunetpp-datastore gnunetdatastore gnunetcore gnunetutil gnunetpp example_pch)
