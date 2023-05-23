@@ -14,7 +14,8 @@ add_library(gnunetpp
     inner/Infra.cpp)
 target_include_directories(gnunetpp PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_precompile_headers(gnunetpp PRIVATE pch.hpp)
-target_link_libraries(gnunetpp PRIVATE idn cppcoro)
+target_link_libraries(gnunetpp PUBLIC idn cppcoro gnunetnamestore gnunetgnsrecord gnunetidentity gnunetcore
+    gnunetutil gnunetfs gnunetdht gnunetnse gnunetcadet gnunetpeerinfo gnunetdatastore gnunetgns)
 
 install(
     DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
