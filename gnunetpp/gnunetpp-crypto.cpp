@@ -57,7 +57,7 @@ uint64_t randomU64(GNUNET_CRYPTO_Quality quality)
     return GNUNET_CRYPTO_random_u64(quality, UINT64_MAX);
 }
 
-std::string to_string(const GNUNET_HashCode& hash)
+std::string to_string_short(const GNUNET_HashCode& hash)
 {
     std::lock_guard<std::mutex> m(g_mtx_hash);
     const char* str = GNUNET_h2s(&hash);
@@ -65,7 +65,7 @@ std::string to_string(const GNUNET_HashCode& hash)
     return ret;
 }
 
-std::string to_string_full(const GNUNET_HashCode& hash)
+std::string to_string(const GNUNET_HashCode& hash)
 {
     std::lock_guard<std::mutex> m(g_mtx_hash_full);
     const char* str = GNUNET_h2s_full(&hash);

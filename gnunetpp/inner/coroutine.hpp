@@ -388,6 +388,14 @@ struct GeneratorWrapper
         {
             return idx > other.idx;
         }
+        T* operator->()
+        {
+            return &*value;
+        }
+        const T* operator->() const
+        {
+            return &*value;
+        }
 
         std::optional<T> value;
         GeneratorWrapper<T>* parent;

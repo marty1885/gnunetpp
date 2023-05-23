@@ -24,33 +24,41 @@ void notifyWakeup()
         write(g_notify_fds[1], "1", 1);
 }
 
+static GNUNET_SCHEDULER_Task* g_select_task = nullptr;
+static GNUNET_NETWORK_FDSet* g_select_fds = nullptr;
+static void onInbountMessages(void*)
+{
+    GNUNET_assert(g_notify_fds[0] != -1);
+    char buf[1024];
+    while(true) {
+        ssize_t len = read(g_notify_fds[0], buf, sizeof(buf));
+        GNUNET_assert(len >= 0);
+        // if there's less data in the pipe then our buffer, we're done reading everything
+        if(len != sizeof(buf))
+            break;
+    }
+
+    g_select_task = GNUNET_SCHEDULER_add_select(GNUNET_SCHEDULER_PRIORITY_URGENT, GNUNET_TIME_UNIT_FOREVER_REL, g_select_fds, nullptr
+        , onInbountMessages, nullptr);
+}
+
 static void installNotifyFds()
 {
     GNUNET_assert(g_notify_fds[0] == -1 && g_notify_fds[1] == -1);
     GNUNET_assert(pipe(g_notify_fds) == 0);
 
-    auto rs = GNUNET_NETWORK_fdset_create();
-    GNUNET_NETWORK_fdset_set_native(rs, g_notify_fds[0]);
-    auto task = GNUNET_SCHEDULER_add_select(GNUNET_SCHEDULER_PRIORITY_URGENT, GNUNET_TIME_UNIT_FOREVER_REL, rs, nullptr
-    , [] (void* cls) {
-        char buf[1024];
-        while(true) {
-            ssize_t len = read(g_notify_fds[0], buf, sizeof(buf));
-            GNUNET_assert(len >= 0);
-            // if there's less data in the pipe then our buffer, we're done reading everything
-            if(len != sizeof(buf))
-                break;
-        }
-    }, nullptr);
+    g_select_fds = GNUNET_NETWORK_fdset_create();
+    GNUNET_NETWORK_fdset_set_native(g_select_fds, g_notify_fds[0]);
+    g_select_task = GNUNET_SCHEDULER_add_select(GNUNET_SCHEDULER_PRIORITY_URGENT, GNUNET_TIME_UNIT_FOREVER_REL, g_select_fds, nullptr
+        , onInbountMessages, nullptr);
     GNUNET_SCHEDULER_add_shutdown([] (void* cls) {
-        auto task = reinterpret_cast<GNUNET_SCHEDULER_Task*>(cls);
-        GNUNET_SCHEDULER_cancel(task);
+        GNUNET_SCHEDULER_cancel(g_select_task);
         close(g_notify_fds[0]);
         close(g_notify_fds[1]);
         g_notify_fds[0] = -1;
         g_notify_fds[1] = -1;
-    }, reinterpret_cast<void*>(task));
-    GNUNET_NETWORK_fdset_destroy(rs);
+        GNUNET_NETWORK_fdset_destroy(g_select_fds);
+    }, nullptr);
 }
 
 }
@@ -81,6 +89,7 @@ void removeAllServices()
 static bool g_running = false;
 void run(std::function<void(const GNUNET_CONFIGURATION_Handle*)> f, const std::string& service_name)
 {
+    GNUNET_assert(!g_running);
     using CallbackType = std::function<void(const GNUNET_CONFIGURATION_Handle* c)>;
 
     const char* args_dummy = "gnunetpp";

@@ -106,4 +106,9 @@ cppcoro::task<> waitUntilShutdown();
  * 
  */
 void wakeUp();
+
+/**
+ * @brief Run on GNUnet main thread
+*/
+cppcoro::task<> runOnMainThread();
 }

@@ -225,4 +225,18 @@ void wakeUp()
         detail::notifyWakeup();
 }
 
+cppcoro::task<> runOnMainThread()
+{
+    struct MainThreadAwaiter : public CallbackAwaiter<>
+    {
+        void await_suspend(std::coroutine_handle<> handle)
+        {
+            run([handle]{
+                handle.resume();
+            });
+        }
+    };
+    co_await MainThreadAwaiter();
+}
+
 }

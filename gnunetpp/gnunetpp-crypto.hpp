@@ -1,11 +1,12 @@
 #pragma once
 
-#include <compare>
 #include <gnunet/gnunet_util_lib.h>
 #include <gnunet/gnunet_signatures.h>
 
+#include <compare>
 #include <string>
 #include <vector>
+#include <optional>
 #include "inner/RawOperator.hpp"
 
 namespace gnunetpp::crypto
@@ -35,8 +36,8 @@ std::vector<uint8_t> randomBytes(size_t size, GNUNET_CRYPTO_Quality quality = GN
 uint64_t randomU64(GNUNET_CRYPTO_Quality quality = GNUNET_CRYPTO_QUALITY_STRONG);
 
 
+std::string to_string_short(const GNUNET_HashCode& hash);
 std::string to_string(const GNUNET_HashCode& hash);
-std::string to_string_full(const GNUNET_HashCode& hash);
 std::string to_string(const GNUNET_CRYPTO_EcdsaPrivateKey& key);
 std::string to_string(const GNUNET_CRYPTO_EcdsaPublicKey& key);
 std::string to_string(const GNUNET_CRYPTO_EddsaPrivateKey& key);
