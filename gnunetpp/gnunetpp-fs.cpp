@@ -394,6 +394,38 @@ void publish(
     });
 }
 
+cppcoro::task<std::pair<std::string, std::string>> publish(
+    const GNUNET_CONFIGURATION_Handle* cfg,
+    const std::string& filename,
+    const std::vector<std::string>& keywords,
+    std::chrono::seconds experation,
+    std::optional<Ego> ego, 
+    const std::string& this_id,
+    const std::string& next_id,
+    GNUNET_FS_BlockOptions block_options)
+{
+    struct PublishAwaiter : public EagerAwaiter<std::pair<std::string, std::string>>
+    {
+        PublishAwaiter(const GNUNET_CONFIGURATION_Handle* cfg,
+            const std::string& filename,
+            const std::vector<std::string>& keywords,
+            std::chrono::seconds experation,
+            std::optional<Ego> ego, 
+            const std::string& this_id,
+            const std::string& next_id,
+            GNUNET_FS_BlockOptions block_options)
+        {
+            publish(cfg, filename, keywords, [this](PublishResult result, const std::string& uri, const std::string& namespace_uri){
+                if(result == PublishResult::Success)
+                    this->setValue(std::make_pair(uri, namespace_uri));
+                else
+                    this->setException(std::make_exception_ptr(std::runtime_error("Failed to publish")));
+            }, experation, ego, this_id, next_id, block_options);
+        }
+    };
+    co_return co_await PublishAwaiter(cfg, filename, keywords, experation, ego, this_id, next_id, block_options);
+}
+
 GNUNET_FS_DirScanner* scan(
     const GNUNET_CONFIGURATION_Handle* cfg,
     const std::string& filename,

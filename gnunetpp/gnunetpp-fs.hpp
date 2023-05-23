@@ -122,6 +122,15 @@ void publish(
     const std::string& this_id = "",
     const std::string& next_id = "",
     GNUNET_FS_BlockOptions block_options = detail::default_block_options);
+cppcoro::task<std::pair<std::string, std::string>> publish(
+    const GNUNET_CONFIGURATION_Handle* cfg,
+    const std::string& filename,
+    const std::vector<std::string>& keywords = {},
+    std::chrono::seconds experation = std::chrono::seconds(3600*24*365),
+    std::optional<Ego> ego = std::nullopt, 
+    const std::string& this_id = "",
+    const std::string& next_id = "",
+    GNUNET_FS_BlockOptions block_options = detail::default_block_options);
 
 // Should this be considered an internal function?
 GNUNET_FS_DirScanner* scan(

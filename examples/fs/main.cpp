@@ -62,17 +62,15 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
     }
 
     else if(run_publish) {
-        gnunetpp::FS::publish(cfg, filename, keywords
-            , [](gnunetpp::FS::PublishResult status, const std::string& uri, const std::string& namespace_uri) {
-            if(status == gnunetpp::FS::PublishResult::Success) {
-                std::cout << "Published " << filename << " at " << uri << std::endl;
-                if(namespace_uri.size() > 0)
-                    std::cout << "Namespace URI: " << (namespace_uri.empty() ? "(none)" : namespace_uri.c_str()) << std::endl;
-            }
-            else {
-                std::cout << "Publish failed" << std::endl;
-            }
-        });
+        try {
+            auto [uri, namespace_uri] = co_await gnunetpp::FS::publish(cfg, filename, keywords);
+            std::cout << "Published " << filename << " at " << uri << std::endl;
+            if(namespace_uri.empty() == false)
+                std::cout << "Namespace URI: " << (namespace_uri.empty() ? "(none)" : namespace_uri.c_str()) << std::endl;
+        }
+        catch(const std::exception& e) {
+            std::cout << "Publish failed" << std::endl;
+        }
     }
 
     else if(run_unindex) {
@@ -83,7 +81,7 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
             std::cout << "Unindexed " << filename << std::endl;
         }
         catch(const std::exception& e) {
-            std::cout << "Unindex failed: " << e.what() << std::endl;
+            std::cerr << "Unindex failed: " << e.what() << std::endl;
         }
     }
 }
