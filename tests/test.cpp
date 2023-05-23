@@ -98,6 +98,16 @@ DROGON_TEST(EdDSA)
     CHECK(gnunetpp::crypto::verify(pk, "hello world", sig.value()) == false);
 }
 
+DROGON_TEST(Identity)
+{
+    auto sk = gnunetpp::crypto::myPeerPrivateKey(cfg);
+    auto pk = gnunetpp::crypto::myPeerIdentity(cfg);
+
+    auto sig = gnunetpp::crypto::sign(sk, "hello world");
+    REQUIRE(sig.has_value());
+    CHECK(gnunetpp::crypto::verify(pk.public_key, "hello world", sig.value()));
+}
+
 int main(int argc, char** argv)
 {
     gnunetpp::run([=](const GNUNET_CONFIGURATION_Handle* cfg_) {

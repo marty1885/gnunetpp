@@ -6,6 +6,7 @@
 #include <memory>
 #include <random>
 #include <thread>
+#include <iostream>
 
 #include <gnunetpp-scheduler.hpp>
 
@@ -120,6 +121,7 @@ void shutdown()
 {
     if(!g_running)
         return;
+    g_running = false;
     GNUNET_SCHEDULER_add_now([] (void* d) {
         scheduler::cancelAll();
         removeAllServices();

@@ -28,3 +28,6 @@ target_link_libraries(gnunetpp-peerinfo gnunetpeerinfo gnunetcore gnunetutil gnu
 
 add_executable(gnunetpp-datastore datastore/main.cpp)
 target_link_libraries(gnunetpp-datastore gnunetdatastore gnunetcore gnunetutil gnunetpp example_pch)
+
+add_executable(gnunetpp-namestore namestore/main.cpp)
+target_link_libraries(gnunetpp-namestore gnunetnamestore gnunetgnsrecord gnunetidentity gnunetcore gnunetutil gnunetpp example_pch)

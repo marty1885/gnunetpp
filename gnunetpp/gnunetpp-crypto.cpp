@@ -129,6 +129,17 @@ GNUNET_PeerIdentity myPeerIdentity(const GNUNET_CONFIGURATION_Handle *cfg)
     throw std::runtime_error("Failed to get host peer identity");
 }
 
+GNUNET_CRYPTO_EddsaPrivateKey myPeerPrivateKey(const GNUNET_CONFIGURATION_Handle *cfg)
+{
+    GNUNET_CRYPTO_EddsaPrivateKey key;
+    auto kp = GNUNET_CRYPTO_eddsa_key_create_from_configuration(cfg);
+    if(kp == nullptr)
+        throw std::runtime_error("Failed to get host peer private key");
+    key = *kp;
+    GNUNET_free(kp);
+    return key;
+}
+
 std::string to_string(const GNUNET_PeerIdentity& id)
 {
     const char* str = GNUNET_i2s_full(&id);

@@ -39,11 +39,7 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
         //     return true; // return false here to stop looking
         // }, std::chrono::seconds(timeout), GNUNET_BLOCK_TYPE_TEST, replication);
         std::cout << "Get completed" << std::endl;
-
-        // stop looking for values after timeout. This ends the program
-        gnunetpp::scheduler::runLater(std::chrono::seconds(timeout), [] {
-            gnunetpp::shutdown();
-        });
+        gnunetpp::shutdown();
     }
 }
 

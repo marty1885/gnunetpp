@@ -10,6 +10,7 @@ add_library(gnunetpp
     gnunetpp-cadet.cpp
     gnunetpp-peerinfo.cpp
     gnunetpp-datastore.cpp
+    gnunetpp-namestore.cpp
     inner/Infra.cpp)
 target_include_directories(gnunetpp PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_precompile_headers(gnunetpp PRIVATE pch.hpp)

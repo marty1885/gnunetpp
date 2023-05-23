@@ -112,8 +112,9 @@ This project aims to create a easy to use wapper for the commonly used part of G
   - [x] Client
 - GNS
   - [x] Resolve
-  - [ ] Register/modify record
-  - [ ] Ego
+- Namestore
+  - [x] Register/modify record
+  - [x] Lookup record in zone
 - Identity
   - [x] Create
   - [x] Delte
