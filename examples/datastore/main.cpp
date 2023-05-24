@@ -28,8 +28,6 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
     }
     else {
         // Lookup the data in the datastore under the given key
-        // FIXME: GNUnet seems to be deleting the data when the write process exits. So all lookups fail. But
-        // copying this code to run right after the put works. Huh... 
         auto lookup = datastore->get(key, queue_priority);
 
         // iterate over all values found and print them to stdout

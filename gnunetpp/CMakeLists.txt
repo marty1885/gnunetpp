@@ -16,6 +16,8 @@ target_include_directories(gnunetpp PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_precompile_headers(gnunetpp PRIVATE pch.hpp)
 target_link_libraries(gnunetpp PUBLIC idn cppcoro gnunetnamestore gnunetgnsrecord gnunetidentity gnunetcore
     gnunetutil gnunetfs gnunetdht gnunetnse gnunetcadet gnunetpeerinfo gnunetdatastore gnunetgns)
+# workaround for libintl.h conflicts
+target_compile_definitions(gnunetpp PUBLIC -DENABLE_NLS)
 
 install(
     DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
