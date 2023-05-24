@@ -7,6 +7,7 @@
 #include <gnunetpp-gns.hpp>
 #include <gnunetpp-identity.hpp>
 #include <gnunetpp-namestore.hpp>
+#include <gnunetpp-cadet.hpp>
 #include "inner/Infra.hpp"
 
 #include <random>
@@ -240,6 +241,40 @@ ENTER_MAIN_THREAD
     CHECK_NOTHROW(co_await namestore->remove(sk, "key1"));
 
     co_await identity->deleteIdentity(ego_name);
+EXIT_MAIN_THREAD
+}
+
+DROGON_TEST(CADET)
+{
+ENTER_MAIN_THREAD
+    auto cadet = std::make_shared<gnunetpp::CADET>(cfg);
+    auto myid = gnunetpp::crypto::myPeerIdentity(cfg);
+
+    gnunetpp::EagerAwaiter<> awaiter;
+
+    auto port = randomString(32);
+    cadet->openPort(port, {GNUNET_MESSAGE_TYPE_CADET_CLI});
+
+    size_t counter = 0;
+    cadet->setConnectedCallback([TEST_CTX, &awaiter, &myid, &counter](const gnunetpp::CADETChannelPtr& channel) {
+        CHECK(channel->isIncoming() == true);
+        CHECK(channel->isOutgoing() == false);
+        CHECK(channel->peer() == myid);
+        // connected callback MUST be called before receive callback
+        CHECK(counter == 0);
+        counter++;
+    });
+    cadet->setReceiveCallback([TEST_CTX, &awaiter, &counter](const gnunetpp::CADETChannelPtr& channel, const std::string_view msg, uint16_t type) {
+        CHECK(msg == "hello world");
+        CHECK(type == GNUNET_MESSAGE_TYPE_CADET_CLI);
+        CHECK(counter == 1);
+        counter++;
+        gnunetpp::scheduler::queue([&awaiter]{awaiter.setValue();});
+    });
+
+    auto channel = cadet->connect(myid, port, {GNUNET_MESSAGE_TYPE_CADET_CLI});
+    channel->send("hello world", GNUNET_MESSAGE_TYPE_CADET_CLI);
+    co_await awaiter;
 EXIT_MAIN_THREAD
 }
 
