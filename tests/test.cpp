@@ -22,7 +22,6 @@ static std::string randomString(size_t length)
     thread_local std::mt19937 rng{std::random_device{}()};
     static const char alphanum[] =
         "0123456789"
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         "abcdefghijklmnopqrstuvwxyz";
     std::uniform_int_distribution<size_t> dist{0, sizeof(alphanum) - 2};
 
@@ -219,10 +218,26 @@ ENTER_MAIN_THREAD
         CHECK(result[0].value == "VALUE1");
         CHECK(result[0].type == "TXT");
     }
-    namestore = std::make_shared<gnunetpp::Namestore>(cfg);
     result = co_await namestore->lookup(sk, "key2");
     CHECK(result.size() == 0);
 
+    // Check GNS is able to resolve the name. Need some time for
+    // GNS to update
+    co_await gnunetpp::scheduler::sleep(500ms);
+    auto gns = std::make_shared<gnunetpp::GNS>(cfg);
+    auto key = "key1."+ego_name;
+    auto gns_result = co_await gns->lookup(key, 10s, "TXT");
+    CHECK(gns_result.size() == 1);
+    if (gns_result.size() == 1) {
+        CHECK(gns_result[0].first == "VALUE1");
+        CHECK(gns_result[0].second == "TXT");
+    }
+    // We published TXT, so A should not be found
+    gns_result = co_await gns->lookup(key, 10s, "A");
+    CHECK(gns_result.size() == 0);
+
+    // Check that we can delete the record
+    CHECK_NOTHROW(co_await namestore->remove(sk, "key1"));
 
     co_await identity->deleteIdentity(ego_name);
 EXIT_MAIN_THREAD
