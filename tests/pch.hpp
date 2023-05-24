@@ -5,5 +5,6 @@
 #include <gnunetpp-identity.hpp>
 
 #include <drogon/drogon_test.h>
+#include <drogon/HttpAppFramework.h>
 
 #include <random>

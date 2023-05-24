@@ -8,6 +8,7 @@
 #include <gnunetpp-identity.hpp>
 #include <gnunetpp-namestore.hpp>
 #include <gnunetpp-cadet.hpp>
+#include <gnunetpp-datastore.hpp>
 #include "inner/Infra.hpp"
 
 #include <random>
@@ -155,7 +156,9 @@ ENTER_MAIN_THREAD
     auto dht = std::make_shared<gnunetpp::DHT>(cfg, 4);
     auto key = randomString(32);
     co_await dht->put(key, "world");
-    auto lookup = dht->get(key, 1s);
+    // just to make sure DHT has time to react to the put
+    co_await gnunetpp::scheduler::sleep(1s);
+    auto lookup = dht->get(key, 2s);
     size_t count = 0;
     for (auto it = co_await lookup.begin(); it != lookup.end(); co_await ++it) {
         CHECK(*it == "world");
@@ -239,6 +242,8 @@ ENTER_MAIN_THREAD
 
     // Check that we can delete the record
     CHECK_NOTHROW(co_await namestore->remove(sk, "key1"));
+    result = co_await namestore->lookup(sk, "key1");
+    CHECK(result.size() == 0);
 
     co_await identity->deleteIdentity(ego_name);
 EXIT_MAIN_THREAD
@@ -275,6 +280,31 @@ ENTER_MAIN_THREAD
     auto channel = cadet->connect(myid, port, {GNUNET_MESSAGE_TYPE_CADET_CLI});
     channel->send("hello world", GNUNET_MESSAGE_TYPE_CADET_CLI);
     co_await awaiter;
+EXIT_MAIN_THREAD
+}
+
+DROGON_TEST(DATASTORE)
+{
+ENTER_MAIN_THREAD
+    auto datastore = std::make_shared<gnunetpp::DataStore>(cfg);
+    auto key = randomString(32);
+    co_await datastore->put(key, "value1", 500s, 42);
+    auto lookup = datastore->get(key);
+    size_t counter = 0;
+    for (auto it = co_await lookup.begin(); it != lookup.end(); co_await ++it) {
+        auto val = *it;
+        auto sv = std::string_view((char*)val.data(), val.size());
+        CHECK(sv == "value1");
+        counter++;
+    }
+    CHECK(counter == 1);
+    auto result = co_await datastore->getOne(key);
+    CHECK(result.has_value());
+
+    auto key2 = randomString(32);
+    result = co_await datastore->getOne(key2);
+    CHECK(!result.has_value());
+
 EXIT_MAIN_THREAD
 }
 

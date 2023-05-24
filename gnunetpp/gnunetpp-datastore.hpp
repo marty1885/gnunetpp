@@ -6,6 +6,9 @@
 #include "inner/coroutine.hpp"
 #include "gnunetpp-crypto.hpp"
 
+#include <optional>
+#include <functional>
+
 namespace gnunetpp
 {
 struct DataStore : public Service
@@ -52,7 +55,7 @@ struct DataStore : public Service
         getOne(hash, std::move(callback), queue_priority, max_queue_size, type, uid);
     }
     
-    cppcoro::task<> put(const GNUNET_HashCode& key
+    cppcoro::task<> put(GNUNET_HashCode key
         , const void* data, size_t data_size
         , std::chrono::seconds expiration = std::chrono::years(1)
         // Default "magic" values taken from various GNUnet examples. Seems to be what GNUnet likes
@@ -132,7 +135,7 @@ struct DataStore : public Service
         return put(hash, data.data(), data.size(), expiration, priority, replication, anonymity, type, queue_priority, max_queue_size);
     }
     
-    cppcoro::task<std::optional<std::vector<uint8_t>>> getOne(const GNUNET_HashCode& hash
+    cppcoro::task<std::optional<std::vector<uint8_t>>> getOne(GNUNET_HashCode hash
         , uint32_t queue_priority=1, uint32_t max_queue_size=1, GNUNET_BLOCK_Type type = GNUNET_BLOCK_TYPE_TEST
         , uint64_t uid = 0);
     cppcoro::task<std::optional<std::vector<uint8_t>>> getOne(const std::string key
@@ -142,7 +145,7 @@ struct DataStore : public Service
         auto hash = gnunetpp::crypto::hash(key);
         return getOne(hash, queue_priority, max_queue_size, type, uid);
     }
-    cppcoro::async_generator<std::vector<uint8_t>> get(const GNUNET_HashCode& hash
+    cppcoro::async_generator<std::vector<uint8_t>> get(GNUNET_HashCode hash
         , uint32_t queue_priority=1, uint32_t max_queue_size=1, GNUNET_BLOCK_Type type = GNUNET_BLOCK_TYPE_TEST);
     cppcoro::async_generator<std::vector<uint8_t>> get(const std::string key
         , uint32_t queue_priority=1, uint32_t max_queue_size=1, GNUNET_BLOCK_Type type = GNUNET_BLOCK_TYPE_TEST)

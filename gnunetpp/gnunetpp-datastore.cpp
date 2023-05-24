@@ -1,5 +1,6 @@
 #include "gnunetpp-datastore.hpp"
 #include <iostream>
+#include <chrono>
 
 using namespace gnunetpp;
 
@@ -82,8 +83,8 @@ void DataStore::put(const GNUNET_HashCode& key
     , uint32_t queue_priority
     , uint32_t max_queue_size)
 {
-    size_t exp_msec = std::chrono::duration_cast<std::chrono::milliseconds>(expiration).count();
-    GNUNET_TIME_Relative gnunet_expiration{exp_msec};
+    size_t exp_usec = std::chrono::duration_cast<std::chrono::microseconds>(expiration).count();
+    GNUNET_TIME_Relative gnunet_expiration{exp_usec};
     GNUNET_TIME_Absolute gnunet_expiration_absolute = GNUNET_TIME_relative_to_absolute(gnunet_expiration);
     PutCallbackPack* pack = new PutCallbackPack{std::move(completedCallback)};
     auto handel = GNUNET_DATASTORE_put(datastore, 0, &key, data_size, data, type, priority, anonymity, replication
@@ -94,7 +95,7 @@ void DataStore::put(const GNUNET_HashCode& key
     }
 }
 
-cppcoro::task<> DataStore::put(const GNUNET_HashCode& key
+cppcoro::task<> DataStore::put(GNUNET_HashCode key
     , const void* data, size_t data_size
     , std::chrono::seconds expiration
     , uint32_t priority
@@ -140,7 +141,7 @@ void DataStore::getOne(const GNUNET_HashCode& hash, std::function<void(std::opti
     }
 }
 
-cppcoro::task<std::optional<std::vector<uint8_t>>> DataStore::getOne(const GNUNET_HashCode& hash
+cppcoro::task<std::optional<std::vector<uint8_t>>> DataStore::getOne(GNUNET_HashCode hash
     , uint32_t queue_priority, uint32_t max_queue_size, GNUNET_BLOCK_Type type, uint64_t uid)
 {
     struct GetAwaiter : public EagerAwaiter<std::optional<std::vector<uint8_t>>>
@@ -161,7 +162,7 @@ cppcoro::task<std::optional<std::vector<uint8_t>>> DataStore::getOne(const GNUNE
     co_return co_await awaiter;
 }
 
-cppcoro::async_generator<std::vector<uint8_t>> DataStore::get(const GNUNET_HashCode& hash
+cppcoro::async_generator<std::vector<uint8_t>> DataStore::get(GNUNET_HashCode hash
     , uint32_t queue_priority, uint32_t max_queue_size, GNUNET_BLOCK_Type type)
 {
     struct GetAwaiter : public EagerAwaiter<std::pair<std::optional<std::vector<uint8_t>>, uint64_t>>
