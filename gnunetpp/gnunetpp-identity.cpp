@@ -64,18 +64,18 @@ static void identity_info_trampoline(void *cls,
 }
 
 Ego::Ego(GNUNET_IDENTITY_Ego* ego)
-    : ego(ego)
+    : ego(ego), pk(getPublicKey(ego)), sk(*getPrivateKey(ego))
 {
 }
 
-GNUNET_IDENTITY_PublicKey Ego::publicKey() const
+const GNUNET_IDENTITY_PublicKey& Ego::publicKey() const
 {
-    return getPublicKey(ego);
+    return pk;
 }
 
-const GNUNET_IDENTITY_PrivateKey*  Ego::privateKey() const
+const GNUNET_IDENTITY_PrivateKey& Ego::privateKey() const
 {
-    return getPrivateKey(ego);
+    return sk;
 }
 
 

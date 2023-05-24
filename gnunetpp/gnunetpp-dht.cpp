@@ -133,9 +133,9 @@ DHT::GetCallbackPack* DHT::get(const GNUNET_HashCode& key_hash, GetCallbackFunct
     data->callback = std::move(completedCallback);
     data->handle = handle;
     data->timer_task = scheduler::runLater(search_timeout, [data, this] () {
+        GNUNET_DHT_get_stop(data->handle);
         if(data->finished_callback)
             data->finished_callback();
-        GNUNET_DHT_get_stop(data->handle);
         delete data;
     }, true);
     data->finished_callback = std::move(finished_callback);
@@ -176,10 +176,10 @@ GeneratorWrapper<std::string> DHT::get(GNUNET_HashCode key_hash
 
 void DHT::GetCallbackPack::cancel()
 {
+    GNUNET_DHT_get_stop(handle);
     scheduler::cancel(timer_task);
     if(finished_callback)
         finished_callback();
-    GNUNET_DHT_get_stop(handle);
     delete this;
 }
 
@@ -210,10 +210,10 @@ void DHT::getCallback(void *cls,
     std::string_view data_view{reinterpret_cast<const char*>(data), size};
     bool keep_running = pack->callback(data_view);
     if(keep_running == false) {
-        if(pack->finished_callback)
-            pack->finished_callback();
         GNUNET_DHT_get_stop(pack->handle);
         scheduler::cancel(pack->timer_task);
+        if(pack->finished_callback)
+            pack->finished_callback();
         delete pack;
     }
 }

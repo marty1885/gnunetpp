@@ -377,10 +377,10 @@ void publish(
 
             const struct GNUNET_CRYPTO_EcdsaPrivateKey *priv = NULL;
             if(ego.has_value()) {
-                auto sk = ego->privateKey();
-                if(ntohl(sk->type) != GNUNET_IDENTITY_TYPE_ECDSA)
+                const auto& sk = ego->privateKey();
+                if(ntohl(sk.type) != GNUNET_IDENTITY_TYPE_ECDSA)
                     throw std::runtime_error("Only ECDSA keys are supported");
-                priv = &sk->ecdsa_key;
+                priv = &sk.ecdsa_key;
             }
             auto pc = GNUNET_FS_publish_start (fs_handle,
                                 fi,

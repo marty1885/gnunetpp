@@ -123,7 +123,7 @@ This project aims to create a easy to use wapper for the commonly used part of G
 - NSE (Network Size Estimatior)
   - [x] Get value
   - [x] Watch value
-* PeerInfo
+- PeerInfo
   - [x] List peers
   - [ ] Add peer
 - Scheduler

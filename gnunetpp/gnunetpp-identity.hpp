@@ -18,8 +18,8 @@ struct Ego
     Ego(GNUNET_IDENTITY_Ego* ego);
     ~Ego() = default;
 
-    GNUNET_IDENTITY_PublicKey publicKey() const;
-    const GNUNET_IDENTITY_PrivateKey*  privateKey() const;
+    const GNUNET_IDENTITY_PublicKey& publicKey() const;
+    const GNUNET_IDENTITY_PrivateKey&  privateKey() const;
     GNUNET_IDENTITY_KeyType keyType() const;
 
     GNUNET_IDENTITY_Ego* native_handle() const { return ego; }
@@ -32,6 +32,10 @@ struct Ego
     bool operator>(const Ego&) const = default;
     bool operator<=(const Ego&) const = default;
     bool operator>=(const Ego&) const = default;
+
+protected:
+    GNUNET_IDENTITY_PublicKey pk;
+    GNUNET_IDENTITY_PrivateKey sk;
 };
 
 struct IdentityService : public Service
@@ -129,3 +133,4 @@ GNUNET_IDENTITY_KeyType getKeyType(GNUNET_IDENTITY_Ego* ego);
 }
 
 GNUNETPP_OPERATOR_COMPOARE_RAW_DATA(GNUNET_IDENTITY_PublicKey)
+GNUNETPP_OPERATOR_COMPOARE_RAW_DATA(GNUNET_IDENTITY_PrivateKey)

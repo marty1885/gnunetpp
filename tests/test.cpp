@@ -6,6 +6,7 @@
 #include <gnunetpp-dht.hpp>
 #include <gnunetpp-gns.hpp>
 #include <gnunetpp-identity.hpp>
+#include <gnunetpp-namestore.hpp>
 #include "inner/Infra.hpp"
 
 #include <random>
@@ -154,15 +155,18 @@ ENTER_MAIN_THREAD
     auto dht = std::make_shared<gnunetpp::DHT>(cfg, 4);
     auto key = randomString(32);
     co_await dht->put(key, "world");
-    // FIXME: Triggers Assertion failed at dht_api.c:1066
-    // auto lookup = dht->get(key, 1s);
-    // size_t count = 0;
-    // for (auto it = co_await lookup.begin(); it != lookup.end(); co_await ++it) {
-    //     CHECK(*it == "world");
-    //     count++;
-    // }
-    // CHECK(count == 1);
+    auto lookup = dht->get(key, 1s);
+    size_t count = 0;
+    for (auto it = co_await lookup.begin(); it != lookup.end(); co_await ++it) {
+        CHECK(*it == "world");
+        count++;
+    }
+    CHECK(count == 1);
 
+    // ensure RAII does release the handle
+    {
+        auto lookup = dht->get(key, 10s);
+    }
 
 EXIT_MAIN_THREAD
 }
@@ -180,7 +184,7 @@ ENTER_MAIN_THREAD
 
     // check signing with the identity works
     // FIXME: This API sucks and easy to confuse types
-    auto sig = gnunetpp::crypto::sign(ego->privateKey()->ecdsa_key, "hello world");
+    auto sig = gnunetpp::crypto::sign(ego->privateKey().ecdsa_key, "hello world");
     CHECK(sig.has_value());
     CHECK(gnunetpp::crypto::verify(ego->publicKey().ecdsa_key, "hello world", sig.value()));
 
@@ -192,9 +196,35 @@ DROGON_TEST(GNS)
 {
 ENTER_MAIN_THREAD
     auto gns = std::make_shared<gnunetpp::GNS>(cfg);
-    auto result = co_await gns->lookup("gnunet.org", 10s, "ANY");
+    auto result = co_await gns->lookup("www.gnunet.org", 10s, "ANY");
     CO_REQUIRE(result.size() != 0);
     // Won't check the actual result as it may change
+EXIT_MAIN_THREAD
+}
+
+DROGON_TEST(Namestore)
+{
+ENTER_MAIN_THREAD
+    auto ego_name = randomString(32);
+    auto identity = std::make_shared<gnunetpp::IdentityService>(cfg);
+    co_await identity->createIdentity(ego_name);
+
+    auto ego = (co_await gnunetpp::getEgo(cfg, ego_name)).value();
+    auto namestore = std::make_shared<gnunetpp::Namestore>(cfg);
+    const auto& sk = ego.privateKey();
+    co_await namestore->store(sk, "key1", "VALUE1", "TXT");
+    auto result = co_await namestore->lookup(sk, "key1");
+    CHECK(result.size() == 1);
+    if (result.size() == 1) {
+        CHECK(result[0].value == "VALUE1");
+        CHECK(result[0].type == "TXT");
+    }
+    namestore = std::make_shared<gnunetpp::Namestore>(cfg);
+    result = co_await namestore->lookup(sk, "key2");
+    CHECK(result.size() == 0);
+
+
+    co_await identity->deleteIdentity(ego_name);
 EXIT_MAIN_THREAD
 }
 

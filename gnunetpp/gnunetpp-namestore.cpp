@@ -80,11 +80,19 @@ static void lookup_callback(void *cls,
     delete pack;
 }
 
+static void lookup_error_callback(void *cls)
+{
+    GNUNET_assert(NULL != cls);
+    auto pack = (LookupCallbackPack*)cls;
+    pack->cb(std::vector<GNSRecord>());
+    delete pack;
+}
+
 void Namestore::lookup(const GNUNET_IDENTITY_PrivateKey& zone, const std::string& label, std::function<void(std::vector<GNSRecord>)> cb)
 {
     auto pack = new LookupCallbackPack();
     pack->cb = std::move(cb);
-    auto entry = GNUNET_NAMESTORE_records_lookup(handle, &zone, label.c_str(), NULL, NULL, lookup_callback, pack);
+    auto entry = GNUNET_NAMESTORE_records_lookup(handle, &zone, label.c_str(), lookup_error_callback, pack, lookup_callback, pack);
     if(entry == NULL) {
         delete pack;
         throw std::runtime_error("GNUNET_NAMESTORE_records_lookup returned NULL");

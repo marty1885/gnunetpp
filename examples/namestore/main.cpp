@@ -27,7 +27,7 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
     }
 
     if(run_lookup) {
-        auto records = co_await namestore->lookup(*id->privateKey(), key);
+        auto records = co_await namestore->lookup(id->privateKey(), key);
         for (auto& record : records)
             std::cout  << record.value << " - " << record.type << std::endl;
 
@@ -35,13 +35,13 @@ cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
             std::cout << "No records found" << std::endl;
     }
     else if (run_store) {
-        auto success = co_await namestore->store(*id->privateKey(), key, value, type, std::chrono::seconds(expiration), publish);
+        auto success = co_await namestore->store(id->privateKey(), key, value, type, std::chrono::seconds(expiration), publish);
         if(!success)
             std::cerr << "Failed to store record" << std::endl;
     }
     else if (run_remove) {
         // Remove is always successful as either the record is removed or it was not there in the first place
-        co_await namestore->remove(*id->privateKey(), key);
+        co_await namestore->remove(id->privateKey(), key);
     }
 
     gnunetpp::shutdown();
