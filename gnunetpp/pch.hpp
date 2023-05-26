@@ -10,6 +10,7 @@
 #include <vector>
 #include <stdexcept>
 #include <chrono>
+#include <compare>
 
 // Fundamental features of the library
 #include "gnunetpp-scheduler.hpp"
