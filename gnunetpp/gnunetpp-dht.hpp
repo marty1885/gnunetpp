@@ -62,13 +62,13 @@ struct DHT : public Service
      */
     GNUNET_DHT_PutHandle* put(const std::string_view key, const std::string_view data
         , PutCallbackFunctor completedCallback
-        , std::chrono::duration<double> expiration = std::chrono::hours(1)
+        , std::chrono::microseconds expiration = std::chrono::hours(1)
         , unsigned int replication = 5
         , GNUNET_BLOCK_Type data_type = GNUNET_BLOCK_TYPE_TEST
         , GNUNET_DHT_RouteOption routing_options = GNUNET_DHT_RO_NONE);
     GNUNET_DHT_PutHandle* put(const GNUNET_HashCode& key_hash, const std::string_view data
         , PutCallbackFunctor completedCallback
-        , std::chrono::duration<double> expiration = std::chrono::hours(1)
+        , std::chrono::microseconds expiration = std::chrono::hours(1)
         , unsigned int replication = 5
         , GNUNET_BLOCK_Type data_type = GNUNET_BLOCK_TYPE_TEST
         , GNUNET_DHT_RouteOption routing_options = GNUNET_DHT_RO_NONE);
@@ -85,13 +85,13 @@ struct DHT : public Service
      * @return GetCallbackPack* 
      */
     GetCallbackPack* get(const std::string_view key, GetCallbackFunctor completedCallback
-        , std::chrono::duration<double> search_timeout = std::chrono::seconds(10)
+        , std::chrono::microseconds search_timeout = std::chrono::seconds(10)
         , GNUNET_BLOCK_Type data_type = GNUNET_BLOCK_TYPE_TEST
         , unsigned int replication = 5
         , GNUNET_DHT_RouteOption routing_options = GNUNET_DHT_RO_NONE
         , std::function<void()> finishedCallback = nullptr);
     GetCallbackPack* get(const GNUNET_HashCode& key_hash, GetCallbackFunctor completedCallback
-        , std::chrono::duration<double> search_timeout = std::chrono::seconds(10)
+        , std::chrono::microseconds search_timeout = std::chrono::seconds(10)
         , GNUNET_BLOCK_Type data_type = GNUNET_BLOCK_TYPE_TEST
         , unsigned int replication = 5
         , GNUNET_DHT_RouteOption routing_options = GNUNET_DHT_RO_NONE
@@ -99,33 +99,33 @@ struct DHT : public Service
 
 
     GeneratorWrapper<std::string> get(const std::string_view key
-        , std::chrono::duration<double> search_timeout = std::chrono::seconds(10)
+        , std::chrono::microseconds search_timeout = std::chrono::seconds(10)
         , GNUNET_BLOCK_Type data_type = GNUNET_BLOCK_TYPE_TEST
         , unsigned int replication = 5
         , GNUNET_DHT_RouteOption routing_options = GNUNET_DHT_RO_NONE);
     GeneratorWrapper<std::string> get(GNUNET_HashCode key_hash
-        , std::chrono::duration<double> search_timeout = std::chrono::seconds(10)
+        , std::chrono::microseconds search_timeout = std::chrono::seconds(10)
         , GNUNET_BLOCK_Type data_type = GNUNET_BLOCK_TYPE_TEST
         , unsigned int replication = 5
         , GNUNET_DHT_RouteOption routing_options = GNUNET_DHT_RO_NONE);
 
     cppcoro::task<> put(const std::string_view key, const std::string_view data
-        , std::chrono::duration<double> expiration = std::chrono::hours(1)
+        , std::chrono::microseconds expiration = std::chrono::hours(1)
         , unsigned int replication = 5
         , GNUNET_BLOCK_Type data_type = GNUNET_BLOCK_TYPE_TEST
         , GNUNET_DHT_RouteOption routing_options = GNUNET_DHT_RO_NONE);
     cppcoro::task<> put(GNUNET_HashCode key, const std::string_view data
-        , std::chrono::duration<double> expiration = std::chrono::hours(1)
+        , std::chrono::microseconds expiration = std::chrono::hours(1)
         , unsigned int replication = 5
         , GNUNET_BLOCK_Type data_type = GNUNET_BLOCK_TYPE_TEST
         , GNUNET_DHT_RouteOption routing_options = GNUNET_DHT_RO_NONE);
     cppcoro::task<> put(const std::string_view key, const std::vector<uint8_t> data
-        , std::chrono::duration<double> expiration = std::chrono::hours(1)
+        , std::chrono::microseconds expiration = std::chrono::hours(1)
         , unsigned int replication = 5
         , GNUNET_BLOCK_Type data_type = GNUNET_BLOCK_TYPE_TEST
         , GNUNET_DHT_RouteOption routing_options = GNUNET_DHT_RO_NONE);
     cppcoro::task<> put(GNUNET_HashCode key, const std::vector<uint8_t> data
-        , std::chrono::duration<double> expiration = std::chrono::hours(1)
+        , std::chrono::microseconds expiration = std::chrono::hours(1)
         , unsigned int replication = 5
         , GNUNET_BLOCK_Type data_type = GNUNET_BLOCK_TYPE_TEST
         , GNUNET_DHT_RouteOption routing_options = GNUNET_DHT_RO_NONE);

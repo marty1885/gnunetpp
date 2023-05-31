@@ -148,7 +148,7 @@ GNUNET_FS_SearchContext* search(
     const GNUNET_CONFIGURATION_Handle* cfg,
     const std::vector<std::string>& keywords,
     std::function<bool(const std::string_view, const std::string_view)> fn,
-    std::chrono::duration<double> timeout,
+    std::chrono::microseconds timeout,
     GNUNET_FS_SearchOptions options,
     unsigned anonymity_level)
 {

@@ -23,7 +23,7 @@ namespace gnunetpp::scheduler
  * @param run_on_shutdown if true, the function will run at shutdown even if it hasn't timed out yet
  * @return TaskID Handle to the task
  */
-TaskID runLater(std::chrono::duration<double> delay, std::function<void()> fn, bool run_on_shutdown = false);
+TaskID runLater(std::chrono::microseconds delay, std::function<void()> fn, bool run_on_shutdown = false);
 
 /**
  * @brief Run a function every `delay` seconds
@@ -32,7 +32,7 @@ TaskID runLater(std::chrono::duration<double> delay, std::function<void()> fn, b
  * @param fn function to run
  * @return TaskID Handle to the task
  */
-TaskID runEvery(std::chrono::duration<double> delay, std::function<void()> fn);
+TaskID runEvery(std::chrono::microseconds delay, std::function<void()> fn);
 
 /**
  * @brief Register a function to run on shutdown
@@ -69,7 +69,7 @@ void run(Fn&& fn)
  * @return cppcoro::task<> await on this to resume execution after the delay
  */
 [[nodiscard]]
-cppcoro::task<> sleep(std::chrono::duration<double> delay);
+cppcoro::task<> sleep(std::chrono::microseconds delay);
 
 /**
  * @brief Cancel a task

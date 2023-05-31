@@ -11,6 +11,7 @@
 #include <stdexcept>
 #include <chrono>
 #include <compare>
+#include <optional>
 
 // Fundamental features of the library
 #include "gnunetpp-scheduler.hpp"

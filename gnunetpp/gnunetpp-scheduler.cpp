@@ -44,11 +44,11 @@ static void timer_callback_trampoline(void* cls)
         g_tasks.remove(id);
 }
 
-static TaskID runDelay(std::chrono::duration<double> delay, std::function<void()> fn, bool repeat, bool run_on_shutdown)
+static TaskID runDelay(std::chrono::microseconds delay, std::function<void()> fn, bool repeat, bool run_on_shutdown)
 {
     using namespace std::chrono;
-    const uint64_t usec = duration_cast<microseconds>(delay).count();
-    GNUNET_TIME_Relative time{usec};
+    GNUNET_assert(delay.count() >= 0);
+    GNUNET_TIME_Relative time{(uint64_t)delay.count()};
 
     auto [id, data] = g_tasks.add({nullptr, std::move(fn), repeat, run_on_shutdown});
     static_assert(sizeof(TaskID) == sizeof(void*));
@@ -60,12 +60,12 @@ static TaskID runDelay(std::chrono::duration<double> delay, std::function<void()
     return id;
 }
 
-TaskID runLater(std::chrono::duration<double> delay, std::function<void()> fn, bool run_on_shutdown)
+TaskID runLater(std::chrono::microseconds delay, std::function<void()> fn, bool run_on_shutdown)
 {
     return runDelay(delay, std::move(fn), false, run_on_shutdown);
 }
 
-TaskID runEvery(std::chrono::duration<double> delay, std::function<void()> fn)
+TaskID runEvery(std::chrono::microseconds delay, std::function<void()> fn)
 {
     return runDelay(delay, std::move(fn), true, false);
 }
@@ -91,11 +91,11 @@ void queue(std::function<void()> fn)
     wakeUp();
 }
 
-cppcoro::task<> sleep(std::chrono::duration<double> delay)
+cppcoro::task<> sleep(std::chrono::microseconds delay)
 {
     struct TimerAwaiter : public CallbackAwaiter<>
     {
-        TimerAwaiter(std::chrono::duration<double> delay) : delay_(delay) {}
+        TimerAwaiter(std::chrono::microseconds delay) : delay_(delay) {}
 
         void await_suspend(std::coroutine_handle<> handle)
         {
@@ -103,7 +103,7 @@ cppcoro::task<> sleep(std::chrono::duration<double> delay)
                 handle.resume();
             }, false);
         }
-        std::chrono::duration<double> delay_;
+        std::chrono::microseconds delay_;
     };
     co_await TimerAwaiter(delay);
 }

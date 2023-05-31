@@ -63,7 +63,7 @@ GNUNET_FS_SearchContext* search(
     const GNUNET_CONFIGURATION_Handle* cfg,
     const std::vector<std::string>& keywords,
     std::function<bool(const std::string_view, const std::string_view)> fn,
-    std::chrono::duration<double> timeout = std::chrono::seconds(30),
+    std::chrono::microseconds timeout = std::chrono::seconds(30),
     GNUNET_FS_SearchOptions options = GNUNET_FS_SEARCH_OPTION_NONE,
     unsigned anonymity_level = 1);
 

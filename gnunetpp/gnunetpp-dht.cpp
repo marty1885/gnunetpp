@@ -16,7 +16,7 @@ void DHT::shutdown()
 
 GNUNET_DHT_PutHandle* DHT::put(const std::string_view key, const std::string_view data
     , PutCallbackFunctor completedCallback
-    , std::chrono::duration<double> expiration
+    , std::chrono::microseconds expiration
     , unsigned int replication
     , GNUNET_BLOCK_Type data_type
     , GNUNET_DHT_RouteOption routing_options)
@@ -27,7 +27,7 @@ GNUNET_DHT_PutHandle* DHT::put(const std::string_view key, const std::string_vie
 
 GNUNET_DHT_PutHandle* DHT::put(const GNUNET_HashCode& key_hash, const std::string_view data
     , PutCallbackFunctor completedCallback
-    , std::chrono::duration<double> expiration
+    , std::chrono::microseconds expiration
     , unsigned int replication
     , GNUNET_BLOCK_Type data_type
     , GNUNET_DHT_RouteOption routing_options)
@@ -36,7 +36,7 @@ GNUNET_DHT_PutHandle* DHT::put(const GNUNET_HashCode& key_hash, const std::strin
         throw std::runtime_error("DHT not connected");
 
     // XXX: This only works because internally GNUNet uses msec. If they ever change this, this will break.
-    const size_t num_usecs = std::chrono::duration_cast<std::chrono::microseconds>(expiration).count();
+    const size_t num_usecs = expiration.count();
     GNUNET_TIME_Relative gnunet_expiration{num_usecs};
 
     PutCallbackFunctor* functor = new PutCallbackFunctor(std::move(completedCallback));
@@ -50,7 +50,7 @@ GNUNET_DHT_PutHandle* DHT::put(const GNUNET_HashCode& key_hash, const std::strin
 }
 
 cppcoro::task<> DHT::put(const std::string_view key, const std::string_view data
-        , std::chrono::duration<double> expiration
+        , std::chrono::microseconds expiration
         , unsigned int replication
         , GNUNET_BLOCK_Type data_type
         , GNUNET_DHT_RouteOption routing_options)
@@ -59,7 +59,7 @@ cppcoro::task<> DHT::put(const std::string_view key, const std::string_view data
 }
 
 cppcoro::task<> DHT::put(const std::string_view key, const std::vector<uint8_t> data
-        , std::chrono::duration<double> expiration
+        , std::chrono::microseconds expiration
         , unsigned int replication
         , GNUNET_BLOCK_Type data_type
         , GNUNET_DHT_RouteOption routing_options)
@@ -70,7 +70,7 @@ cppcoro::task<> DHT::put(const std::string_view key, const std::vector<uint8_t> 
 }
 
 cppcoro::task<> DHT::put(GNUNET_HashCode key, const std::vector<uint8_t> data
-        , std::chrono::duration<double> expiration
+        , std::chrono::microseconds expiration
         , unsigned int replication
         , GNUNET_BLOCK_Type data_type
         , GNUNET_DHT_RouteOption routing_options)
@@ -81,7 +81,7 @@ cppcoro::task<> DHT::put(GNUNET_HashCode key, const std::vector<uint8_t> data
 }
 
 cppcoro::task<> DHT::put(GNUNET_HashCode key_hash, const std::string_view data
-        , std::chrono::duration<double> expiration
+        , std::chrono::microseconds expiration
         , unsigned int replication
         , GNUNET_BLOCK_Type data_type
         , GNUNET_DHT_RouteOption routing_options)
@@ -89,7 +89,7 @@ cppcoro::task<> DHT::put(GNUNET_HashCode key_hash, const std::string_view data
     struct PutAwaiter : public EagerAwaiter<>
     {
         PutAwaiter(DHT* dht, const GNUNET_HashCode& key_hash, const std::string_view data
-            , std::chrono::duration<double> expiration
+            , std::chrono::microseconds expiration
             , unsigned int replication
             , GNUNET_BLOCK_Type data_type
             , GNUNET_DHT_RouteOption routing_options)
@@ -103,7 +103,7 @@ cppcoro::task<> DHT::put(GNUNET_HashCode key_hash, const std::string_view data
 }
 
 DHT::GetCallbackPack* DHT::get(const std::string_view key, GetCallbackFunctor completedCallback
-    , std::chrono::duration<double> search_timeout
+    , std::chrono::microseconds search_timeout
     , GNUNET_BLOCK_Type data_type
     , unsigned int replication
     , GNUNET_DHT_RouteOption routing_options
@@ -114,7 +114,7 @@ DHT::GetCallbackPack* DHT::get(const std::string_view key, GetCallbackFunctor co
 }
 
 DHT::GetCallbackPack* DHT::get(const GNUNET_HashCode& key_hash, GetCallbackFunctor completedCallback
-    , std::chrono::duration<double> search_timeout
+    , std::chrono::microseconds search_timeout
     , GNUNET_BLOCK_Type data_type
     , unsigned int replication
     , GNUNET_DHT_RouteOption routing_options
@@ -143,7 +143,7 @@ DHT::GetCallbackPack* DHT::get(const GNUNET_HashCode& key_hash, GetCallbackFunct
 }
 
 GeneratorWrapper<std::string> DHT::get(const std::string_view key
-        , std::chrono::duration<double> search_timeout
+        , std::chrono::microseconds search_timeout
         , GNUNET_BLOCK_Type data_type
         , unsigned int replication
         , GNUNET_DHT_RouteOption routing_options)
@@ -152,7 +152,7 @@ GeneratorWrapper<std::string> DHT::get(const std::string_view key
 }
 
 GeneratorWrapper<std::string> DHT::get(GNUNET_HashCode key_hash
-        , std::chrono::duration<double> search_timeout
+        , std::chrono::microseconds search_timeout
         , GNUNET_BLOCK_Type data_type
         , unsigned int replication
         , GNUNET_DHT_RouteOption routing_options)

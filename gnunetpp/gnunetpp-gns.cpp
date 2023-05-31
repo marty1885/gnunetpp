@@ -24,33 +24,30 @@ static void process_lookup_result (void *cls,
     const GNUNET_GNSRECORD_Data *rd)
 {
     auto pack = reinterpret_cast<GnsCallbackPack*>(cls);
-    if (rd_count == 0) {
-        pack->cb({});
-    }
-    else {
-        std::vector<std::pair<std::string, std::string>> results;
-        results.reserve(rd_count);
-        for (uint32_t i = 0; i < rd_count; i++) {
-            if(pack->record_type != GNUNET_GNSRECORD_TYPE_ANY && rd[i].record_type != pack->record_type)
-                continue;
-            char *rd_str = GNUNET_GNSRECORD_value_to_string (rd[i].record_type,
-                rd[i].data,
-                rd[i].data_size);
-            std::string rd_string = "<error>";
-            if (rd_str != nullptr) {
-                rd_string = rd_str;
-                GNUNET_free (rd_str);
-            }
+    GNUNET_assert(pack != nullptr);
 
-            const char* type_str = GNUNET_GNSRECORD_number_to_typename(rd[i].record_type);
-            std::string type_string = "<error>";
-            if (type_str != nullptr)
-                type_string = type_str;
-
-            results.push_back({rd_string, type_string});
+    std::vector<std::pair<std::string, std::string>> results;
+    results.reserve(rd_count);
+    for (uint32_t i = 0; i < rd_count; i++) {
+        if(pack->record_type != GNUNET_GNSRECORD_TYPE_ANY && rd[i].record_type != pack->record_type)
+            continue;
+        char *rd_str = GNUNET_GNSRECORD_value_to_string (rd[i].record_type,
+            rd[i].data,
+            rd[i].data_size);
+        std::string rd_string = "<error>";
+        if (rd_str != nullptr) {
+            rd_string = rd_str;
+            GNUNET_free (rd_str);
         }
-        pack->cb(std::move(results));
+
+        const char* type_str = GNUNET_GNSRECORD_number_to_typename(rd[i].record_type);
+        std::string type_string = "<error>";
+        if (type_str != nullptr)
+            type_string = type_str;
+
+        results.emplace_back(std::move(type_string), std::move(rd_string));
     }
+    pack->cb(std::move(results));
 
     scheduler::cancel(pack->timeout_id);
     delete pack;
@@ -60,7 +57,7 @@ GNS::GNS(const GNUNET_CONFIGURATION_Handle *cfg)
 {
     gns = GNUNET_GNS_connect(cfg);
     if(gns == nullptr)
-        throw std::runtime_error("Failed to connect to GNS service failed");
+        throw std::runtime_error("Failed to connect to GNS service");
     registerService(this);
 }
 
@@ -79,11 +76,15 @@ void GNS::lookup(const std::string &name, std::chrono::milliseconds timeout, Gns
     GnsErrorCallback err_cb, uint32_t record_type, bool dns_compatability, GNUNET_GNS_LocalOptions options)
 {
     std::string lookup_name = name;
+    // FIXME: DNS compatability is not working
+    if(dns_compatability)
+        throw std::runtime_error("FIXME: DNS compatability not working");
+
     if(gns == nullptr)
         throw std::runtime_error("GNS service not connected");
     if(dns_compatability && GNUNET_DNSPARSER_check_name(name.c_str()) == GNUNET_OK) {
         char* str = nullptr;
-        if(idna_to_unicode_8z8z(name.c_str(), &str, 0) != IDNA_SUCCESS)
+        if(idna_to_unicode_8z8z(name.c_str(), &str, IDNA_ALLOW_UNASSIGNED) != IDNA_SUCCESS)
             throw std::runtime_error("Failed to convert name to unicode");
         lookup_name = str;
         free(str);
