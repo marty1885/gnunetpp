@@ -1,5 +1,4 @@
 add_library(gnunetpp
-    gnunetpp.cpp
     gnunetpp-scheduler.cpp
     gnunetpp-crypto.cpp
     gnunetpp-dht.cpp

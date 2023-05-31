@@ -62,7 +62,11 @@ DROGON_TEST(CryptoTest)
     CHECK(hash == crypto::hash("hello world"));
     CHECK(hash != crypto::hash("hello world2"));
     STATIC_REQUIRE(SupportsAllCompares<GNUNET_HashCode>);
+    STATIC_REQUIRE(SupportsAllCompares<GNUNET_ShortHashCode>);
+    STATIC_REQUIRE(SupportsAllCompares<GNUNET_CRYPTO_EcdsaSignature>);
+    STATIC_REQUIRE(SupportsAllCompares<GNUNET_CRYPTO_EddsaSignature>);
     STATIC_REQUIRE(SupportsHash<GNUNET_HashCode>);
+    STATIC_REQUIRE(SupportsHash<GNUNET_ShortHashCode>);
 
     hash = crypto::hmac("hello world", "key");
     CHECK(hash == crypto::hmac("hello world", "key"));

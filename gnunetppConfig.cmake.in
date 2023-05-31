@@ -1,0 +1,37 @@
+# - Config file for gnunetpp
+# It defines the following variables
+#  GNUNETPP_INCLUDE_DIRS - include directories for GNUnet++
+#  GNUNETPP_LIBRARIES    - libraries to link against
+#  gnunetpp_FOUND
+# This module defines the following IMPORTED target:
+# gnunetpp::gnunetpp
+
+@PACKAGE_INIT@
+
+if(NOT "@PROJECT_NAME@_FOUND")
+  set("@PROJECT_NAME@_FOUND" TRUE)
+endif()
+
+include(CMakeFindDependencyMacro)
+# include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
+
+# Create an imported target for your package
+add_library(@PROJECT_NAME@::@PROJECT_NAME@ INTERFACE IMPORTED)
+set_target_properties(@PROJECT_NAME@::@PROJECT_NAME@ PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_INSTALL_INCLUDEDIR}")
+
+target_link_libraries(@PROJECT_NAME@::@PROJECT_NAME@ INTERFACE
+    @PROJECT_NAME@
+    cppcoro
+    gnunetnamestore
+    gnunetgnsrecord
+    gnunetidentity
+    gnunetcore
+    gnunetutil
+    gnunetfs
+    gnunetdht
+    gnunetnse
+    gnunetcadet
+    gnunetpeerinfo
+    gnunetdatastore
+    gnunetgns
+)
