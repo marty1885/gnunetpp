@@ -10,11 +10,12 @@ add_library(gnunetpp
     gnunetpp-peerinfo.cpp
     gnunetpp-datastore.cpp
     gnunetpp-namestore.cpp
+    gnunetpp-messenger.cpp
     inner/Infra.cpp)
 target_include_directories(gnunetpp PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_precompile_headers(gnunetpp PRIVATE pch.hpp)
 target_link_libraries(gnunetpp PUBLIC idn cppcoro gnunetnamestore gnunetgnsrecord gnunetidentity gnunetcore
-    gnunetutil gnunetfs gnunetdht gnunetnse gnunetcadet gnunetpeerinfo gnunetdatastore gnunetgns)
+    gnunetutil gnunetfs gnunetdht gnunetnse gnunetcadet gnunetpeerinfo gnunetdatastore gnunetgns gnunetmessenger)
 # workaround for libintl.h conflicts
 target_compile_definitions(gnunetpp PUBLIC -DENABLE_NLS)
 

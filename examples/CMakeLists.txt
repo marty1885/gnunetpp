@@ -31,3 +31,6 @@ target_link_libraries(gnunetpp-datastore gnunetpp example_pch)
 
 add_executable(gnunetpp-namestore namestore/main.cpp)
 target_link_libraries(gnunetpp-namestore gnunetpp example_pch)
+
+add_executable(gnunetpp-messenger messenger/main.cpp)
+target_link_libraries(gnunetpp-messenger gnunetpp example_pch)

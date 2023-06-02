@@ -37,7 +37,10 @@ uint64_t randomU64(GNUNET_CRYPTO_Quality quality = GNUNET_CRYPTO_QUALITY_STRONG)
 
 
 std::string to_string_short(const GNUNET_HashCode& hash);
+std::string to_string_short(const GNUNET_PeerIdentity& id);
+std::string to_string_short(const GNUNET_ShortHashCode& hash);
 std::string to_string(const GNUNET_HashCode& hash);
+std::string to_string(const GNUNET_ShortHashCode& hash);
 std::string to_string(const GNUNET_CRYPTO_EcdsaPrivateKey& key);
 std::string to_string(const GNUNET_CRYPTO_EcdsaPublicKey& key);
 std::string to_string(const GNUNET_CRYPTO_EddsaPrivateKey& key);

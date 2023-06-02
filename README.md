@@ -155,3 +155,8 @@ This project aims to create a easy to use wapper for the commonly used part of G
   - [x] Delayed run
   - [x] Run on exit
   - [x] Run immidately
+- Messenger
+  - [x] Send/receive basic messages
+  - [x] Joining via doors
+  - [ ] Send/receive files
+  - [ ] API to send non-text messages

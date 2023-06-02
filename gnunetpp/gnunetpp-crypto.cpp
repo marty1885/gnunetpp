@@ -65,6 +65,21 @@ std::string to_string_short(const GNUNET_HashCode& hash)
     return ret;
 }
 
+std::string to_string_short(const GNUNET_PeerIdentity &id)
+{
+    std::lock_guard<std::mutex> m(g_mtx_hash);
+    const char* str = GNUNET_i2s(&id);
+    std::string ret{str};
+    return ret;
+}
+
+std::string to_string_short(const GNUNET_ShortHashCode &hash)
+{
+    const char* str = GNUNET_sh2s(&hash);
+    GNUNET_assert(str != nullptr);
+    return str;
+}
+
 std::string to_string(const GNUNET_HashCode& hash)
 {
     std::lock_guard<std::mutex> m(g_mtx_hash_full);
@@ -145,6 +160,14 @@ std::string to_string(const GNUNET_PeerIdentity& id)
     const char* str = GNUNET_i2s_full(&id);
     GNUNET_assert(str != nullptr);
     return str;
+}
+
+std::string to_string(const GNUNET_ShortHashCode& hash)
+{
+    auto str = GNUNET_STRINGS_data_to_string_alloc(&hash, sizeof(hash));
+    std::string ret{str};
+    GNUNET_free(str);
+    return ret;
 }
 
 GNUNET_PeerIdentity peerIdentity(const std::string_view& str)

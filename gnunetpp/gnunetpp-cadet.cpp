@@ -333,7 +333,7 @@ void list_paths_trampoline(void* cls, const GNUNET_CADET_PeerPathDetail* ppd)
         for(size_t i = 0; i < ppd->path_length; i++) {
             path.push_back(ppd->path[i]);
             // GNUnet specifically says then the target peer is the last entry in the path
-            if(memcmp(&ppd->peer, &ppd->path[i], sizeof(GNUNET_PeerIdentity)) == 0)
+            if(ppd->peer == ppd->path[i])
                 break;
         }
         pack->paths.emplace_back(std::move(path));
