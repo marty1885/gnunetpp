@@ -85,8 +85,23 @@ struct Room : public NonCopyable
     Room(Room&& other) : room(other.room) { other.room = nullptr; }
     Room& operator=(Room&& other) { room = other.room; other.room = nullptr; return *this; }
 
+    /**
+     * @brief Send a message to all members of this room
+     * 
+     * @param value The message to send
+    */
     void sendMessage(const std::string& value);
+    /**
+     * @brief Send a private message to a specific member of this room
+     * 
+     * @param value The message to send
+    */
     void sendPrivateMessage(const std::string& value, Contact contact);
+    /**
+     * @brief Set a callback for when a message is received
+     * 
+     * @param cb The callback to set
+    */
     void setReadMessageCallback(std::function<void(const Message&)> cb) { recv_cb = std::move(cb); }
 
     GNUNET_MESSENGER_Room* room = nullptr;
@@ -95,17 +110,46 @@ struct Room : public NonCopyable
 
 struct Messenger : public Service
 {
+    /**
+     * @brief Create a new messenger
+     * @param cfg The GNUnet configuration handle
+     * @param ego_name The name of your ego. If empty, an anonymous ego will be used
+    */
     Messenger(const GNUNET_CONFIGURATION_Handle* cfg, const std::string& ego_name = "");
     virtual void shutdown() override;
     ~Messenger();
 
+    /**
+     * @brief "Opens" a room so your node becomes a door for this room. If your node is not already a member of this room,
+     *       a new room will be created.
+     * 
+     * @param id The ID of the room to open
+    */
     std::shared_ptr<Room> openRoom(const GNUNET_HashCode& id);
+    /**
+     * @brief "Enters" a room via a door.
+     * 
+     * @param id The ID of the room to enter
+     * @param door The door to enter through
+     * @param open_as_door If true, your node will become a door for this room
+     * 
+     * @note entering a room with open_as_door = true is equlicent to setting it to false then calling openRoom with the same ID 
+    */
     std::shared_ptr<Room> enterRoom(const GNUNET_HashCode& id, const GNUNET_PeerIdentity& door, bool open_as_door = true);
 
+    /**
+     * Set the name of your ego viewd by other nodes
+    */
     bool setName(const std::string& name);
 
+    /**
+     * @return the name of your ego used during initialization
+    */
     std::string getEgoName() const;
 
+    /**
+     * @brief Wait for the messenger to be initialized
+    */
     cppcoro::task<> waitForInit();
 
     GNUNET_MESSENGER_Handle* handle = nullptr;
