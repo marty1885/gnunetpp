@@ -76,37 +76,12 @@ First you need the dependencies
   * Tested with GCC 12.1 and Clang 14.0
 * A installation of GNUnet 0.19 (or likely the latest version)
 * libidn2
-* cppcoro
 
 (For examples)
 * CLI11
 
 (For tests)
 * Drogon (for the async test framework)
-
-### Building notes
-
-If you see the error message
-
-```
-/usr/include/cppcoro/task.hpp:52:38: error: the expression 'cppcoro::detail::task_promise_base::final_awaitable::await_suspend<cppcoro::detail::task_promise<void> >' is required to be non-throwing
-   52 |                                 void await_suspend(cppcoro::coroutine_handle<PROMISE> coroutine)
-```
-
-You need to apply the following patch to cppcoro
-
-```diff
---- task.hpp    2023-05-24 22:55:41.685357747 +0800
-+++ task.hpp.bak        2023-05-24 22:55:20.875358464 +0800
-@@ -49,7 +49,7 @@
-                                // were crashing under x86 optimised builds.
-                                template<typename PROMISE>
-                                CPPCORO_NOINLINE
--                               void await_suspend(cppcoro::coroutine_handle<PROMISE> coroutine) noexcept
-+                               void await_suspend(cppcoro::coroutine_handle<PROMISE> coroutine)
-                                {
-                                        task_promise_base& promise = coroutine.promise();
-```
 
 ## Roadmap
 
@@ -116,7 +91,7 @@ This project aims to create a easy to use wapper for the commonly used part of G
   - [x] Move applicable APIs to C++ coroutines
   - [x] Primitives to support multithreading
     - [x] Allow other threads to wake GNUnet scheduler
-  - [ ] Replace cppcoro with something maintained
+  - [x] Replace cppcoro
 - DHT
   - [x] Basic operations (put/get)
   - [ ] Monitor

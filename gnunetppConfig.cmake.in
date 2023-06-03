@@ -21,7 +21,6 @@ set_target_properties(@PROJECT_NAME@::@PROJECT_NAME@ PROPERTIES INTERFACE_INCLUD
 
 target_link_libraries(@PROJECT_NAME@::@PROJECT_NAME@ INTERFACE
     @PROJECT_NAME@
-    cppcoro
     gnunetnamestore
     gnunetgnsrecord
     gnunetidentity

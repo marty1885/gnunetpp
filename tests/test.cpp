@@ -203,7 +203,7 @@ DROGON_TEST(GNS)
 {
 ENTER_MAIN_THREAD
     auto gns = std::make_shared<gnunetpp::GNS>(cfg);
-    auto result = co_await gns->lookup("www.gnunet.org", 10s, "ANY");
+    auto result = co_await gns->lookup("www.gnunet.org", 10s, "ANY", false);
     CO_REQUIRE(result.size() != 0);
     // Won't check the actual result as it may change
 EXIT_MAIN_THREAD
@@ -237,8 +237,8 @@ ENTER_MAIN_THREAD
     auto gns_result = co_await gns->lookup(key, 10s, "TXT");
     CHECK(gns_result.size() == 1);
     if (gns_result.size() == 1) {
-        CHECK(gns_result[0].first == "VALUE1");
-        CHECK(gns_result[0].second == "TXT");
+        CHECK(gns_result[0].second == "VALUE1");
+        CHECK(gns_result[0].first == "TXT");
     }
     // We published TXT, so A should not be found
     gns_result = co_await gns->lookup(key, 10s, "A");

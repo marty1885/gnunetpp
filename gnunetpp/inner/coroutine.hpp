@@ -1,5 +1,5 @@
 #pragma once
-#include <cppcoro/async_generator.hpp>
+#include "async_generator.hpp"
 
 #include <memory>
 #include <optional>
@@ -725,6 +725,61 @@ struct GeneratorWrapper
     std::function<void()> cleanup;
 };
 
+namespace internal
+{
+template <typename T>
+auto getAwaiterImpl(T &&value) noexcept(
+    noexcept(static_cast<T &&>(value).operator co_await()))
+    -> decltype(static_cast<T &&>(value).operator co_await())
+{
+    return static_cast<T &&>(value).operator co_await();
+}
+
+template <typename T>
+auto getAwaiterImpl(T &&value) noexcept(
+    noexcept(operator co_await(static_cast<T &&>(value))))
+    -> decltype(operator co_await(static_cast<T &&>(value)))
+{
+    return operator co_await(static_cast<T &&>(value));
+}
+
+template <typename T>
+auto getAwaiter(T &&value) noexcept(
+    noexcept(getAwaiterImpl(static_cast<T &&>(value))))
+    -> decltype(getAwaiterImpl(static_cast<T &&>(value)))
+{
+    return getAwaiterImpl(static_cast<T &&>(value));
+}
+
+}  // end namespace internal
+
+template <typename T>
+struct await_result
+{
+    using awaiter_t = decltype(internal::getAwaiter(std::declval<T>()));
+    using type = decltype(std::declval<awaiter_t>().await_resume());
+};
+
+template <typename T>
+using await_result_t = typename await_result<T>::type;
+
+template <typename T, typename = std::void_t<>>
+struct is_awaitable : std::false_type
+{
+};
+
+template <typename T>
+struct is_awaitable<
+    T,
+    std::void_t<decltype(internal::getAwaiter(std::declval<T>()))>>
+    : std::true_type
+{
+};
+
+template <typename T>
+constexpr bool is_awaitable_v = is_awaitable<T>::value;
+
+
 /**
  * @brief Runs a coroutine from a regular function
  * @param coro A coroutine that is awaitable
@@ -737,7 +792,7 @@ void async_run(Coro &&coro)
         auto frame = coro();
 
         using FrameType = std::decay_t<decltype(frame)>;
-        static_assert(cppcoro::is_awaitable_v<FrameType>);
+        static_assert(is_awaitable_v<FrameType>);
 
         co_await frame;
         co_return;

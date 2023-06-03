@@ -145,9 +145,9 @@ struct DataStore : public Service
         auto hash = gnunetpp::crypto::hash(key);
         return getOne(hash, queue_priority, max_queue_size, type, uid);
     }
-    cppcoro::async_generator<std::vector<uint8_t>> get(GNUNET_HashCode hash
+    async_generator<std::vector<uint8_t>> get(GNUNET_HashCode hash
         , uint32_t queue_priority=1, uint32_t max_queue_size=1, GNUNET_BLOCK_Type type = GNUNET_BLOCK_TYPE_TEST);
-    cppcoro::async_generator<std::vector<uint8_t>> get(const std::string key
+    async_generator<std::vector<uint8_t>> get(const std::string key
         , uint32_t queue_priority=1, uint32_t max_queue_size=1, GNUNET_BLOCK_Type type = GNUNET_BLOCK_TYPE_TEST)
     {
         auto hash = gnunetpp::crypto::hash(key);

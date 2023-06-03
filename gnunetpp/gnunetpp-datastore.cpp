@@ -162,7 +162,7 @@ Task<std::optional<std::vector<uint8_t>>> DataStore::getOne(GNUNET_HashCode hash
     co_return co_await awaiter;
 }
 
-cppcoro::async_generator<std::vector<uint8_t>> DataStore::get(GNUNET_HashCode hash
+async_generator<std::vector<uint8_t>> DataStore::get(GNUNET_HashCode hash
     , uint32_t queue_priority, uint32_t max_queue_size, GNUNET_BLOCK_Type type)
 {
     struct GetAwaiter : public EagerAwaiter<std::pair<std::optional<std::vector<uint8_t>>, uint64_t>>

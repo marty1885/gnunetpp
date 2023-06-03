@@ -77,8 +77,8 @@ void GNS::lookup(const std::string &name, std::chrono::milliseconds timeout, Gns
 {
     std::string lookup_name = name;
     // FIXME: DNS compatability is not working
-    if(dns_compatability)
-        throw std::runtime_error("FIXME: DNS compatability not working");
+    // if(dns_compatability)
+    //     throw std::runtime_error("FIXME: DNS compatability not working");
 
     if(gns == nullptr)
         throw std::runtime_error("GNS service not connected");
