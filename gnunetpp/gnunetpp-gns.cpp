@@ -79,7 +79,7 @@ void GNS::lookup(const std::string &name, std::chrono::milliseconds timeout, Gns
 
     if(gns == nullptr)
         throw std::runtime_error("GNS service not connected");
-    if(dns_compatability) {
+    if(dns_compatability_check) {
         if(GNUNET_DNSPARSER_check_name(name.c_str()) != GNUNET_OK)
             throw std::runtime_error("Name not valid with DNS");
         char* str = nullptr;
@@ -109,7 +109,7 @@ void GNS::lookup(const std::string &name, std::chrono::milliseconds timeout, Gns
     uint32_t type = GNUNET_GNSRECORD_typename_to_number(record_type.data());
     if(type == UINT32_MAX)
         throw std::runtime_error("Invalid record type");
-    lookup(name, timeout, std::move(cb), std::move(err_cb), type, dns_compatability, options);
+    lookup(name, timeout, std::move(cb), std::move(err_cb), type, dns_compatability_check, options);
 }
 
 Task<std::vector<std::pair<std::string, std::string>>> GNS::lookup(const std::string &name, std::chrono::milliseconds timeout,
