@@ -92,6 +92,9 @@ This project aims to create a easy to use wapper for the commonly used part of G
   - [x] Primitives to support multithreading
     - [x] Allow other threads to wake GNUnet scheduler
   - [x] Replace cppcoro
+- CMake
+  - [ ] Locate GNUnet installation path (currently use the expected path)
+  - [ ] Find libidn2
 - DHT
   - [x] Basic operations (put/get)
   - [ ] Monitor
@@ -135,3 +138,5 @@ This project aims to create a easy to use wapper for the commonly used part of G
   - [x] Joining via doors
   - [ ] Send/receive files
   - [x] API to send non-text messages
+- Overall cleanup
+  - [ ] Enforce memory safety and track all raw pointers
