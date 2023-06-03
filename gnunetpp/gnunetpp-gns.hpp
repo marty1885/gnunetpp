@@ -31,19 +31,23 @@ struct GNS : public Service
      * @param timeout Timeout for the lookup
      * @param cb Callback to call when the lookup is completed.
      * @param record_type The type of record to lookup. Defaults to ANY.
-     * @param dns_compatability If true, the lookup will be done in a way that is compatible with DNS.
+     * @param dns_compatability_check If true, the record must also be a valid format for DNS.
+     * 
+     * @note dns_compatability_check doesn't mean GNS will lookup the record in DNS, it just means
+     * that the name must also conform to DNS standards (ex, each label must be less than 63
+     * characters)
      */
     void lookup(const std::string &name, std::chrono::milliseconds timeout
                 , GnsCallback cb
                 , GnsErrorCallback err_cb
                 , uint32_t record_type = GNUNET_GNSRECORD_TYPE_ANY
-                , bool dns_compatability = true
+                , bool dns_compatability_check = true
                 , GNUNET_GNS_LocalOptions options = GNUNET_GNS_LO_DEFAULT);
     void lookup(const std::string &name, std::chrono::milliseconds timeout
                 , GnsCallback cb
                 , GnsErrorCallback err_cb
                 , const std::string_view record_type
-                , bool dns_compatability = true
+                , bool dns_compatability_check = true
                 , GNUNET_GNS_LocalOptions options = GNUNET_GNS_LO_DEFAULT);
     
     /**
@@ -58,13 +62,13 @@ struct GNS : public Service
     Task<std::vector<std::pair<std::string, std::string>>> lookup(const std::string &name
         , std::chrono::milliseconds timeout
         , uint32_t record_type = GNUNET_GNSRECORD_TYPE_ANY
-        , bool dns_compatability = true
+        , bool dns_compatability_check = true
         , GNUNET_GNS_LocalOptions options = GNUNET_GNS_LO_DEFAULT);
     [[nodiscard]]
     Task<std::vector<std::pair<std::string, std::string>>> lookup(const std::string &name
         , std::chrono::milliseconds timeout
         , const std::string_view record_type
-        , bool dns_compatability = true
+        , bool dns_compatability_check = true
         , GNUNET_GNS_LocalOptions options = GNUNET_GNS_LO_DEFAULT);
 
     GNUNET_GNS_Handle *gns = nullptr;

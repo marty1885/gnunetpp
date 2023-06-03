@@ -73,16 +73,15 @@ void GNS::shutdown()
 }
 
 void GNS::lookup(const std::string &name, std::chrono::milliseconds timeout, GnsCallback cb,
-    GnsErrorCallback err_cb, uint32_t record_type, bool dns_compatability, GNUNET_GNS_LocalOptions options)
+    GnsErrorCallback err_cb, uint32_t record_type, bool dns_compatability_check, GNUNET_GNS_LocalOptions options)
 {
     std::string lookup_name = name;
-    // FIXME: DNS compatability is not working
-    // if(dns_compatability)
-    //     throw std::runtime_error("FIXME: DNS compatability not working");
 
     if(gns == nullptr)
         throw std::runtime_error("GNS service not connected");
-    if(dns_compatability && GNUNET_DNSPARSER_check_name(name.c_str()) == GNUNET_OK) {
+    if(dns_compatability) {
+        if(GNUNET_DNSPARSER_check_name(name.c_str()) != GNUNET_OK)
+            throw std::runtime_error("Name not valid with DNS");
         char* str = nullptr;
         if(idna_to_unicode_8z8z(name.c_str(), &str, IDNA_ALLOW_UNASSIGNED) != IDNA_SUCCESS)
             throw std::runtime_error("Failed to convert name to unicode");
@@ -105,7 +104,7 @@ void GNS::lookup(const std::string &name, std::chrono::milliseconds timeout, Gns
 }
 
 void GNS::lookup(const std::string &name, std::chrono::milliseconds timeout, GnsCallback cb,
-    GnsErrorCallback err_cb, const std::string_view record_type, bool dns_compatability, GNUNET_GNS_LocalOptions options)
+    GnsErrorCallback err_cb, const std::string_view record_type, bool dns_compatability_check, GNUNET_GNS_LocalOptions options)
 {
     uint32_t type = GNUNET_GNSRECORD_typename_to_number(record_type.data());
     if(type == UINT32_MAX)
