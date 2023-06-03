@@ -134,4 +134,4 @@ This project aims to create a easy to use wapper for the commonly used part of G
   - [x] Send/receive basic messages
   - [x] Joining via doors
   - [ ] Send/receive files
-  - [ ] API to send non-text messages
+  - [x] API to send non-text messages

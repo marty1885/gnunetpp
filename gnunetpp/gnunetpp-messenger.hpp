@@ -77,6 +77,8 @@ struct Message
     MessageType message;
 };
 
+using UserSendibleMessage = std::variant<TextMessage, FileMessage, NameChangeMessage, InviteMessage>;
+
 struct Room : public NonCopyable
 {
     Room(GNUNET_MESSENGER_Room* room) : room(room) {}
@@ -91,12 +93,14 @@ struct Room : public NonCopyable
      * @param value The message to send
     */
     void sendMessage(const std::string& value);
+    void sendMessage(const UserSendibleMessage& value);
     /**
      * @brief Send a private message to a specific member of this room
      * 
      * @param value The message to send
     */
     void sendPrivateMessage(const std::string& value, Contact contact);
+    void sendPrivateMessage(const UserSendibleMessage& value, Contact contact);
     /**
      * @brief Set a callback for when a message is received
      * 
