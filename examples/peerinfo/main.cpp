@@ -8,7 +8,7 @@
 using namespace gnunetpp;
 
 
-cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
+Task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
 {
     std::cout << "Peers:" << std::endl;
     auto peerinfo = std::make_shared<PeerInfo>(cfg);

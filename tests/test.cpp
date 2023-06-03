@@ -37,7 +37,7 @@ static std::string randomString(size_t length)
 }
 
 // MEGA HACK to get SANE coroutine environment
-#define ENTER_MAIN_THREAD gnunetpp::async_run([=]() -> cppcoro::task<>{ co_await gnunetpp::scheduler::runOnMainThread();
+#define ENTER_MAIN_THREAD gnunetpp::async_run([=]() -> Task<>{ co_await gnunetpp::scheduler::runOnMainThread();
 #define EXIT_MAIN_THREAD });
 
 template <typename T>
@@ -95,7 +95,7 @@ DROGON_TEST(Sechduler)
         SUCCESS();
     });
 
-    gnunetpp::async_run([TEST_CTX]() -> cppcoro::task<void> {
+    gnunetpp::async_run([TEST_CTX]() -> gnunetpp::Task<void> {
         co_await scheduler::sleep(10ms);
         SUCCESS();
     });

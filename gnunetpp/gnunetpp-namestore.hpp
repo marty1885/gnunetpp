@@ -34,7 +34,7 @@ struct Namestore : public Service
      * @param cb a callback that is called with the records
     */
     void lookup(const GNUNET_IDENTITY_PrivateKey& zone, const std::string& label, std::function<void(std::vector<GNSRecord>)> cb);
-    cppcoro::task<std::vector<GNSRecord>> lookup(GNUNET_IDENTITY_PrivateKey zone, const std::string label);
+    Task<std::vector<GNSRecord>> lookup(GNUNET_IDENTITY_PrivateKey zone, const std::string label);
     /**
      * @brief Store records for a given label under a given zone (ego/identity)
      * 
@@ -46,13 +46,13 @@ struct Namestore : public Service
      * @note This OVERWRITES any existing records for the given label. If you want to append records, use `lookup` and `store` instead.
     */
     void store(const GNUNET_IDENTITY_PrivateKey& zone, const std::string& label, const std::vector<GNSRecord>& records, std::function<void(bool)> cb);
-    cppcoro::task<bool> store(GNUNET_IDENTITY_PrivateKey zone, const std::string label, const std::string value, std::string type
+    Task<bool> store(GNUNET_IDENTITY_PrivateKey zone, const std::string label, const std::string value, std::string type
         , std::chrono::seconds experation = std::chrono::seconds(1200), bool publish = false);
     
     /**
      * @brief Remove records for a given label under a given zone (ego/identity)
      */
-    cppcoro::task<> remove(GNUNET_IDENTITY_PrivateKey zone, const std::string label);
+    Task<> remove(GNUNET_IDENTITY_PrivateKey zone, const std::string label);
 
     GNUNET_NAMESTORE_Handle* handle = nullptr;
 };

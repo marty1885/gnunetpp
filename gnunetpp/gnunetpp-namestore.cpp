@@ -152,7 +152,7 @@ void Namestore::store(const GNUNET_IDENTITY_PrivateKey& zone, const std::string&
     }
 }
 
-cppcoro::task<std::vector<GNSRecord>> Namestore::lookup(GNUNET_IDENTITY_PrivateKey zone, const std::string label)
+Task<std::vector<GNSRecord>> Namestore::lookup(GNUNET_IDENTITY_PrivateKey zone, const std::string label)
 {
     struct LookupAwaiter : public EagerAwaiter<std::vector<GNSRecord>>
     {
@@ -167,7 +167,7 @@ cppcoro::task<std::vector<GNSRecord>> Namestore::lookup(GNUNET_IDENTITY_PrivateK
     co_return co_await LookupAwaiter(this, zone, label);
 }
 
-cppcoro::task<bool> Namestore::store(GNUNET_IDENTITY_PrivateKey zone, const std::string label, const std::string value, std::string type
+Task<bool> Namestore::store(GNUNET_IDENTITY_PrivateKey zone, const std::string label, const std::string value, std::string type
         , std::chrono::seconds experation, bool publish)
 {
     struct StoreAwaiter : public EagerAwaiter<bool>
@@ -192,7 +192,7 @@ cppcoro::task<bool> Namestore::store(GNUNET_IDENTITY_PrivateKey zone, const std:
     co_return co_await StoreAwaiter(this, zone, label, value, type, experation, publish);
 }
 
-cppcoro::task<> Namestore::remove(GNUNET_IDENTITY_PrivateKey zone, const std::string label)
+Task<> Namestore::remove(GNUNET_IDENTITY_PrivateKey zone, const std::string label)
 {
     struct RemoveAwaiter : public EagerAwaiter<>
     {

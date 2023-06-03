@@ -109,22 +109,22 @@ struct DHT : public Service
         , unsigned int replication = 5
         , GNUNET_DHT_RouteOption routing_options = GNUNET_DHT_RO_NONE);
 
-    cppcoro::task<> put(const std::string_view key, const std::string_view data
+    Task<> put(const std::string_view key, const std::string_view data
         , std::chrono::microseconds expiration = std::chrono::hours(1)
         , unsigned int replication = 5
         , GNUNET_BLOCK_Type data_type = GNUNET_BLOCK_TYPE_TEST
         , GNUNET_DHT_RouteOption routing_options = GNUNET_DHT_RO_NONE);
-    cppcoro::task<> put(GNUNET_HashCode key, const std::string_view data
+    Task<> put(GNUNET_HashCode key, const std::string_view data
         , std::chrono::microseconds expiration = std::chrono::hours(1)
         , unsigned int replication = 5
         , GNUNET_BLOCK_Type data_type = GNUNET_BLOCK_TYPE_TEST
         , GNUNET_DHT_RouteOption routing_options = GNUNET_DHT_RO_NONE);
-    cppcoro::task<> put(const std::string_view key, const std::vector<uint8_t> data
+    Task<> put(const std::string_view key, const std::vector<uint8_t> data
         , std::chrono::microseconds expiration = std::chrono::hours(1)
         , unsigned int replication = 5
         , GNUNET_BLOCK_Type data_type = GNUNET_BLOCK_TYPE_TEST
         , GNUNET_DHT_RouteOption routing_options = GNUNET_DHT_RO_NONE);
-    cppcoro::task<> put(GNUNET_HashCode key, const std::vector<uint8_t> data
+    Task<> put(GNUNET_HashCode key, const std::vector<uint8_t> data
         , std::chrono::microseconds expiration = std::chrono::hours(1)
         , unsigned int replication = 5
         , GNUNET_BLOCK_Type data_type = GNUNET_BLOCK_TYPE_TEST

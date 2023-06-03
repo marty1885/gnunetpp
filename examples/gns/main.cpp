@@ -11,7 +11,7 @@ std::string record_type;
 int timeout;
 bool dns_compatability;
 
-cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
+gnunetpp::Task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
 {
     auto gns = std::make_shared<gnunetpp::GNS>(cfg);
     auto result = co_await gns->lookup(name, std::chrono::seconds(timeout), record_type, dns_compatability);

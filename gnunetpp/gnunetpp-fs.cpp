@@ -394,7 +394,7 @@ void publish(
     });
 }
 
-cppcoro::task<std::pair<std::string, std::string>> publish(
+Task<std::pair<std::string, std::string>> publish(
     const GNUNET_CONFIGURATION_Handle* cfg,
     const std::string& filename,
     const std::vector<std::string>& keywords,
@@ -487,7 +487,7 @@ GNUNET_FS_UnindexContext* unindex(
     return uc;
 }
 
-cppcoro::task<> unindex(const GNUNET_CONFIGURATION_Handle* cfg, const std::string& filename) {
+Task<> unindex(const GNUNET_CONFIGURATION_Handle* cfg, const std::string& filename) {
     struct UnindexAwaiter : public EagerAwaiter<> {
         UnindexAwaiter(const GNUNET_CONFIGURATION_Handle* cfg, const std::string& filename)
         {

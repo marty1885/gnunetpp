@@ -55,7 +55,7 @@ struct DataStore : public Service
         getOne(hash, std::move(callback), queue_priority, max_queue_size, type, uid);
     }
     
-    cppcoro::task<> put(GNUNET_HashCode key
+    Task<> put(GNUNET_HashCode key
         , const void* data, size_t data_size
         , std::chrono::seconds expiration = std::chrono::years(1)
         // Default "magic" values taken from various GNUnet examples. Seems to be what GNUnet likes
@@ -65,7 +65,7 @@ struct DataStore : public Service
         , GNUNET_BLOCK_Type type = GNUNET_BLOCK_TYPE_TEST
         , uint32_t queue_priority = 2
         , uint32_t max_queue_size = 1);
-    cppcoro::task<> put(const GNUNET_HashCode& key
+    Task<> put(const GNUNET_HashCode& key
         , const std::string_view sv
         , std::chrono::seconds expiration = std::chrono::years(1)
         // Default "magic" values taken from various GNUnet examples. Seems to be what GNUnet likes
@@ -78,7 +78,7 @@ struct DataStore : public Service
     {
         return put(key, sv.data(), sv.size(), expiration, priority, replication, anonymity, type, queue_priority, max_queue_size);
     }
-    cppcoro::task<> put(const GNUNET_HashCode& key
+    Task<> put(const GNUNET_HashCode& key
         , const std::vector<uint8_t>& data
         , std::chrono::seconds expiration = std::chrono::years(1)
         // Default "magic" values taken from various GNUnet examples. Seems to be what GNUnet likes
@@ -92,7 +92,7 @@ struct DataStore : public Service
         return put(key, data.data(), data.size(), expiration, priority, replication, anonymity, type, queue_priority, max_queue_size);
     }
     
-    cppcoro::task<> put(const std::string_view key
+    Task<> put(const std::string_view key
         , const void* data, size_t data_size
         , std::chrono::seconds expiration = std::chrono::years(1)
         // Default "magic" values taken from various GNUnet examples. Seems to be what GNUnet likes
@@ -106,7 +106,7 @@ struct DataStore : public Service
         auto hash = crypto::hash(key);
         return put(hash, data, data_size, expiration, priority, replication, anonymity, type, queue_priority, max_queue_size);
     }
-    cppcoro::task<> put(const std::string_view key
+    Task<> put(const std::string_view key
         , const std::string_view sv
         , std::chrono::seconds expiration = std::chrono::years(1)
         // Default "magic" values taken from various GNUnet examples. Seems to be what GNUnet likes
@@ -120,7 +120,7 @@ struct DataStore : public Service
         auto hash = crypto::hash(key);
         return put(hash, sv.data(), sv.size(), expiration, priority, replication, anonymity, type, queue_priority, max_queue_size);
     }
-    cppcoro::task<> put(const std::string_view key
+    Task<> put(const std::string_view key
         , const std::vector<uint8_t>& data
         , std::chrono::seconds expiration = std::chrono::years(1)
         // Default "magic" values taken from various GNUnet examples. Seems to be what GNUnet likes
@@ -135,10 +135,10 @@ struct DataStore : public Service
         return put(hash, data.data(), data.size(), expiration, priority, replication, anonymity, type, queue_priority, max_queue_size);
     }
     
-    cppcoro::task<std::optional<std::vector<uint8_t>>> getOne(GNUNET_HashCode hash
+    Task<std::optional<std::vector<uint8_t>>> getOne(GNUNET_HashCode hash
         , uint32_t queue_priority=1, uint32_t max_queue_size=1, GNUNET_BLOCK_Type type = GNUNET_BLOCK_TYPE_TEST
         , uint64_t uid = 0);
-    cppcoro::task<std::optional<std::vector<uint8_t>>> getOne(const std::string key
+    Task<std::optional<std::vector<uint8_t>>> getOne(const std::string key
         , uint32_t queue_priority=1, uint32_t max_queue_size=1, GNUNET_BLOCK_Type type = GNUNET_BLOCK_TYPE_TEST
         , uint64_t uid = 0)
     {

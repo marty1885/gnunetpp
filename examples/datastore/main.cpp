@@ -15,7 +15,7 @@ uint32_t replication;
 uint32_t priority;
 uint32_t queue_priority;
 
-cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
+gnunetpp::Task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
 {
     auto datastore = std::make_shared<gnunetpp::DataStore>(cfg);
     if(run_put) {

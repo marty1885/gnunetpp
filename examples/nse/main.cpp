@@ -16,7 +16,7 @@ std::string right_pad(std::string s, size_t n)
     return s;
 }
 
-cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
+Task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
 {
     auto nse = std::make_unique<NSE>(cfg);
     auto [network_size, log2_stddev] = co_await nse->estimate();

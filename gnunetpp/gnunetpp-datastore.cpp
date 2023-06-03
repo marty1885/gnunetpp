@@ -95,7 +95,7 @@ void DataStore::put(const GNUNET_HashCode& key
     }
 }
 
-cppcoro::task<> DataStore::put(GNUNET_HashCode key
+Task<> DataStore::put(GNUNET_HashCode key
     , const void* data, size_t data_size
     , std::chrono::seconds expiration
     , uint32_t priority
@@ -141,7 +141,7 @@ void DataStore::getOne(const GNUNET_HashCode& hash, std::function<void(std::opti
     }
 }
 
-cppcoro::task<std::optional<std::vector<uint8_t>>> DataStore::getOne(GNUNET_HashCode hash
+Task<std::optional<std::vector<uint8_t>>> DataStore::getOne(GNUNET_HashCode hash
     , uint32_t queue_priority, uint32_t max_queue_size, GNUNET_BLOCK_Type type, uint64_t uid)
 {
     struct GetAwaiter : public EagerAwaiter<std::optional<std::vector<uint8_t>>>

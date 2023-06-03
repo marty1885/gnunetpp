@@ -27,7 +27,7 @@ std::string serializeTimePoint( const time_point& time, const std::string& forma
     return ss.str();
 }
 
-cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
+Task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
 {
     if(!identity_name.empty()) {
         auto identity = co_await getEgo(cfg, identity_name);

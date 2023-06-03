@@ -112,7 +112,7 @@ GNUNET_IDENTITY_Operation* IdentityService::createIdentity(const std::string& na
         , &detail::identity_create_trampline, cb);
 }
 
-cppcoro::task<const GNUNET_IDENTITY_PrivateKey*> IdentityService::createIdentity(const std::string& name
+Task<const GNUNET_IDENTITY_PrivateKey*> IdentityService::createIdentity(const std::string& name
         , GNUNET_IDENTITY_KeyType type)
 {
     struct IdentityCreateAwaiter : public EagerAwaiter<const GNUNET_IDENTITY_PrivateKey*>
@@ -138,7 +138,7 @@ GNUNET_IDENTITY_Operation* IdentityService::deleteIdentity(const std::string& na
     return GNUNET_IDENTITY_delete(handle, name.c_str(), &detail::identity_delete_trampline, cb);
 }
 
-cppcoro::task<> IdentityService::deleteIdentity(const std::string& name)
+Task<> IdentityService::deleteIdentity(const std::string& name)
 {
     struct IdentityDeleteAwaiter : public EagerAwaiter<void>
     {
@@ -163,7 +163,7 @@ GNUNET_IDENTITY_EgoLookup* getEgo(const GNUNET_CONFIGURATION_Handle* cfg
         , new std::function<void(std::optional<Ego>)>(std::move(fn)));
 }
 
-cppcoro::task<std::optional<Ego>> getEgo(const GNUNET_CONFIGURATION_Handle* cfg
+Task<std::optional<Ego>> getEgo(const GNUNET_CONFIGURATION_Handle* cfg
     , const std::string& name)
 {
     struct EgoLookupAwaiter : public EagerAwaiter<std::optional<Ego>>

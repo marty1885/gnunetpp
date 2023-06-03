@@ -55,7 +55,7 @@ void PeerInfo::peers(std::function<void(const std::set<GNUNET_PeerIdentity> peer
     }
 }
 
-cppcoro::task<std::set<GNUNET_PeerIdentity>> PeerInfo::peers()
+Task<std::set<GNUNET_PeerIdentity>> PeerInfo::peers()
 {
     struct PeerInfoAwaiter : public EagerAwaiter<std::set<GNUNET_PeerIdentity>>
     {

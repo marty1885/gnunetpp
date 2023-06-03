@@ -231,7 +231,7 @@ void CADET::listPeers(const GNUNET_CONFIGURATION_Handle* cfg, std::function<void
     GNUNET_CADET_list_peers(cfg, list_peers_trampoline, cls);
 }
 
-cppcoro::task<std::vector<GNUNET_CADET_PeerListEntry>> CADET::listPeers(const GNUNET_CONFIGURATION_Handle* cfg)
+Task<std::vector<GNUNET_CADET_PeerListEntry>> CADET::listPeers(const GNUNET_CONFIGURATION_Handle* cfg)
 {
     struct PeerListAwaiter : public EagerAwaiter<std::vector<GNUNET_CADET_PeerListEntry>> {
         PeerListAwaiter(const GNUNET_CONFIGURATION_Handle* cfg) {
@@ -350,7 +350,7 @@ void CADET::pathsToPeer(const GNUNET_CONFIGURATION_Handle* cfg, const GNUNET_Pee
     GNUNET_CADET_get_path(cfg, &peer, list_paths_trampoline, cls);
 }
 
-cppcoro::task<std::vector<std::vector<GNUNET_PeerIdentity>>> CADET::pathsToPeer(const GNUNET_CONFIGURATION_Handle* cfg, const GNUNET_PeerIdentity& peer)
+Task<std::vector<std::vector<GNUNET_PeerIdentity>>> CADET::pathsToPeer(const GNUNET_CONFIGURATION_Handle* cfg, const GNUNET_PeerIdentity& peer)
 {
     struct PathAwaiter : public EagerAwaiter<std::vector<std::vector<GNUNET_PeerIdentity>>> {
         PathAwaiter(const GNUNET_CONFIGURATION_Handle* cfg, const GNUNET_PeerIdentity& peer) {
@@ -387,7 +387,7 @@ void CADET::listTunnels(const GNUNET_CONFIGURATION_Handle* cfg, std::function<vo
     GNUNET_CADET_list_tunnels(cfg, list_tunnels_trampoline, cls);
 }
 
-cppcoro::task<std::vector<GNUNET_CADET_TunnelDetails>> CADET::listTunnels(const GNUNET_CONFIGURATION_Handle* cfg)
+Task<std::vector<GNUNET_CADET_TunnelDetails>> CADET::listTunnels(const GNUNET_CONFIGURATION_Handle* cfg)
 {
     struct TunnelAwaiter : public EagerAwaiter<std::vector<GNUNET_CADET_TunnelDetails>> {
         TunnelAwaiter(const GNUNET_CONFIGURATION_Handle* cfg) {

@@ -20,7 +20,7 @@ bool run_publish;
 bool run_unindex;
 
 
-cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
+gnunetpp::Task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
 {
     if(run_search) {
         gnunetpp::FS::search(cfg, keywords, [n=0](const std::string_view uri, const std::string_view original_file_name) mutable -> bool {

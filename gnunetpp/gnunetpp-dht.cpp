@@ -49,7 +49,7 @@ GNUNET_DHT_PutHandle* DHT::put(const GNUNET_HashCode& key_hash, const std::strin
     return handle;
 }
 
-cppcoro::task<> DHT::put(const std::string_view key, const std::string_view data
+Task<> DHT::put(const std::string_view key, const std::string_view data
         , std::chrono::microseconds expiration
         , unsigned int replication
         , GNUNET_BLOCK_Type data_type
@@ -58,7 +58,7 @@ cppcoro::task<> DHT::put(const std::string_view key, const std::string_view data
     return put(crypto::hash(key), data, expiration, replication, data_type, routing_options);
 }
 
-cppcoro::task<> DHT::put(const std::string_view key, const std::vector<uint8_t> data
+Task<> DHT::put(const std::string_view key, const std::vector<uint8_t> data
         , std::chrono::microseconds expiration
         , unsigned int replication
         , GNUNET_BLOCK_Type data_type
@@ -69,7 +69,7 @@ cppcoro::task<> DHT::put(const std::string_view key, const std::vector<uint8_t> 
     return put(crypto::hash(key), std::string_view(begin, end), expiration, replication, data_type, routing_options);
 }
 
-cppcoro::task<> DHT::put(GNUNET_HashCode key, const std::vector<uint8_t> data
+Task<> DHT::put(GNUNET_HashCode key, const std::vector<uint8_t> data
         , std::chrono::microseconds expiration
         , unsigned int replication
         , GNUNET_BLOCK_Type data_type
@@ -80,7 +80,7 @@ cppcoro::task<> DHT::put(GNUNET_HashCode key, const std::vector<uint8_t> data
     return put(key, std::string_view(begin, end), expiration, replication, data_type, routing_options);
 }
 
-cppcoro::task<> DHT::put(GNUNET_HashCode key_hash, const std::string_view data
+Task<> DHT::put(GNUNET_HashCode key_hash, const std::string_view data
         , std::chrono::microseconds expiration
         , unsigned int replication
         , GNUNET_BLOCK_Type data_type

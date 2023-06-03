@@ -117,10 +117,10 @@ void run(std::function<void(const GNUNET_CONFIGURATION_Handle*)> f, const std::s
         throw std::runtime_error("GNUNet program run failed");
 }
 
-void start(std::function<cppcoro::task<void>(const GNUNET_CONFIGURATION_Handle*)> f, const std::string& service_name)
+void start(std::function<Task<void>(const GNUNET_CONFIGURATION_Handle*)> f, const std::string& service_name)
 {
     run([f = std::move(f)](const GNUNET_CONFIGURATION_Handle* c) {
-        async_run([f = std::move(f), c]() -> cppcoro::task<> {
+        async_run([f = std::move(f), c]() -> Task<> {
             co_await f(c);
         });
     });

@@ -122,7 +122,7 @@ void publish(
     const std::string& this_id = "",
     const std::string& next_id = "",
     GNUNET_FS_BlockOptions block_options = detail::default_block_options);
-cppcoro::task<std::pair<std::string, std::string>> publish(
+Task<std::pair<std::string, std::string>> publish(
     const GNUNET_CONFIGURATION_Handle* cfg,
     const std::string& filename,
     const std::vector<std::string>& keywords = {},
@@ -153,7 +153,7 @@ GNUNET_FS_UnindexContext* unindex(
     UnindexCallbackFunctor fn);
 
 [[nodiscard]]
-cppcoro::task<> unindex(
+Task<> unindex(
     const GNUNET_CONFIGURATION_Handle* cfg,
     const std::string& file);
 

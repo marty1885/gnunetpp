@@ -69,7 +69,7 @@ std::string connection_status(uint16_t cstate)
 }
 
 static std::shared_ptr<CADET> cadet;
-cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
+Task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
 {
     if(run_peer_list) {
         // Get a list of all peers currently known over CADET (Different from the list of peers in the peer service)

@@ -56,7 +56,7 @@ struct IdentityService : public Service
     GNUNET_IDENTITY_Operation* createIdentity(const std::string& name
         , std::function<void(const GNUNET_IDENTITY_PrivateKey*, const std::string&)> fn
         , GNUNET_IDENTITY_KeyType type = GNUNET_IDENTITY_TYPE_ECDSA);
-    cppcoro::task<const GNUNET_IDENTITY_PrivateKey*> createIdentity(const std::string& name
+    Task<const GNUNET_IDENTITY_PrivateKey*> createIdentity(const std::string& name
         , GNUNET_IDENTITY_KeyType type = GNUNET_IDENTITY_TYPE_ECDSA);
 
     /**
@@ -68,7 +68,7 @@ struct IdentityService : public Service
      */
     GNUNET_IDENTITY_Operation* deleteIdentity(const std::string& name
         , std::function<void(const std::string&)> fn);
-    cppcoro::task<> deleteIdentity(const std::string& name);
+    Task<> deleteIdentity(const std::string& name);
 
     GNUNET_IDENTITY_Handle* native_handle() const { return handle; }
     GNUNET_IDENTITY_Handle* handle = nullptr;
@@ -102,7 +102,7 @@ GNUNET_IDENTITY_PublicKey getPublicKey(const GNUNET_IDENTITY_PrivateKey& key);
  */
 GNUNET_IDENTITY_EgoLookup* getEgo(const GNUNET_CONFIGURATION_Handle* cfg
     , const std::string& name, std::function<void(std::optional<Ego>)> fn);
-cppcoro::task<std::optional<Ego>> getEgo(const GNUNET_CONFIGURATION_Handle* cfg
+Task<std::optional<Ego>> getEgo(const GNUNET_CONFIGURATION_Handle* cfg
     , const std::string& name);
 /**
  * @brief Get public key from ego

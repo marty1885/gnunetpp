@@ -113,7 +113,7 @@ void GNS::lookup(const std::string &name, std::chrono::milliseconds timeout, Gns
     lookup(name, timeout, std::move(cb), std::move(err_cb), type, dns_compatability, options);
 }
 
-cppcoro::task<std::vector<std::pair<std::string, std::string>>> GNS::lookup(const std::string &name, std::chrono::milliseconds timeout,
+Task<std::vector<std::pair<std::string, std::string>>> GNS::lookup(const std::string &name, std::chrono::milliseconds timeout,
     uint32_t record_type, bool dns_compatability, GNUNET_GNS_LocalOptions options)
 {
     struct RecordAwaiter : public EagerAwaiter<std::vector<std::pair<std::string, std::string>>>
@@ -132,7 +132,7 @@ cppcoro::task<std::vector<std::pair<std::string, std::string>>> GNS::lookup(cons
     co_return co_await RecordAwaiter(*this, name, timeout, record_type, dns_compatability, options);
 }
 
-cppcoro::task<std::vector<std::pair<std::string, std::string>>> GNS::lookup(const std::string &name, std::chrono::milliseconds timeout,
+Task<std::vector<std::pair<std::string, std::string>>> GNS::lookup(const std::string &name, std::chrono::milliseconds timeout,
     const std::string_view record_type, bool dns_compatability, GNUNET_GNS_LocalOptions options)
 {
     uint32_t type = GNUNET_GNSRECORD_typename_to_number(record_type.data());

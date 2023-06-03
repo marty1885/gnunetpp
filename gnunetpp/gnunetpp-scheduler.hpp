@@ -66,10 +66,10 @@ void run(Fn&& fn)
  * @brief Resumes execution after a delay
  * 
  * @param delay delay in seconds
- * @return cppcoro::task<> await on this to resume execution after the delay
+ * @return Task<> await on this to resume execution after the delay
  */
 [[nodiscard]]
-cppcoro::task<> sleep(std::chrono::microseconds delay);
+Task<> sleep(std::chrono::microseconds delay);
 
 /**
  * @brief Cancel a task
@@ -93,13 +93,13 @@ void shutdown();
  * @brief Asynchronously read a line from stdin
  */
 void readStdin(std::function<void(const std::string&, bool)> fn);
-cppcoro::task<std::string> readStdin();
+Task<std::string> readStdin();
 
 /**
  * @brief Asynchronously wait until shutdown
  * 
  */
-cppcoro::task<> waitUntilShutdown();
+Task<> waitUntilShutdown();
 
 /**
  * @brief Force the GNUnet scheduler to run
@@ -110,5 +110,5 @@ void wakeUp();
 /**
  * @brief Run on GNUnet main thread
 */
-cppcoro::task<> runOnMainThread();
+Task<> runOnMainThread();
 }

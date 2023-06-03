@@ -52,16 +52,16 @@ struct GNS : public Service
      * @param name Domain name to lookup (e.g. "gnunet.org")
      * @param timeout Timeout for the lookup
      * @param record_type The type of record to lookup. Defaults to ANY.
-     * @return cppcoro::task<std::vector<std::string>> awiat to get the result
+     * @return Task<std::vector<std::string>> awiat to get the result
      */
     [[nodiscard]]
-    cppcoro::task<std::vector<std::pair<std::string, std::string>>> lookup(const std::string &name
+    Task<std::vector<std::pair<std::string, std::string>>> lookup(const std::string &name
         , std::chrono::milliseconds timeout
         , uint32_t record_type = GNUNET_GNSRECORD_TYPE_ANY
         , bool dns_compatability = true
         , GNUNET_GNS_LocalOptions options = GNUNET_GNS_LO_DEFAULT);
     [[nodiscard]]
-    cppcoro::task<std::vector<std::pair<std::string, std::string>>> lookup(const std::string &name
+    Task<std::vector<std::pair<std::string, std::string>>> lookup(const std::string &name
         , std::chrono::milliseconds timeout
         , const std::string_view record_type
         , bool dns_compatability = true

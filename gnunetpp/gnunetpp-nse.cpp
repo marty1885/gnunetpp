@@ -56,7 +56,7 @@ void NSE::shutdown()
     nse = nullptr;
 }
 
-cppcoro::task<std::pair<double, double>> NSE::estimate()
+Task<std::pair<double, double>> NSE::estimate()
 {
     co_await EstimateAwaiter{this};
     co_return *estimate_;

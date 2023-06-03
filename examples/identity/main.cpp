@@ -15,7 +15,7 @@ bool run_list;
 std::string identity_name;
 std::string key_type;
 
-cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
+Task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
 {
     GNUNET_HashCode k1;
     GNUNET_HashCode k2;

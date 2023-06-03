@@ -91,7 +91,7 @@ void queue(std::function<void()> fn)
     wakeUp();
 }
 
-cppcoro::task<> sleep(std::chrono::microseconds delay)
+Task<> sleep(std::chrono::microseconds delay)
 {
     struct TimerAwaiter : public CallbackAwaiter<>
     {
@@ -185,7 +185,7 @@ void readStdin(std::function<void(const std::string&, bool)> fn)
     wakeUp();
 }
 
-cppcoro::task<std::string> readStdin()
+Task<std::string> readStdin()
 {
     struct ReadLineAwaiter : public CallbackAwaiter<std::string>
     {
@@ -203,7 +203,7 @@ cppcoro::task<std::string> readStdin()
     co_return co_await ReadLineAwaiter();
 }
 
-cppcoro::task<> waitUntilShutdown()
+Task<> waitUntilShutdown()
 {
     struct ShutdownAwaiter : public CallbackAwaiter<>
     {
@@ -225,7 +225,7 @@ void wakeUp()
         detail::notifyWakeup();
 }
 
-cppcoro::task<> runOnMainThread()
+Task<> runOnMainThread()
 {
     struct MainThreadAwaiter : public CallbackAwaiter<>
     {

@@ -13,7 +13,7 @@ size_t expiration;
 uint32_t replication;
 
 std::shared_ptr<gnunetpp::DHT> dht;
-cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
+gnunetpp::Task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
 {
     // Create a DHT service with a hashtable size of 1 since we only do 1 operation at a time
     dht = std::make_shared<gnunetpp::DHT>(cfg, 1);

@@ -18,7 +18,7 @@ struct PeerInfo : public Service
     ~PeerInfo();
 
     void peers(std::function<void(const std::set<GNUNET_PeerIdentity> peers)> callback, std::function<void(const std::string_view)> errorCallback);
-    cppcoro::task<std::set<GNUNET_PeerIdentity>> peers();
+    Task<std::set<GNUNET_PeerIdentity>> peers();
 
     GNUNET_PEERINFO_Handle* native_handle() const { return handle;}
     GNUNET_PEERINFO_Handle* handle = nullptr;

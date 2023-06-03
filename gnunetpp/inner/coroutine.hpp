@@ -1,6 +1,4 @@
 #pragma once
-#include <cppcoro/generator.hpp>
-#include <cppcoro/task.hpp>
 #include <cppcoro/async_generator.hpp>
 
 #include <memory>
@@ -11,6 +9,301 @@
 
 namespace gnunetpp
 {
+
+struct final_awaiter
+{
+    bool await_ready() noexcept
+    {
+        return false;
+    }
+    template <typename T>
+    auto await_suspend(std::coroutine_handle<T> handle) noexcept
+    {
+        return handle.promise().continuation_;
+    }
+    void await_resume() noexcept
+    {
+    }
+};
+
+
+template <typename T = void>
+struct [[nodiscard]] Task
+{
+    struct promise_type;
+    using handle_type = std::coroutine_handle<promise_type>;
+
+    Task(handle_type h) : coro_(h)
+    {
+    }
+    Task(const Task &) = delete;
+    Task(Task &&other)
+    {
+        coro_ = other.coro_;
+        other.coro_ = nullptr;
+    }
+    ~Task()
+    {
+        if (coro_)
+            coro_.destroy();
+    }
+    Task &operator=(const Task &) = delete;
+    Task &operator=(Task &&other)
+    {
+        if (std::addressof(other) == this)
+            return *this;
+        if (coro_)
+            coro_.destroy();
+
+        coro_ = other.coro_;
+        other.coro_ = nullptr;
+        return *this;
+    }
+
+    struct promise_type
+    {
+        Task<T> get_return_object()
+        {
+            return Task<T>{handle_type::from_promise(*this)};
+        }
+        std::suspend_always initial_suspend()
+        {
+            return {};
+        }
+        void return_value(const T &v)
+        {
+            value_ = std::make_unique<T>(v);
+        }
+        void return_value(T &&v)
+        {
+            value_ = std::make_unique<T>(std::move(v));
+        }
+
+        auto final_suspend() noexcept
+        {
+            return final_awaiter{};
+        }
+
+        void unhandled_exception()
+        {
+            exception_ = std::current_exception();
+        }
+
+        T &&result() &&
+        {
+            if (exception_ != nullptr)
+                std::rethrow_exception(exception_);
+            assert(value_ != nullptr);
+            return std::move(*value_);
+        }
+
+        T &result() &
+        {
+            if (exception_ != nullptr)
+                std::rethrow_exception(exception_);
+            assert(value_ != nullptr);
+            return *value_;
+        }
+
+        void setContinuation(std::coroutine_handle<> handle)
+        {
+            continuation_ = handle;
+        }
+
+        // HACK: GCC has bug disambiguating the forward(&&) and forward(&) overloads
+        // so we need to use a pointer to avoid the ambiguity. Otherwise both 
+        // variant and optional can't be used here to avoid that allocation.
+        std::unique_ptr<T> value_;
+        std::exception_ptr exception_;
+        bool has_value_ = false;
+        
+        std::coroutine_handle<> continuation_;
+    };
+
+    auto operator co_await() const &noexcept
+    {
+        struct awaiter
+        {
+          public:
+            explicit awaiter(handle_type coro) : coro_(coro)
+            {
+            }
+            bool await_ready() noexcept
+            {
+                return !coro_ || coro_.done();
+            }
+            auto await_suspend(std::coroutine_handle<> handle) noexcept
+            {
+                coro_.promise().setContinuation(handle);
+                return coro_;
+            }
+            T await_resume()
+            {
+                auto &&v = coro_.promise().result();
+                return std::move(v);
+            }
+
+          private:
+            handle_type coro_;
+        };
+        return awaiter(coro_);
+    }
+
+    auto operator co_await() const &&noexcept
+    {
+        struct awaiter
+        {
+          public:
+            explicit awaiter(handle_type coro) : coro_(coro)
+            {
+            }
+            bool await_ready() noexcept
+            {
+                return !coro_ || coro_.done();
+            }
+            auto await_suspend(std::coroutine_handle<> handle) noexcept
+            {
+                coro_.promise().setContinuation(handle);
+                return coro_;
+            }
+            T await_resume()
+            {
+                return std::move(coro_.promise().result());
+            }
+
+          private:
+            handle_type coro_;
+        };
+        return awaiter(coro_);
+    }
+    handle_type coro_;
+};
+
+template <>
+struct [[nodiscard]] Task<void>
+{
+    struct promise_type;
+    using handle_type = std::coroutine_handle<promise_type>;
+
+    Task(handle_type handle) : coro_(handle)
+    {
+    }
+    Task(const Task &) = delete;
+    Task(Task &&other)
+    {
+        coro_ = other.coro_;
+        other.coro_ = nullptr;
+    }
+    ~Task()
+    {
+        if (coro_)
+            coro_.destroy();
+    }
+    Task &operator=(const Task &) = delete;
+    Task &operator=(Task &&other)
+    {
+        if (std::addressof(other) == this)
+            return *this;
+        if (coro_)
+            coro_.destroy();
+
+        coro_ = other.coro_;
+        other.coro_ = nullptr;
+        return *this;
+    }
+
+    struct promise_type
+    {
+        Task<> get_return_object()
+        {
+            return Task<>{handle_type::from_promise(*this)};
+        }
+        std::suspend_always initial_suspend()
+        {
+            return {};
+        }
+        void return_void()
+        {
+        }
+        auto final_suspend() noexcept
+        {
+            return final_awaiter{};
+        }
+        void unhandled_exception()
+        {
+            exception_ = std::current_exception();
+        }
+        void result()
+        {
+            if (exception_ != nullptr)
+                std::rethrow_exception(exception_);
+        }
+        void setContinuation(std::coroutine_handle<> handle)
+        {
+            continuation_ = handle;
+        }
+        std::exception_ptr exception_;
+        std::coroutine_handle<> continuation_;
+    };
+
+    auto operator co_await() const &noexcept
+    {
+        struct awaiter
+        {
+          public:
+            explicit awaiter(handle_type coro) : coro_(coro)
+            {
+            }
+            bool await_ready() noexcept
+            {
+                return !coro_ || coro_.done();
+            }
+            auto await_suspend(std::coroutine_handle<> handle) noexcept
+            {
+                coro_.promise().setContinuation(handle);
+                return coro_;
+            }
+            auto await_resume()
+            {
+                coro_.promise().result();
+            }
+
+          private:
+            handle_type coro_;
+        };
+        return awaiter(coro_);
+    }
+
+    auto operator co_await() const &&noexcept
+    {
+        struct awaiter
+        {
+          public:
+            explicit awaiter(handle_type coro) : coro_(coro)
+            {
+            }
+            bool await_ready() noexcept
+            {
+                return false;
+            }
+            auto await_suspend(std::coroutine_handle<> handle) noexcept
+            {
+                coro_.promise().setContinuation(handle);
+                return coro_;
+            }
+            void await_resume()
+            {
+                coro_.promise().result();
+            }
+
+          private:
+            handle_type coro_;
+        };
+        return awaiter(coro_);
+    }
+    handle_type coro_;
+};
+
 
 // Fires a coroutine and doesn't force waiting nor deallocates upon promise destructs
 // NOTE: AsyncTask is designed to be not awaitable. And kills the entire process
@@ -363,11 +656,17 @@ struct GeneratorWrapper
         using reference = T&;
         using difference_type = std::ptrdiff_t;
 
+        iterator_type(const iterator_type& other) = default;
+        iterator_type(std::optional<T> val, GeneratorWrapper<T>* parent, size_t idx)
+            : value(std::move(val)), parent(parent), idx(idx)
+        {
+        }
+
         T& operator*()
         {
             return *value;
         }
-        cppcoro::task<iterator_type> operator++ ()
+        Task<iterator_type> operator++ ()
         {
             *this = co_await parent->next();
             co_return *this;
@@ -402,12 +701,12 @@ struct GeneratorWrapper
         size_t idx = 0;
     };
 
-    cppcoro::task<iterator_type> begin()
+    Task<iterator_type> begin()
     {
         return next();
     }
 
-    cppcoro::task<iterator_type> next()
+    Task<iterator_type> next()
     {
         auto& ref = *awaiter;
         auto value = co_await ref;

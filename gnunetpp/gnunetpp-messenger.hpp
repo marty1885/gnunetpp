@@ -150,7 +150,7 @@ struct Messenger : public Service
     /**
      * @brief Wait for the messenger to be initialized
     */
-    cppcoro::task<> waitForInit();
+    Task<> waitForInit();
 
     GNUNET_MESSENGER_Handle* handle = nullptr;
     bool identity_set = false;

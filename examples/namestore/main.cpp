@@ -16,7 +16,7 @@ bool run_lookup = false;
 bool run_store = false;
 bool run_remove = false;
 
-cppcoro::task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
+gnunetpp::Task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
 {
     auto namestore = std::make_shared<gnunetpp::Namestore>(cfg);
 

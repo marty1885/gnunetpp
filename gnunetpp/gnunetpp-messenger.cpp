@@ -155,7 +155,7 @@ std::string Messenger::getEgoName() const
     return name;
 }
 
-cppcoro::task<> Messenger::waitForInit()
+Task<> Messenger::waitForInit()
 {
     struct Awaiter : public EagerAwaiter<>
     {

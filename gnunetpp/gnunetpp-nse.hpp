@@ -22,7 +22,7 @@ struct NSE : public Service
      * @brief  Get the GNUnet network size estimate
     */
     [[nodiscard]]
-    cppcoro::task<std::pair<double, double>> estimate();
+    Task<std::pair<double, double>> estimate();
 
     /**
      * @brief Watch for estimate changes
