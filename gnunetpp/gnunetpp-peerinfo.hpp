@@ -2,6 +2,7 @@
 
 #include <gnunet/gnunet_util_lib.h>
 #include <gnunet/gnunet_peerinfo_service.h>
+#include <gnunet/gnunet_transport_hello_service.h>
 
 #include "gnunetpp-crypto.hpp"
 #include "inner/Infra.hpp"
@@ -24,4 +25,7 @@ struct PeerInfo : public Service
     GNUNET_PEERINFO_Handle* handle = nullptr;
 };
 
+void helloMessage(const GNUNET_CONFIGURATION_Handle* cfg, GNUNET_TRANSPORT_AddressClass ac, std::function<void(std::shared_ptr<GNUNET_HELLO_Message> hello)> callback);
+Task<std::shared_ptr<GNUNET_HELLO_Message>> helloMessage(const GNUNET_CONFIGURATION_Handle* cfg, GNUNET_TRANSPORT_AddressClass ac=GNUNET_TRANSPORT_AC_ANY);
+std::string to_string(const std::shared_ptr<GNUNET_HELLO_Message> hello);
 }
