@@ -129,7 +129,12 @@ This project aims to create a easy to use wapper for the commonly used part of G
   - [x] Watch value
 - PeerInfo
   - [x] List peers
-  - [ ] Add peer
+  - [x] Add peer
+  - [ ] Hello message to URI
+    - Partially done. Current method depends on ABI of transport plugins not changing.
+    - However, it is memory safe.
+  - [ ] Parse HELLO URI
+
 - Scheduler
   - [x] Delayed run
   - [x] Run on exit
