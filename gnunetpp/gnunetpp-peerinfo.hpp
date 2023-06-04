@@ -21,6 +21,9 @@ struct PeerInfo : public Service
     void peers(std::function<void(const std::set<GNUNET_PeerIdentity> peers)> callback, std::function<void(const std::string_view)> errorCallback);
     Task<std::set<GNUNET_PeerIdentity>> peers();
 
+    void addPeer(const std::shared_ptr<GNUNET_HELLO_Message>& hello, std::function<void()> callback);
+    Task<void> addPeer(std::shared_ptr<GNUNET_HELLO_Message> hello);
+
     GNUNET_PEERINFO_Handle* native_handle() const { return handle;}
     GNUNET_PEERINFO_Handle* handle = nullptr;
 };

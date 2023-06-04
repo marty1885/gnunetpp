@@ -11,6 +11,9 @@ bool show_hello = false;
 Task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
 {
     if(show_hello) {
+        // retrieve the HELLO message of the local peer, This message can be sent to another node (out of band)
+        // to notify it about our existence. The other node can then use this HELLO message to connect to us
+        // by calling `co_await peerinfo->addPeer(hello)`
         auto hello = co_await helloMessage(cfg);
         std::cout << to_string(hello) << std::endl;
     }

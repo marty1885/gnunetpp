@@ -76,6 +76,34 @@ Task<std::set<GNUNET_PeerIdentity>> PeerInfo::peers()
     co_return co_await PeerInfoAwaiter(*this);
 }
 
+void PeerInfo::addPeer(const std::shared_ptr<GNUNET_HELLO_Message>& hello, std::function<void()> callback)
+{
+    // TODO: The callback may not be called if PeerInfo is destroyed before the callback is called.
+    //     Due to this operation is automatically cancelled.
+    auto ic = GNUNET_PEERINFO_add_peer(handle, hello.get(), [](void *cls) {
+        auto callback = reinterpret_cast<std::function<void()>*>(cls);
+        (*callback)();
+        delete callback;
+    }, new std::function<void()>(std::move(callback)));
+}
+
+Task<> PeerInfo::addPeer(std::shared_ptr<GNUNET_HELLO_Message> hello)
+{
+    struct PeerInfoAwaiter : public EagerAwaiter<>
+    {
+        PeerInfoAwaiter(PeerInfo& pi, std::shared_ptr<GNUNET_HELLO_Message> hello)
+            : hello(std::move(hello))
+        {
+            pi.addPeer(this->hello, [this]() {
+                setValue();
+            });
+        }
+
+        std::shared_ptr<GNUNET_HELLO_Message> hello;
+    };
+    co_return co_await PeerInfoAwaiter(*this, std::move(hello));
+}
+
 struct HelloCallbackPack
 {
     std::function<void(std::shared_ptr<GNUNET_HELLO_Message> hello)> callback;
