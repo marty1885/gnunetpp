@@ -10,14 +10,13 @@ bool show_hello = false;
 
 Task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
 {
-    auto peerinfo = std::make_shared<PeerInfo>(cfg);
-
     if(show_hello) {
-        auto hello = co_await helloMessage(cfg, GNUNET_TRANSPORT_AC_ANY);
+        auto hello = co_await helloMessage(cfg);
         std::cout << to_string(hello) << std::endl;
     }
     else {
         // retrieve all peers that we know about
+        auto peerinfo = std::make_shared<PeerInfo>(cfg);
         auto peers = co_await peerinfo->peers();
         std::cout << "Peers:" << std::endl;
         for (auto& peer : peers) {
