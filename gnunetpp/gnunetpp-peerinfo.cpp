@@ -243,6 +243,7 @@ std::string gnunetpp::to_string(const std::shared_ptr<GNUNET_HELLO_Message> hell
             inet_ntop(AF_INET6, &ipv6_addr, ipv6_addr_str, INET6_ADDRSTRLEN);
             address_str = "tcp." + std::to_string(options) + ".[" + ipv6_addr_str + "]:" + std::to_string(port);
         }
+        // TODO: Add support to bluetooth, udp, unix, etc.
 
 
         GNUNET_HELLO_address_free(address);
