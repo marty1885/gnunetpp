@@ -61,3 +61,8 @@ Task<std::pair<double, double>> NSE::estimate()
     co_await EstimateAwaiter{this};
     co_return *estimate_;
 }
+
+void NSE::watch(std::function<void(std::pair<double, double>)> callback)
+{
+    observers_.push_back(std::move(callback));
+}
