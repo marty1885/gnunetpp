@@ -40,6 +40,7 @@ Task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
             std::cout << "Created identity " << identity_name << " with key " << to_string(*pk) << std::endl;
         else
             std::cout << "Failed to create identity " << identity_name << std::endl;
+        gnunetpp::shutdown();
     }
     
     else if(run_get) {
@@ -53,6 +54,7 @@ Task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
         }
         else
             std::cout << "Ego not found" << std::endl;
+        gnunetpp::shutdown();
     }
 
     else if(run_delete) {
@@ -60,6 +62,7 @@ Task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
         // Be careful with this function,
         auto identity = std::make_shared<IdentityService>(cfg);
         co_await identity->deleteIdentity(identity_name);
+        gnunetpp::shutdown();
     }
 
     else if(run_list) {

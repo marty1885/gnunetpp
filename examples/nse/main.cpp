@@ -25,6 +25,7 @@ Task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
         << "estimated network size     |  log2 stddev\n"
         << "-----------------------------------------\n"
         << right_pad(std::to_string(network_size), 27) << "|  " << log2_stddev << std::endl;
+    gnunetpp::shutdown();
 }
 
 int main(int argc, char** argv)

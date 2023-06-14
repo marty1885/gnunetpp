@@ -71,6 +71,7 @@ gnunetpp::Task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
         catch(const std::exception& e) {
             std::cout << "Publish failed" << std::endl;
         }
+        gnunetpp::shutdown();
     }
 
     else if(run_unindex) {
@@ -83,6 +84,7 @@ gnunetpp::Task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
         catch(const std::exception& e) {
             std::cerr << "Unindex failed: " << e.what() << std::endl;
         }
+        gnunetpp::shutdown();
     }
 }
 
