@@ -192,6 +192,18 @@ void getIdentities(const GNUNET_CONFIGURATION_Handle* cfg, std::function<void(co
     }
 }
 
+GeneratorWrapper<std::pair<std::string, Ego>> getIdentities(const GNUNET_CONFIGURATION_Handle *cfg)
+{
+    auto awaiter = std::make_unique<QueuedAwaiter<std::pair<std::string, Ego>>>();
+    getIdentities(cfg, [awaiter=awaiter.get()](const std::string& name, GNUNET_IDENTITY_Ego* ego){
+        if(name != "")
+            awaiter->addValue(std::make_pair(name, Ego(ego)));
+        else
+            awaiter->finish();
+    });
+    return GeneratorWrapper<std::pair<std::string, Ego>>(std::move(awaiter), []{});
+}
+
 Ego anonymousEgo()
 {
     return Ego(GNUNET_IDENTITY_ego_get_anonymous());

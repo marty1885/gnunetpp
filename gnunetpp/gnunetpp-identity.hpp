@@ -23,7 +23,6 @@ struct Ego
     GNUNET_IDENTITY_KeyType keyType() const;
 
     GNUNET_IDENTITY_Ego* native_handle() const { return ego; }
-    GNUNET_IDENTITY_Ego* ego = nullptr;
 
     std::strong_ordering operator<=>(const Ego&) const;
     bool operator==(const Ego&) const = default;
@@ -34,6 +33,7 @@ struct Ego
     bool operator>=(const Ego&) const = default;
 
 protected:
+    GNUNET_IDENTITY_Ego* ego = nullptr;
     GNUNET_IDENTITY_PublicKey pk;
     GNUNET_IDENTITY_PrivateKey sk;
 };
@@ -85,6 +85,7 @@ std::string to_string(GNUNET_IDENTITY_KeyType key);
  * @param fn callback to call for each identity
  */
 void getIdentities(const GNUNET_CONFIGURATION_Handle* cfg, std::function<void(const std::string&, GNUNET_IDENTITY_Ego* ego)> fn);
+GeneratorWrapper<std::pair<std::string, Ego>> getIdentities(const GNUNET_CONFIGURATION_Handle* cfg);
 
 /**
  * @brief Get public key from private key
