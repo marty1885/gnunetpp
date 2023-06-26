@@ -14,9 +14,7 @@ add_library(gnunetpp
     inner/Infra.cpp)
 target_include_directories(gnunetpp PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_precompile_headers(gnunetpp PRIVATE pch.hpp)
-target_link_libraries(gnunetpp PUBLIC idn gnunetnamestore gnunetgnsrecord gnunetidentity gnunetcore
-    gnunetutil gnunetfs gnunetdht gnunetnse gnunetcadet gnunetpeerinfo gnunetdatastore gnunetgns gnunetmessenger
-    gnunettransport gnunethello)
+target_link_libraries(gnunetpp PUBLIC idn GNUnet::GNUnet)
 # workaround for libintl.h conflicts
 target_compile_definitions(gnunetpp PUBLIC -DENABLE_NLS)
 

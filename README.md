@@ -94,7 +94,7 @@ This project aims to create a easy to use wapper for the commonly used part of G
   - [x] Replace cppcoro
   - [ ] Port to C++ modules when CMake supports it
 - CMake
-  - [ ] Locate GNUnet installation path (currently use the expected path)
+  - [x] Locate GNUnet installation path (currently use the expected path)
   - [ ] Find libidn2
 - DHT
   - [x] Basic operations (put/get)
