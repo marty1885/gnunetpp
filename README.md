@@ -75,7 +75,7 @@ First you need the dependencies
 * C++20 capable compiler
   * Tested with GCC 12.1 and Clang 14.0
 * A installation of GNUnet 0.19 (or likely the latest version)
-* libidn2
+* libidn
 
 (For examples)
 * CLI11
@@ -95,7 +95,7 @@ This project aims to create a easy to use wapper for the commonly used part of G
   - [ ] Port to C++ modules when CMake supports it
 - CMake
   - [x] Locate GNUnet installation path (currently use the expected path)
-  - [ ] Find libidn2
+  - [x] Find libidn
 - DHT
   - [x] Basic operations (put/get)
   - [ ] Monitor

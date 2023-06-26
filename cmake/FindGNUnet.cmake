@@ -23,6 +23,9 @@ if (NOT all_libs_found)
     return()
 endif ()
 
+find_package(idn REQUIRED)
+list(APPEND GNUnet_LIBRARIES idn::idn)
+
 # HACK: CMake requires a library as the "target" of an imported library, so we
 # use a library we know will be present on the system.
 add_library(GNUnet::GNUnet IMPORTED UNKNOWN)
