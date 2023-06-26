@@ -19,19 +19,10 @@ include(CMakeFindDependencyMacro)
 add_library(@PROJECT_NAME@::@PROJECT_NAME@ INTERFACE IMPORTED)
 set_target_properties(@PROJECT_NAME@::@PROJECT_NAME@ PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_INSTALL_INCLUDEDIR}")
 
+# Find dependencies
+find_package(GNUnet REQUIRED)
+
 target_link_libraries(@PROJECT_NAME@::@PROJECT_NAME@ INTERFACE
     @PROJECT_NAME@
-    gnunetnamestore
-    gnunetgnsrecord
-    gnunetidentity
-    gnunetcore
-    gnunetutil
-    gnunetfs
-    gnunetdht
-    gnunetnse
-    gnunetcadet
-    gnunetpeerinfo
-    gnunetdatastore
-    gnunetgns
-    gnunetmessenger
+    GNUnet::GNUnet
 )

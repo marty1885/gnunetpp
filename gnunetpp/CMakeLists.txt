@@ -21,7 +21,8 @@ target_compile_definitions(gnunetpp PUBLIC -DENABLE_NLS)
 install(
     DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DESTINATION include
-    FILES_MATCHING PATTERN "*.hpp")
+    FILES_MATCHING PATTERN "*.hpp"
+    PATTERN "pch.hpp" EXCLUDE)
 install(
     TARGETS gnunetpp
     LIBRARY DESTINATION lib
