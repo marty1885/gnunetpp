@@ -1,6 +1,7 @@
 #include "gnunetpp-peerinfo.hpp"
 #include "gnunetpp-crypto.hpp"
 #include <iostream>
+#include <iomanip>
 
 using namespace gnunetpp;
 
