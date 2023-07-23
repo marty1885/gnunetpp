@@ -233,6 +233,30 @@ void Room::sendPrivateMessage(const UserSendibleMessage &value, Contact contact)
     GNUNET_MESSENGER_send_message(room, &msg, contact.contact);
 }
 
+int Room::forEachMember(std::function<void(const Contact &)> cb)
+{
+    auto ptr = new std::function<void(const Contact &)>(cb);
+    // IMPORTANT: this method is synchronous, so we can safely delete the pointer after the call
+    int num_members = GNUNET_MESSENGER_iterate_members(room, 
+    [] (void* cls, GNUNET_MESSENGER_Room* room, const GNUNET_MESSENGER_Contact* contact) -> int {
+        auto cb = (std::function<void(const Contact &)>*)cls;
+        (*cb)(Contact{contact});
+        return GNUNET_OK;
+    }, ptr);
+    delete ptr;
+    return num_members;
+}
+
+std::vector<Contact> Room::members()
+{
+    std::vector<Contact> contacts;
+    int n = forEachMember([&contacts] (const Contact& contact) {
+        contacts.push_back(contact);
+    });
+    GNUNET_assert(n == contacts.size());
+    return contacts;
+}
+
 std::string Contact::name() const
 {
     auto name = GNUNET_MESSENGER_contact_get_name(contact);

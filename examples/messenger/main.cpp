@@ -106,8 +106,21 @@ Task<> service(const GNUNET_CONFIGURATION_Handle* cfg)
             shutdown();
             co_return;
         }
+        else if(line == "/list") {
+            std::cout << "Members of room " << room_str << ":" << std::endl;
+            auto members = room->members();
+            for(auto& contact : members) {
+                std::string disp_name = contact.name();
+                std::string key = "<unknown>";
+                if(contact.key())
+                    key = to_string(*contact.key());
+                if(disp_name.empty())
+                    disp_name = "<unknown>";
+                std::cout << "* " << disp_name << " (" << key << ")" << std::endl;
+            }
+        }
         // don't send empty messages
-        if(!line.empty())
+        else if(!line.empty())
             room->sendMessage(line);
     }
 }

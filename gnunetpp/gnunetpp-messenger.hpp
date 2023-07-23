@@ -108,6 +108,15 @@ struct Room : public NonCopyable
     */
     void setReadMessageCallback(std::function<void(const Message&)> cb) { recv_cb = std::move(cb); }
 
+    /**
+     * @brief iterate over all members of this room
+     * 
+     * @return the number of members
+    */
+    int forEachMember(std::function<void(const Contact&)> cb);
+
+    std::vector<Contact> members();
+
     GNUNET_MESSENGER_Room* room = nullptr;
     std::function<void(const Message&)> recv_cb;
 };
