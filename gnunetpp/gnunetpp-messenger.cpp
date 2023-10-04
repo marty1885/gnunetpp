@@ -4,6 +4,7 @@
 using namespace gnunetpp;
 
 #include <iostream>
+#include <any>
 
 void message_callback (void *cls,
                         GNUNET_MESSENGER_Room *room,
@@ -179,15 +180,19 @@ GNUNET_HashCode Room::getId() const
 }
 
 // using UserSendibleMessage = std::variant<TextMessage, FileMessage, NameChangeMessage, InviteMessage>;
-static GNUNET_MESSENGER_Message message_convert(const UserSendibleMessage &value)
+[[nodiscard]]
+static std::pair<GNUNET_MESSENGER_Message, std::any> message_convert(const UserSendibleMessage &value)
 {
     GNUNET_MESSENGER_Message msg;
+    std::string dup;
     if(value.index() == std::variant_npos)
-        return msg;
+        return {msg, std::any()};
     switch(value.index()) {
         case 0:
             msg.header.kind = GNUNET_MESSENGER_KIND_TEXT;
-            msg.body.text.text = (char*)std::get<0>(value).text.c_str();
+            // HACK: We need to keep the string alive until the message is sent
+            dup = std::get<0>(value).text;
+            msg.body.text.text = (char*)dup.c_str();
             break;
         case 1:
             // Don't know how to send files yet
@@ -195,7 +200,8 @@ static GNUNET_MESSENGER_Message message_convert(const UserSendibleMessage &value
             break;
         case 2:
             msg.header.kind = GNUNET_MESSENGER_KIND_NAME;
-            msg.body.name.name = (char*)std::get<2>(value).name.c_str();
+            dup = std::get<2>(value).name;
+            msg.body.name.name = (char*)dup.c_str();
             break;
         case 3:
             msg.header.kind = GNUNET_MESSENGER_KIND_INVITE;
@@ -206,30 +212,30 @@ static GNUNET_MESSENGER_Message message_convert(const UserSendibleMessage &value
             // Should never happen
             throw std::runtime_error("Unknown message type");
     }
-    return msg;
+    return {msg, std::move(dup)};
 }
 
 void Room::sendMessage(const std::string &value)
 {
-    auto msg = message_convert(TextMessage{value});
+    auto [msg, _] = message_convert(TextMessage{value});
     GNUNET_MESSENGER_send_message(room, &msg, nullptr);
 }
 
 void Room::sendMessage(const UserSendibleMessage &value)
 {
-    auto msg = message_convert(value);
+    auto [msg, _] = message_convert(value);
     GNUNET_MESSENGER_send_message(room, &msg, nullptr);
 }
 
 void Room::sendPrivateMessage(const std::string &value, Contact contact)
 {
-    auto msg = message_convert(TextMessage{value});
+    auto [msg, _] = message_convert(TextMessage{value});
     GNUNET_MESSENGER_send_message(room, &msg, contact.contact);
 }
 
 void Room::sendPrivateMessage(const UserSendibleMessage &value, Contact contact)
 {
-    auto msg = message_convert(value);
+    auto [msg, _] = message_convert(value);
     GNUNET_MESSENGER_send_message(room, &msg, contact.contact);
 }
 
