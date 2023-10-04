@@ -184,15 +184,17 @@ GNUNET_HashCode Room::getId() const
 static std::pair<GNUNET_MESSENGER_Message, std::any> message_convert(const UserSendibleMessage &value)
 {
     GNUNET_MESSENGER_Message msg;
-    std::string dup;
     if(value.index() == std::variant_npos)
         return {msg, std::any()};
+
+    std::shared_ptr<std::string> holder = nullptr;
+
     switch(value.index()) {
         case 0:
             msg.header.kind = GNUNET_MESSENGER_KIND_TEXT;
             // HACK: We need to keep the string alive until the message is sent
-            dup = std::get<0>(value).text;
-            msg.body.text.text = (char*)dup.c_str();
+            holder = std::make_shared<std::string>(std::get<0>(value).text);
+            msg.body.text.text = (char*)holder->c_str();
             break;
         case 1:
             // Don't know how to send files yet
@@ -200,8 +202,8 @@ static std::pair<GNUNET_MESSENGER_Message, std::any> message_convert(const UserS
             break;
         case 2:
             msg.header.kind = GNUNET_MESSENGER_KIND_NAME;
-            dup = std::get<2>(value).name;
-            msg.body.name.name = (char*)dup.c_str();
+            holder = std::make_shared<std::string>(std::get<2>(value).name);
+            msg.body.name.name = (char*)holder->c_str();
             break;
         case 3:
             msg.header.kind = GNUNET_MESSENGER_KIND_INVITE;
@@ -212,7 +214,9 @@ static std::pair<GNUNET_MESSENGER_Message, std::any> message_convert(const UserS
             // Should never happen
             throw std::runtime_error("Unknown message type");
     }
-    return {msg, std::move(dup)};
+
+    std::any res = std::move(holder);
+    return {msg, res};
 }
 
 void Room::sendMessage(const std::string &value)
