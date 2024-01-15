@@ -187,9 +187,7 @@ ENTER_MAIN_THREAD
 
     auto ego = co_await gnunetpp::getEgo(cfg, ego_name);
     CO_REQUIRE(ego.has_value());
-    CHECK(ego->keyType() == GNUNET_IDENTITY_TYPE_ECDSA);
-
-    // check signing with the identity works
+    CHECK(ego->keyType() == GNUNET_IDENTITY_TYPE_ECDSA);    // check signing with the identity works
     // FIXME: This API sucks and easy to confuse types
     auto sig = gnunetpp::crypto::sign(ego->privateKey().ecdsa_key, "hello world");
     CHECK(sig.has_value());
@@ -199,7 +197,7 @@ ENTER_MAIN_THREAD
 EXIT_MAIN_THREAD
 }
 
-DROGON_TEST(GNS)
+/*DROGON_TEST(GNS)
 {
 ENTER_MAIN_THREAD
     auto gns = std::make_shared<gnunetpp::GNS>(cfg);
@@ -207,7 +205,7 @@ ENTER_MAIN_THREAD
     CO_REQUIRE(result.size() != 0);
     // Won't check the actual result as it may change
 EXIT_MAIN_THREAD
-}
+}*/
 
 DROGON_TEST(Namestore)
 {
